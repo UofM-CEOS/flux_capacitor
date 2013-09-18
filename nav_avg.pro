@@ -2,7 +2,7 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-09-18T19:22:24+0000
+;; Last-Updated: 2013-09-18T21:15:24+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -55,19 +55,20 @@
 ;; ------------------------------------------------------------------------
 ;;; Code:
 
-PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, VEC_FIELD, $
+PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
              BEAR_FIELD, HEAD_FIELD, STAMP, ITEMPLATE_SAV, HEADER
 
   ;; Check parameters
   IF (n_params() NE 10) THEN $
-     message, 'Usage: ONE_MIN_NAV, IDIR, ODIR, VEC_FIELD, BEAR_FIELD' + $
-              'HEAD_FIELD, STAMP, ITEMPLATE_SAV, HEADER'
+     message, 'Usage: ONE_MIN_NAV, IDIR, ODIR, ISAMPLE_RATE, ' + $
+              'OSAMPLE_RATE, BMAG_FIELD, BEAR_FIELD, HEAD_FIELD, ' + $
+              'STAMP, ITEMPLATE_SAV, HEADER'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
      message, 'ODIR is undefined or is empty string'
-  IF ((n_elements(vec_field) EQ 0) OR (vec_field EQ '')) THEN $
-     message, 'VEC_FIELD is undefined or is empty string'
+  IF ((n_elements(bmag_field) EQ 0) OR (bmag_field EQ '')) THEN $
+     message, 'BMAG_FIELD is undefined or is empty string'
   IF ((n_elements(isample_rate) EQ 0) OR (isample_rate EQ '')) THEN $
      message, 'ISAMPLE_RATE is undefined or is empty string'
   IF ((n_elements(osample_rate) EQ 0) OR (osample_rate EQ '')) THEN $
@@ -125,6 +126,10 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, VEC_FIELD, $
         avgs=mean(col_data, dimension=1, /nan)
         all_arr[col - 6, *]=avgs
      ENDFOREACH
+
+     print, 'hi'
+     ;; brg=bearing_avg(data.(bear_field), data.(bmag_field))
+     ;; all_arr[n_avg_cols + 6, *]=brg
 
      ;; FOR fld=13L, n_fields - 1 DO BEGIN
      ;;    print, data.(fld)
