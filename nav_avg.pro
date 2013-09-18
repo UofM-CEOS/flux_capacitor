@@ -2,7 +2,7 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-09-18T15:47:00+0000
+;; Last-Updated: 2013-09-18T19:22:24+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -94,13 +94,16 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, VEC_FIELD, $
 
   restore, itemplate_sav
   n_fields=nav_template.FIELDCOUNT
+  ang_cols=[bear_field, head_field]
+  avg_cols=(cgSetDifference(indgen(n_fields - 13) + 13, ang_cols))
+  n_avg_cols=size(avg_cols, /n_elements)
   FOR k=0, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
      print, 'Producing 1-min average for file: ' + ifile
      data=read_ascii(ifile, count=n_inputfile, template=nav_template)
      beg_jd=julday(data.FIELD02[0], data.FIELD03[0], data.FIELD01[0], 0)
      mins=timegen(start=beg_jd, final=beg_jd + (86399.0 / 86400), $
-                  step_size=1, units='minutes')
+                  step_size=osample_rate, units='seconds')
      mins=jul2timestamp(temporary(mins))
      ;; Make a working array, populate with 'NaN'
      all_arr=fltarr(n_fields - 3, size(mins, /n_elements))
@@ -112,12 +115,15 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, VEC_FIELD, $
      all_arr[4, *]=strmid(mins, 14, 2)
      all_arr[5, *]=strmid(mins, 17, 2)
      all_arr[6,*]=data.FIELD07[0] ; place Program Version
-     ang_cols=[bear_field, head_field]
-     avg_cols=(cgSetDifference(indgen(n_fields - 13) + 13, ang_cols))
-     n_avg_cols=size(avg_cols, /n_elements)
      FOREACH col, avg_cols DO BEGIN
         col_data=reform(data.(col), osample_rate / isample_rate, $
                         86400 / osample_rate)
+        ;; This will throw "floating point illegal operand" arithmetic
+        ;; error warning when all elements in each row are NaN, which
+        ;; should should just be ignored.  In these cases, the result is
+        ;; -NaN.
+        avgs=mean(col_data, dimension=1, /nan)
+        all_arr[col - 6, *]=avgs
      ENDFOREACH
 
      ;; FOR fld=13L, n_fields - 1 DO BEGIN
