@@ -1,0 +1,66 @@
+2013-09-18  Sebastian Luque  <spluque@gmail.com>
+
+	* flux_capacitor.pro:
+	Updated calls to subroutines to reflect changes in them.
+
+	* day_splitter_nav.pro:
+	Ensure n_days is long integer, and n_fields gets info from template.
+
+2013-09-16  Sebastian Luque  <spluque@gmail.com>
+
+	* std_nav.pro:
+	Modified arguments to account for convention of directories without
+	trailing path separators.
+
+	* day_splitter_nav.pro: Finished first take, working properly.
+
+2013-09-13  Sebastian Luque  <spluque@gmail.com>
+
+	* day_splitter_nav.pro: Implemented proper removal of unneeded days.
+
+2013-09-12  Sebastian Luque  <spluque@gmail.com>
+
+	* doy2calendar.pro: Reformat output of JUL2TIMESTAMP.
+
+	* doy2calendar.pro: Added JUL2TIMESTAMP function.
+
+2013-09-11  Sebastian Luque  <spluque@gmail.com>
+
+	* day_splitter_nav.pro: Trying structure approach (TEST).
+
+2013-09-04  Sebastian Luque  <spluque@gmail.com>
+
+	* std_nav.pro:
+	Format the output without so much whitespace, to reduce file size and
+	facilitate operations later.
+
+	* doy2calendar.pro: Return a string also for calendar2doy.
+
+	* std_nav.pro: Use different output file name.
+
+2013-09-03  Sebastian Luque  <spluque@gmail.com>
+
+	* std_nav.pro: Remove old comment.
+
+	* std_nav.pro: Rename procedure and file, and add checks.
+
+2013-09-03  Sebastian Luque  <spluque@gmail.com>
+
+	* std_nav.pro: Rename procedure and file, and add checks.
+
+2013-08-28  Sebastian Luque  <spluque@gmail.com>
+
+	* doy2calendar.pro: Added 'calendar2doy' function.
+
+	* flux_capacitor.pro:
+	Do not create temporary 'val' variable that is just for tests; just use the
+	expression in the test.
+
+	* std_nav_AN11.pro:
+	Added a test to skip rows with improper number of columns.  In reality,
+	this needs a much more thorough test for the structure of input.  It is
+	very fragile for now.
+
+	Removed the 'out_columns' argument, since it doesn't serve any
+	purpose because the input columns are hard-coded, which implies
+	fixed output columns.

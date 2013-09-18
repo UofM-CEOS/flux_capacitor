@@ -1,0 +1,15 @@
+
+* TODO Entire program should run independently of year
+
+** TODO Rename files and all names to reflect this independence
+
+* TODO Implement temporary() where appropriate
+
+
+* Emacs local variables
+
+#+STARTUP: content
+#+PROPERTY: results silent
+# Local Variables:
+# mode: org
+# End:

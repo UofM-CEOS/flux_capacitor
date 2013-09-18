@@ -1,0 +1,18 @@
+;IDL start-up file
+
+.compile 'DAY_SPLITTER_GPS'
+.compile 'DAY_SPLITTER_MET'
+.compile 'EXTRACT_FLUX_RUNS_AN11'
+.compile 'EXTRACT_GYRO_RUNS_AN11'
+.compile 'EXTRACT_RMC_RUNS_AN11'
+.compile 'ONE_MIN_VAN11'
+.compile 'ONE_MIN_VRMC_AN11'
+.compile 'PROCESS_RAD'
+.compile 'STD_NAV_AN11'
+.compile 'STD_NAV_AN11'
+.compile 'EC_MOMENTUM'
+.compile 'EC_OPEN'
+.compile 'OGVIE'
+.compile 'PROCESS_MET_AN11'
+.compile 'SPEC_MASSMAN'
+.compile 'ec_main_AN11v2.pro'
