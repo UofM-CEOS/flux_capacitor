@@ -2,7 +2,7 @@
 ;;; bearing_avg.pro --- Average bearing and magnitude
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-18T20:11:56+0000
-;; Last-Updated: 2013-09-18T22:22:21+0000
+;; Last-Updated: 2013-09-19T18:38:02+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -40,31 +40,19 @@
 FUNCTION BEARING_AVG, X, VMAG, dimension=dimension
 
   ;; Convert to radians
-  radarr=x * !DTOR
+  rads=x * !DTOR
   ;; calculate x and y coordinates
-  yarr=cos(radarr) * vmag
-  xarr=sin(radarr) * vmag
-  x_mean=mean(xarr, dimension=dimension, /NAN)    ; x_mean is in the v_wind direction
-  y_mean=mean(yarr, dimension=dimension, /NAN)    ; y_mean is in the u_wind direction
+  ys=cos(rads) * vmag
+  xs=sin(rads) * vmag
+  x_mean=mean(xs, dimension=dimension, /NAN)    ; x_mean is in the v_wind direction
+  y_mean=mean(ys, dimension=dimension, /NAN)    ; y_mean is in the u_wind direction
   mag=sqrt(x_mean ^ 2 + y_mean ^ 2)
-  vec_mean=atan(x_mean / y_mean)
-  vec_mean1=atan(x_mean, y_mean)
+  vec_mean=atan(x_mean, y_mean)
   deg_mean=vec_mean / !DTOR
-  deg_mean1=vec_mean1 / !DTOR
-  IF ((x_mean GE 0) AND (y_mean GE 0)) THEN $
-     compass_mean=0 + deg_mean
-  IF ((x_mean GE 0) AND (y_mean LE 0)) THEN $
-     compass_mean=180 + deg_mean
-  IF ((x_mean LE 0) AND (y_mean LE 0)) THEN $
-     compass_mean=180 + deg_mean
-  IF ((x_mean LE 0) AND (y_mean GE 0)) THEN $
-     compass_mean=360 + deg_mean
-  RETURN, compass_mean
-  ;; RETURN, compass_mean
-  ;; output=fltarr(n_elements(,2)
-  ;; output[0,0]=compass_mean
-  ;; output[0,1]=mag
-  ;; RETURN, output
+  negs=where(deg_mean LE 0, nneg)
+  IF nneg GT 0 THEN $
+     deg_mean[negs]=temporary(deg_mean[negs]) + 360
+  RETURN, reform([deg_mean, mag], n_elements(deg_mean), 2)
 
 END
 
