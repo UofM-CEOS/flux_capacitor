@@ -2,7 +2,7 @@
 ;;; day_splitter_MET.pro --- split MET data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-20T05:02:17+0000
+;; Last-Updated: 2013-09-20T12:30:47+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -103,6 +103,38 @@
 PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
                       HEADER, SAMPLERATE, STAMP, N_PREFIX, $
                       OVERWRITE=OVERWRITE
+
+  ;; Check parameters
+  IF (n_params() NE 9) THEN $
+     message, 'Usage: DAY_SPLITTER_NAV, STARTDATE, ENDDATE, IDIR, ' + $
+              'ODIR, ITEMPLATE_SAV, HEADER, SAMPLERATE, STAMP, N_PREFIX'
+  IF ((n_elements(startdate) EQ 0) OR (idir EQ '')) THEN $
+     message, 'STARTDATE is undefined or is empty string'
+  IF ((n_elements(enddate) EQ 0) OR (idir EQ '')) THEN $
+     message, 'ENDDATE is undefined or is empty string'
+  IF (long(enddate) LT long(startdate)) THEN $
+     message, 'ENDDATE must be greater than or equal to STARTDATE'
+  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
+     message, 'IDIR is undefined or is empty string'
+  IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
+     message, 'ODIR is undefined or is empty string'
+  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
+     message, 'ITEMPLATE_SAV is undefined or is empty string'
+  IF (n_elements(header) EQ 0) THEN $
+     message, 'HEADER is undefined'
+  IF (n_elements(samplerate) EQ 0) THEN $
+     message, 'SAMPLERATE is undefined'
+  IF ((n_elements(stamp) EQ 0) OR (stamp EQ '')) THEN $
+     message, 'STAMP is undefined or is empty string'
+  IF (n_elements(n_prefix) EQ 0) THEN $
+     message, 'N_PREFIX is undefined'
+
+  idir_files=file_search(idir + path_sep() + '*.dat', $
+                         count=nidir_files, /nosort)
+  IF nidir_files LT 1 THEN BEGIN
+     print, 'No input files found'
+     RETURN
+  ENDIF
 
 ;Extract the year, month, and day from the input dates
 s_y = LONG(STRMID(startdate,0,4))
