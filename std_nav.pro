@@ -1,13 +1,20 @@
 ;; $Id$
-;;; std_nav_AN11.pro --- Standardize NAV files
+;;; std_nav.pro --- Standardize NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-28T17:48:36+0000
-;; Last-Updated: 2013-09-17T00:00:34+0000
+;; Last-Updated: 2013-09-20T18:41:25+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
 ;; Check ChangeLog for history.
+;;
+;; Example call:
+;;
+;; std_nav, expand_path('~/tmp/NAV'), expand_path('~/tmp/NAV/STD'), $
+;;          'Year, Month, Day, Hour, Minute, Second, ProgVers, GPSYear, ' + $
+;;          'GPSMonth, GPSDay, GPSHour, GPSMin, GPSSec, Latitude, Longitude, ' + $
+;;          'SOG(kts), COG(deg), Heading, Pitch, Roll, Accelx, Accely, Accelz'
 ;;
 ;; Below is from Bruce Johnson's comments.
 ;; 
@@ -32,53 +39,55 @@
 ;; ------------------------------------------------------------------------
 ;;; Code:
 
-PRO STD_NAV, RAW_NAV_DIR, OUT_DIR, HEADER, OVERWRITE=OVERWRITE
+PRO STD_NAV, IDIR, ODIR, HEADER, OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 3) THEN $
-     message, 'Usage: STD_NAV, RAW_NAV_DIR, HEADER'
-  IF ((n_elements(raw_nav_dir) EQ 0) OR (raw_nav_dir EQ '')) THEN $
-     message, 'RAW_NAV_DIR is undefined or is empty string'
-  IF ((n_elements(out_dir) EQ 0) OR (out_dir EQ '')) THEN $
-     message, 'OUT_DIR is undefined or is empty string'
+     message, 'Usage: STD_NAV, IDIR, HEADER'
+  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
+     message, 'IDIR is undefined or is empty string'
+  IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
+     message, 'ODIR is undefined or is empty string'
   IF (n_elements(header) EQ 0) THEN $
      message, 'HEADER is undefined'
 
-  cd, raw_nav_dir
-  navlist=file_search('*.dat', count=nav_recs, /nosort)
+  idir_files=file_search(idir + path_sep() + '*.dat', count=nidir_files, $
+                         /nosort)
+  IF nidir_files LT 1 THEN BEGIN
+     print, 'No input files found'
+     RETURN
+  ENDIF
   ;; Code currently works under these assumptions (silly state of affairs):
-  in_cols=20
-  out_cols=23
+  n_ifields=20
+  n_ofields=23
      
-  ;; Loop through files in the raw-NAV directory
-  FOR k=0, nav_recs - 1 DO BEGIN
-     iname=strsplit(navlist[k], '.', /extract)
+  ;; Loop through files in input directory
+  FOR k=0, nidir_files - 1 DO BEGIN
+     iname=strsplit(file_basename(idir_files[k]), '.', /extract)
      ;; Get a name for the file, check if it already exists
-     outname=strcompress(out_dir + path_sep() + iname[0] + '_std.' + $
-                         iname[1], /remove_all)
-     file_stamp=strcompress(iname[0] + '_std.' + iname[1], /remove_all)
-     
-     cd, out_dir
-     out_list=file_search('*.dat', /nosort)
-     matchfiles=where(file_stamp EQ out_list, matchfilecount)
+     ofile_name=strcompress(odir + path_sep() + iname[0] + '_std.' + $
+                            iname[1], /remove_all)
+     ofile_stamp=file_basename(ofile_name)
+     out_list=file_search(odir + path_sep() + '*.dat', /nosort)
+     matchfiles=where(ofile_stamp EQ file_basename(out_list), $
+                      matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN
         IF keyword_set(overwrite) THEN BEGIN
-           print, 'Standardized NAV file ' + file_stamp + $
+           print, 'Standardized NAV file ' + ofile_stamp + $
                   ' already exists.  Overwriting'
         ENDIF ELSE BEGIN
-        print, 'Standardized NAV file ' + file_stamp + $
+        print, 'Standardized NAV file ' + ofile_stamp + $
                ' already exists.  Not overwriting'
         CONTINUE
      ENDELSE
      ENDIF
 
-     ifile_nav=strcompress(raw_nav_dir + path_sep() + navlist[k], $
-                           /remove_all)
-     print, 'Processing file: ' + navlist[k]
+     ifile_nav=idir_files[k]
+     print, 'Processing file: ' + ifile_nav
 
      ;; Designate number of lines and columns for output file
      lines=file_lines(ifile_nav)
-     work_arr=fltarr(out_cols, lines)
+     work_arr=fltarr(n_ofields, lines)
      work_arr[*, *]='NAN' 
 
      ;; Open input file as a string array
@@ -87,18 +96,15 @@ PRO STD_NAV, RAW_NAV_DIR, OUT_DIR, HEADER, OVERWRITE=OVERWRITE
      readf, 1, ifile_str
      close, 1
 
-     ;; Need to modify this time array so it works, should be (0-year,
-     ;; 1-month, 2-day, 3-hour, 4-min, 5-sec)
      time_arr=fltarr(6, lines)
      time_arr[*, *]='NaN'
      
      ;; Loop through records (lines)
      FOR exd=0L, lines[0] - 1  DO BEGIN
         ;; Extract date/time info and fix NAN problem.
-        splitstr=strsplit(ifile_str[exd], ",", /extract) ; split input
-                                ; columns
+        splitstr=strsplit(ifile_str[exd], ",", /extract) ; split input columns
         ;; Skip if wrong number of records
-        IF (n_elements(splitstr) NE in_cols) THEN CONTINUE
+        IF (n_elements(splitstr) NE n_ifields) THEN CONTINUE
         findnan=where(splitstr EQ '"NAN"', foundnan) 
         IF foundnan GT 0 THEN BEGIN
            splitstr[findnan]='NaN' ;look for "NAN" and replace with "NaN"
@@ -202,11 +208,11 @@ PRO STD_NAV, RAW_NAV_DIR, OUT_DIR, HEADER, OVERWRITE=OVERWRITE
 
      ;;----------------Now print it out-----------------------------------
      ;;make the array a string for easy printing
-     formatnum=string(out_cols - 1, format='(i2)')
-     formatstring='(' + formatnum + '(a,", "),a)'
-     openw, unit1, outname, /get_lun
+     fmt_nofields=string(n_ofields - 1, format='(i2)')
+     fmt_str='(' + fmt_nofields + '(a,", "),a)'
+     openw, unit1, ofile_name, /get_lun
      printf, unit1, header
-     printf, unit1, strcompress(work_arr, /remove_all), format=formatstring
+     printf, unit1, strcompress(work_arr, /remove_all), format=fmt_str
      close, /all
 
   ENDFOR
@@ -219,4 +225,4 @@ END
 ;; allout-layout: (-2 + : 0)
 ;; End:
 ;;
-;;; std_nav_AN11.pro ends here
+;;; std_nav.pro ends here
