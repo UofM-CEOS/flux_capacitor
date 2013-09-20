@@ -2,7 +2,7 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-09-18T21:15:24+0000
+;; Last-Updated: 2013-09-20T03:35:25+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -95,9 +95,18 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
 
   restore, itemplate_sav
   n_fields=nav_template.FIELDCOUNT
-  ang_cols=[bear_field, head_field]
+  ang_cols=[bmag_field, bear_field, head_field]
   avg_cols=(cgSetDifference(indgen(n_fields - 13) + 13, ang_cols))
   n_avg_cols=size(avg_cols, /n_elements)
+  ncols_osample=osample_rate / isample_rate
+  nrows_osample=86400 / osample_rate
+  header=strsplit(temporary(header), ', ', /extract)
+  header_out=strarr(n_fields - 3)
+  header_out[0:6]=header[0:6]
+  header_out[7:(n_fields - 3 - 4)]=header[13:(n_fields - 1)]
+  stdevstr=['SOG_stdev', 'COG_stdev', 'Heading_stdev']
+  header_out[(n_fields - 6):(n_fields - 4)]=stdevstr
+  header_out=strjoin(header_out, ', ')
   FOR k=0, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
      print, 'Producing 1-min average for file: ' + ifile
@@ -117,8 +126,7 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
      all_arr[5, *]=strmid(mins, 17, 2)
      all_arr[6,*]=data.FIELD07[0] ; place Program Version
      FOREACH col, avg_cols DO BEGIN
-        col_data=reform(data.(col), osample_rate / isample_rate, $
-                        86400 / osample_rate)
+        col_data=reform(data.(col), ncols_osample, nrows_osample)
         ;; This will throw "floating point illegal operand" arithmetic
         ;; error warning when all elements in each row are NaN, which
         ;; should should just be ignored.  In these cases, the result is
@@ -126,118 +134,45 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
         avgs=mean(col_data, dimension=1, /nan)
         all_arr[col - 6, *]=avgs
      ENDFOREACH
+     ;; Means for SOG, COG, and heading
+     cog=data.(bear_field)
+     brg2d=reform(cog, ncols_osample, nrows_osample)
+     sog=data.(bmag_field)
+     bmag2d=reform(sog, ncols_osample, nrows_osample)
+     head=data.(head_field)
+     head2d=reform(head, ncols_osample, nrows_osample)
+     brgmag_mean=bearing_avg(brg2d, bmag2d, dimension=1)
+     all_arr[bmag_field - 6, *]=brgmag_mean[*, 1]
+     all_arr[bear_field - 6, *]=brgmag_mean[*, 0]
+     head_mean=bearing_avg(head2d, 1, dimension=1)
+     all_arr[head_field - 6, *]=head_mean[*, 0]
+     ;; Standard deviations
+     FOR i=0, nrows_osample - 1 DO BEGIN
+        sog_ok=where(finite(bmag2d[*, i]) GT 0, n_sog_ok, complement=sog_bad)
+        cog_ok=where(finite(brg2d[*, i]) GT 0, n_cog_ok, complement=cog_bad)
+        head_ok=where(finite(head2d[*, i]) GT 0, n_head_ok, $
+                      complement=head_bad)
+        IF n_sog_ok GT 10 THEN $
+           all_arr[17, i]=stdev(bmag2d[sog_ok, i])
+        IF n_cog_ok GT 10 THEN $
+           all_arr[18, i]=stdev_yamartino(brg2d[cog_ok, i])
+        IF n_head_ok GT 10 THEN $
+           all_arr[19, i]=stdev_yamartino(head2d[head_ok, i])
+     ENDFOR
+     
+     file_stamp=file_basename(ifile, '.dat') + '_' + $
+                strtrim(osample_rate, 2) + 's.dat'
+     fmt_nfields=strtrim(n_fields - 4)
+     fmt_str='(' + fmt_nfields + '(a,","),a)'
+     all_arr=strcompress(temporary(all_arr), /remove_all)
 
-     print, 'hi'
-     ;; brg=bearing_avg(data.(bear_field), data.(bmag_field))
-     ;; all_arr[n_avg_cols + 6, *]=brg
-
-     ;; FOR fld=13L, n_fields - 1 DO BEGIN
-     ;;    print, data.(fld)
-     ;;    ;; IF fld EQ bear_field THEN BEGIN
-     ;;    ;;    bearings=data.(fld)
-     ;;    ;; ENDIF
-     ;; ENDFOR
+     print, 'Writing file: ' + file_stamp
+     openw, lun, odir + path_sep() + file_stamp, /get_lun
+     printf, lun, header_out
+     printf, lun, all_arr, format=fmt_str
+     free_lun, lun
   ENDFOR
-;; ;create loops to calculate 60s averages
-;; ;--------------------------------------
-;;      FOR y=0L, 1440-1L DO BEGIN
-;;         st=y * 60
-;;         en=st + 59
-;;         FOR f=13, n_fields-1 DO BEGIN
-           
-;;                                 ;calculate averages for COG and SOG
-;;            IF f EQ bear_field THEN BEGIN
-;;               bear_data=data.FIELD01(f,st:en)
-;;               vec_data =1
-              
-;;               IF vec_field GT 0 THEN BEGIN
-;;                  vec_data=data.FIELD01(vec_field,st:en)
-;;               ENDIF
-              
-;;               values=bearing_avg(bear_data, vec_data)
-;;               work_arr[bear_field-6,y)=values(0,0)
-              
-;;               IF vec_field GT 0 THEN BEGIN
-;;                  work_arr[vec_field-6,y)=values(0,1)
-;;               ENDIF
-;;               GOTO, skip
-;;            ENDIF
-           
-;;                                 ;calculate average for Heading
-;;            IF f EQ head_field THEN BEGIN
-;;               head_data=data.FIELD01(f,st:en)
-;;               vec_data =1
-;;               values=bearing_avg(head_data, vec_data)
-;;               work_arr[head_field-6,y)=values(0,0)
-;;               GOTO, skip
-;;            ENDIF
-
-;;            work_arr[f-6,y)=mean(data.FIELD01(f,st:en), /NAN)
-;;            skip:
-;;         ENDFOR
         
-;;         sog=data.FIELD01(15,st:en)
-;;         cog=data.FIELD01(16,st:en)
-;;         head=data.FIELD01(17,st:en)
-;;         good_sog=where(finite(sog) GT 0, n_good_sog)
-;;         good_cog=where(finite(cog) GT 0, n_good_cog)
-;;         good_head=where(finite(head) GT 0, n_good_head)
-
-;;         IF n_good_sog GT 10 THEN BEGIN
-;;            work_arr[17,y)=stdev(sog[good_sog])
-;;         ENDIF
-
-;;         IF n_good_cog GT 10 THEN BEGIN
-;;            work_arr[18,y)=yamartino(cog[good_cog])
-;;         ENDIF
-
-;;         IF n_good_head GT 10 THEN BEGIN
-;;            work_arr[19,y)=yamartino(head[good_head])
-;;         ENDIF
-
-;;      ENDFOR
-
-;; ;create a name for the output file
-;; ;---------------------------------
-;;      current_JD  =LONG(calendar_to_jd(work_arr[0,0),work_arr[1,0),work_arr[2,0)))
-;;      current_date=jd_to_calendar(long(work_arr[0,0)),long(current_JD))
-
-;;      IF current_JD LT 100 THEN BEGIN
-;;         JD_stamp=strcompress(current_JD)
-;;         JD_stamp='0'+JD_stamp
-;;         IF current_JD LT 10 THEN BEGIN
-;;            JD_stamp=strcompress(current_JD)
-;;            JD_stamp='00'+JD_stamp
-;;         ENDIF
-;;      ENDIF ELSE BEGIN
-;;         JD_stamp  =strcompress(current_JD, /REMOVE_ALL)
-;;      ENDELSE
-
-;;      date_stamp=strmid(current_date,4,4)
-;;      year_stamp=STRCOMPRESS(LONG(work_arr[0,0)))
-
-;; ;create a file name for the output file with JD stamp and date stamp
-;; ;format for NAV output file name --> 1min_NAV_yyyy_JDxxx_hhmm.dat
-;;      outname=STRCOMPRESS(odir + '1min_' + stamp + '_' + year_stamp + '_JD' + JD_stamp + '_' + date_stamp + '.dat', /REMOVE_ALL)
-
-;;      formatnum   =strcompress(n_fields-4)
-;;      formatstring=strcompress('(' + formatnum + '(a,","),a)', /REMOVE_ALL)
-
-;; ;make the array a string for easy printing, and DO IT
-;;      work_str=strcompress(work_arr, /REMOVE_ALL)
-;;      header  ='Year, Month, Day, Hour, Minute, Second, ProgVers, Latitude, Longitude, SOG(kts), COG(deg), Heading, Pitch, ' +$
-;;               'Roll, Accelx, Accely, Accelz, SOG_stdev, COG_stdev, Heading_stdev'
-;;      print, 'Creating file:  ' + outname
-;;      print, '---------------------------'
-
-;;      openw, unit1, outname, /get_lun
-;;      printf, unit1, header
-;;      printf, unit1, work_arr, FORMAT=formatstring
-
-;; skiploop:
-;;      close, /all
-;;   ENDFOR
-
 END
 
 
