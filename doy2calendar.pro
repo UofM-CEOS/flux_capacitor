@@ -2,7 +2,7 @@
 ;;; doy2calendar.pro --- Convert DOY to calendar date
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-28T17:54:17+0000
-;; Last-Updated: 2013-09-12T17:31:54+0000
+;; Last-Updated: 2013-09-20T21:54:09+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -26,7 +26,7 @@ END
 FUNCTION calendar2doy, year, month, day
   
   jd=julday(month, day, year)
-  caldat, jd, Null, Null, year
+  caldat, jd, Null0, Null1, year
   doy=string(jd - julday(12, 31, year - 1), format='(i03)')
   RETURN, doy
 
