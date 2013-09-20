@@ -2,7 +2,7 @@
 ;;; day_splitter_NAV.pro --- split NAV data into daily files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-29T03:29:07+0000
-;; Last-Updated: 2013-09-20T15:57:04+0000
+;; Last-Updated: 2013-09-20T16:00:43+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -90,7 +90,7 @@ PRO DAY_SPLITTER_NAV, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
                       HEADER, SAMPLERATE, STAMP, OVERWRITE=OVERWRITE
 
   ;; Check parameters
-  IF (n_params() NE 9) THEN $
+  IF (n_params() NE 8) THEN $
      message, 'Usage: DAY_SPLITTER_NAV, STARTDATE, ENDDATE, IDIR, ' + $
               'ODIR, ITEMPLATE_SAV, HEADER, SAMPLERATE, STAMP, [/OVERWRITE]'
   IF ((n_elements(startdate) EQ 0) OR (idir EQ '')) THEN $
