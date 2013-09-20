@@ -2,7 +2,7 @@
 ;;; std_nav.pro --- Standardize NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-28T17:48:36+0000
-;; Last-Updated: 2013-09-20T18:41:25+0000
+;; Last-Updated: 2013-09-20T19:02:27+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -43,7 +43,7 @@ PRO STD_NAV, IDIR, ODIR, HEADER, OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 3) THEN $
-     message, 'Usage: STD_NAV, IDIR, HEADER'
+     message, 'Usage: STD_NAV, IDIR, ODIR, HEADER'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
