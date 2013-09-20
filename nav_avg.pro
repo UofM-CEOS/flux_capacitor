@@ -2,7 +2,7 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-09-20T03:35:25+0000
+;; Last-Updated: 2013-09-20T20:02:44+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -86,8 +86,8 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
   IF (n_elements(header) EQ 0) THEN $
      message, 'HEADER is undefined'
 
-  idir_files=file_search(idir + path_sep() + '*.dat', $
-                         count=nidir_files, /nosort)
+  idir_files=file_search(idir + path_sep() + '*.dat', count=nidir_files, $
+                         /nosort)
   IF nidir_files LT 1 THEN BEGIN
      print, 'No input files found'
      RETURN
@@ -153,9 +153,9 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
         head_ok=where(finite(head2d[*, i]) GT 0, n_head_ok, $
                       complement=head_bad)
         IF n_sog_ok GT 10 THEN $
-           all_arr[17, i]=stdev(bmag2d[sog_ok, i])
+           all_arr[17, i]=stddev(bmag2d[sog_ok, i])
         IF n_cog_ok GT 10 THEN $
-           all_arr[18, i]=stdev_yamartino(brg2d[cog_ok, i])
+           all_arr[18, i]=stddev_yamartino(brg2d[cog_ok, i])
         IF n_head_ok GT 10 THEN $
            all_arr[19, i]=stdev_yamartino(head2d[head_ok, i])
      ENDFOR
