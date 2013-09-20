@@ -1,9 +1,9 @@
 ;; $Id$
-;;; day_splitter_nav.pro --- split NAV data into daily files
+;;; day_splitter_NAV.pro --- split NAV data into daily files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-29T03:29:07+0000
-;; Last-Updated: 2013-09-17T19:35:45+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-09-20T03:53:46+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
@@ -260,4 +260,4 @@ END
 ;; allout-layout: (-2 + : 0)
 ;; End:
 ;;
-;;; day_splitter_nav.pro ends here
+;;; day_splitter_NAV.pro ends here
