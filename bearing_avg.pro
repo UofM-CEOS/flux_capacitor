@@ -1,4 +1,4 @@
-;; $Id: $
+;; $Id$
 ;;; bearing_avg.pro --- Average bearing and magnitude
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-18T20:11:56+0000

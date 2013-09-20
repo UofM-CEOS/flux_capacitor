@@ -1,4 +1,4 @@
-;; $Id: $
+;; $Id$
 ;;; day_splitter_MET.pro --- split MET data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000

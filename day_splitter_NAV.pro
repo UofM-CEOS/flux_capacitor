@@ -2,7 +2,7 @@
 ;;; day_splitter_NAV.pro --- split NAV data into daily files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-29T03:29:07+0000
-;; Last-Updated: 2013-09-20T16:00:43+0000
+;; Last-Updated: 2013-09-20T20:01:28+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -112,8 +112,8 @@ PRO DAY_SPLITTER_NAV, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   IF ((n_elements(stamp) EQ 0) OR (stamp EQ '')) THEN $
      message, 'STAMP is undefined or is empty string'
 
-  idir_files=file_search(idir + path_sep() + '*.dat', $
-                         count=nidir_files, /nosort)
+  idir_files=file_search(idir + path_sep() + '*.dat', count=nidir_files, $
+                         /nosort)
   IF nidir_files LT 1 THEN BEGIN
      print, 'No input files found'
      RETURN
