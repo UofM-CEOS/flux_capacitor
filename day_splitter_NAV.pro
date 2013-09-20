@@ -2,8 +2,8 @@
 ;;; day_splitter_NAV.pro --- split NAV data into daily files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-29T03:29:07+0000
-;; Last-Updated: 2013-09-20T03:53:46+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-09-20T15:57:04+0000
+;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
@@ -87,13 +87,12 @@
 ;;; Code:
 
 PRO DAY_SPLITTER_NAV, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
-                      HEADER, SAMPLERATE, STAMP, N_PREFIX, $
-                      OVERWRITE=OVERWRITE
+                      HEADER, SAMPLERATE, STAMP, OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 9) THEN $
      message, 'Usage: DAY_SPLITTER_NAV, STARTDATE, ENDDATE, IDIR, ' + $
-              'ODIR, ITEMPLATE_SAV, HEADER, SAMPLERATE, STAMP, N_PREFIX'
+              'ODIR, ITEMPLATE_SAV, HEADER, SAMPLERATE, STAMP, [/OVERWRITE]'
   IF ((n_elements(startdate) EQ 0) OR (idir EQ '')) THEN $
      message, 'STARTDATE is undefined or is empty string'
   IF ((n_elements(enddate) EQ 0) OR (idir EQ '')) THEN $
@@ -112,8 +111,6 @@ PRO DAY_SPLITTER_NAV, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      message, 'SAMPLERATE is undefined'
   IF ((n_elements(stamp) EQ 0) OR (stamp EQ '')) THEN $
      message, 'STAMP is undefined or is empty string'
-  IF (n_elements(n_prefix) EQ 0) THEN $
-     message, 'N_PREFIX is undefined'
 
   idir_files=file_search(idir + path_sep() + '*.dat', $
                          count=nidir_files, /nosort)
