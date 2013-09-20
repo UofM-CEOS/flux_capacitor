@@ -1,7 +1,7 @@
 ;;; control.inc --- Variables for flux_capacitor.pro
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-09-16T23:46:56+0000
+;; Last-Updated: 2013-09-20T19:41:57+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -198,12 +198,12 @@ IRGA_dir=rootdir + 'TowerData' + path_sep() + 'IRGA'
 ;; vec_field  - field number which has vector magnitude data associated
 ;;              with the bearing field (set to 0 for no data)
 
-met_header='Year, Month, Day, Hour, Minute, Sec, Prog Version, Battery(V), ' + $
+met_header='Year, Month, Day, Hour, Minute, Sec, Prog_Version, Battery(V), ' + $
            'Panel_T(C), Pressure(kPa), Air_T(C), RH(%), Surface_T(C), ' + $
-           'Raw Wind Speed(m/s), Raw Wind Direction(deg), Wind StdDev, ' + $
-           'PAR(umol/m2/s), Pitch(deg), Roll (deg), Battery StdDev, ' + $
-           'Panel_T StdDev, Pressure StDev, Air_T StDev, RH StDev, ' + $
-           'Surface_T StDev, PAR StDev'
+           'Raw_Wind_Speed(m/s), Raw_Wind_Direction(deg), Wind_StdDev, ' + $
+           'PAR(umol/m2/s), Pitch(deg), Roll(deg), Battery_StdDev, ' + $
+           'Panel_T_StdDev, Pressure_StDev, Air_T_StDev, RH_StDev, ' + $
+           'Surface_T_StDev, PAR_StDev'
 met_timing=60
 met_outcolumns=26
 met_stamp='MET'
@@ -218,17 +218,17 @@ nav_stamp='NAV'
 nav_prefix=8
 
 rad_header='Year, Month, Day, Hour, Minute, Sec, Battery(V), Panel_T(C), ' + $
-           'Batt_stdev, PanelT_stdev, Kdown(W/m2), Thermopile, Tcase(K), ' + $
+           'Battery_StDev, Panel_T_stdev, Kdown(W/m2), Thermopile, Tcase(K), ' + $
            'Tdome_avg, LWin(W/m2), PAR(umol/m2/s), Tuv(C), UV-B(W/m2), ' + $
-           'UV-A(W/m2), UV-broad(W/m2), Kdown_stdev, Thermopile_stdev, ' + $
-           'Tcase_stdev, Tdome_stdev, LWin_stdev, PAR_stdev, Tuv_stdev, ' + $
-           'UV-B_stdev, UV-A_stdev, UV-broad_stdev' 
+           'UV-A(W/m2), UV-broad(W/m2), Kdown_StDev, Thermopile_StDev, ' + $
+           'Tcase_StDev, Tdome_StDev, LWin_StDev, PAR_StDev, Tuv_StDev, ' + $
+           'UV-B_StDev, UV-A_StDev, UV-broad_StDev' 
 rad_timing=60
 rad_outcolumns=30
 rad_stamp='RAD'
 rad_prefix=8
 
-gyro_header='Year,Month,Day,Hour,Min,Sec,Heading'
+gyro_header='Year, Month, Day, Hour, Min, Sec, Heading'
 gyro_timing=1
 gyro_outcolumns=7
 gyro_stamp='GYRO'
@@ -236,7 +236,7 @@ gyro_prefix=7
 gyro_bear_field=6
 gyro_vec_field=0
 
-rmc_header='Year,Month,Day,Hour,Min,Sec,Lat,Long,SOG,COG'
+rmc_header='Year, Month, Day, Hour, Min, Sec, Lat, Long, SOG, COG'
 rmc_timing=1
 rmc_outcolumns=10
 rmc_stamp='RMC'
