@@ -2,12 +2,13 @@
 ;;; day_splitter_MET.pro --- split MET data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-20T22:21:54+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-09-21T03:07:18+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
-;; Lots to be done here.  Why are MET files not standardized, as NAV are?
+;; This is a complete mess; lots to be done here.  Why are MET files not
+;; standardized, as NAV are?
 ;;
 ;; Example call:
 ;;
