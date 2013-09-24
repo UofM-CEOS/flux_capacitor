@@ -2,8 +2,8 @@
 ;;; day_splitter_MET.pro --- split MET data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-21T03:07:18+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-09-24T20:43:31+0000
+;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
@@ -275,33 +275,6 @@ PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
 ;;   ;Now start a loop that will go through each of the input files, and then it should be NO PROBLEM
 ;;   ;to match the data with the array using the WHERE function.
 
-;;     ;some extra processing for the MET data
-;;     ;--------------------------------------
-;;     ;for 2011 removed RH data when sensor was not working
-;;     ;from 0931 UTC on JD204 until 1435 on JD207
-
-;;     IF stamp EQ 'MET' THEN BEGIN 
-    
-;;     ;for RH data on julian days 204, replace with NaN if time greater than 0930
-;;       rh_nc = where(data.(1)[*] EQ 2011 AND data.(2)[*] EQ 204 AND long(data.(3)[*] GT 930), rh_nc_count)
-;;       IF rh_nc_count GT 0 THEN BEGIN
-;;         data.(10)[rh_nc] = 'NaN'
-;;      ENDIF
-      
-;;     ;for RH data on julian days 205 and 206, replace with NaN
-;;       rh_nc = where(data.(1)[*] EQ 2011 AND data.(2)[*] GT 204 AND data.(2)[*] LT 207, rh_nc_count)
-;;       IF rh_nc_count GT 0 THEN BEGIN
-;;         data.(10)[rh_nc] = 'NaN'
-;;      ENDIF
-      
-;;     ;for RH data on julian day 207, replace with NaN if time less than 1435
-;;       rh_nc = where(data.(1)[*] EQ 2011 AND data.(2)[*] EQ 207 AND long(data.(3)[*] LT 1436), rh_nc_count)
-;;       IF rh_nc_count GT 0 THEN BEGIN
-;;         data.(10)[rh_nc] = 'NaN'
-;;      ENDIF
-;;    ENDIF
-    
-;;     stop
 ;;     ;Some extra processing for the RAD data
 ;;     ;--------------------------------------
 ;;     ;converting time of 2400 to time of 0000, and adding 1 to Julian Day
