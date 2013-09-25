@@ -2,7 +2,7 @@
 ;;; std_met.pro --- Standardize MET files
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-09-24T20:31:41+0000
+;; Last-Updated: 2013-09-25T13:48:32+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -124,7 +124,7 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
   ;; Loop through files in input directory
   FOR k=0, nidir_files - 1 DO BEGIN
      iname=strsplit(file_basename(idir_files[k]), '.', /extract)
-     ;; Get a name for the file, check if it already exists
+     ;; Get a path for the file, check if it already exists
      ofile_name=strcompress(odir + path_sep() + iname[0] + '_std.' + $
                             iname[1], /remove_all)
      ofile_stamp=file_basename(ofile_name)
@@ -185,6 +185,7 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
 
      ;; Loop through records (lines)
      FOR exd=0L, lines[0] - 1  DO BEGIN
+        ;; Fix things depending on year
         CASE yyyy[exd] OF
            2011: BEGIN
               ;; For 2011 RH data set to NaN when sensor was not working
