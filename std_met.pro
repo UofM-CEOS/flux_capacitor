@@ -2,7 +2,7 @@
 ;;; std_met.pro --- Standardize MET files
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-09-25T13:48:32+0000
+;; Last-Updated: 2013-09-25T17:59:20+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -78,8 +78,8 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
      message, 'ODIR is undefined or is empty string'
   IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
      message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(time_beg_idx) EQ 0) OR (time_beg_idx EQ '')) THEN $
-     message, 'TIME_BEG_IDX is undefined or is empty string'
+  IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
+     message, 'TIME_BEG_IDX must be a scalar >= zero'
   IF (n_elements(oheader) EQ 0) THEN $
      message, 'OHEADER is undefined'
 
@@ -148,7 +148,7 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)
      ;; Number of lines in input
-     lines=n_elements(idata.(0))
+     lines=n_elements(idata.(time_beg_idx)[0, *])
      ;; Obtain full time details
      yyyy=reform(idata.(time_beg_idx)[year_subfield, *])
      IF month_subfield GE 0 THEN BEGIN 
@@ -211,6 +211,68 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
   ENDFOR
 
 END
+
+;; Below was moved from std_MET.pro, so should be added to looping through
+;; records section above.
+
+;;     ;Some extra processing for the RAD data
+;;     ;--------------------------------------
+;;     ;converting time of 2400 to time of 0000, and adding 1 to Julian Day
+;;     IF stamp EQ 'RAD' THEN BEGIN
+;;       tfclock = where(long(data.(3)[*]) EQ 2400, tfclock_count)
+;;       IF tfclock_count GT 0 THEN BEGIN
+;;         data.(3)[tfclock] = '0'
+;;         data.(2)[tfclock] = data.(2)[tfclock]+1
+;;      ENDIF
+      
+;;       ;for 2011 substituting 'NaN' when the UVS-AB-T sensor was not installed
+;;       ;no data for all days before Julian Day 213 (Aug 1)
+;;       no_uv_sensor = where((data.(1)[*] EQ 2011) AND (data.(2)[*] LT 213), no_uv_count)
+;;       IF no_uv_count GT 0 THEN BEGIN
+;;         data.(14)[no_uv_sensor] = 'NaN'
+;;         data.(15)[no_uv_sensor] = 'NaN'
+;;         data.(16)[no_uv_sensor] = 'NaN'
+;;         data.(24)[no_uv_sensor] = 'NaN'
+;;         data.(25)[no_uv_sensor] = 'NaN'
+;;         data.(26)[no_uv_sensor] = 'NaN'
+;;      ENDIF 
+      
+;;       ;no data for all times before 1515 UTC on Julian Day 213 (Aug 1)
+;;       no_uv_sensor = where((data.(1)[*] EQ 2011) AND (data.(2)[*] EQ 213) AND (long(data.(3)[*] LT 1515)), no_uv_count)
+;;       IF no_uv_count GT 0 THEN BEGIN
+;;         data.(14)[no_uv_sensor] = 'NaN'
+;;         data.(15)[no_uv_sensor] = 'NaN'
+;;         data.(16)[no_uv_sensor] = 'NaN'
+;;         data.(24)[no_uv_sensor] = 'NaN'
+;;         data.(25)[no_uv_sensor] = 'NaN'
+;;         data.(26)[no_uv_sensor] = 'NaN'
+;;      ENDIF
+;;    ENDIF 
+
+;;     ;decode our date/time information
+;;     input_hour = lonarr(1,n_elements(data.(3)[*]))
+;;     input_min  = input_hour
+;;     input_0    = where(long(data.(3)[*]) LT 60, match0)
+;;     input_1    = where((long(data.(3)[*]) GT 59) AND (long(data.(3)[*] LT 1000)),match1)
+;;     input_2    = where(long(data.(3)[*]) GT 999,match2)
+
+;;     IF match0 GT 0 THEN BEGIN
+;;       input_min(input_0) = long(data.(3)[input_0])
+;;    ENDIF
+
+;;     IF match1 GT 0 THEN BEGIN
+;;       input_hour(input_1) = long(strmid(data.(3)[input_1],0,1))
+;;       input_min(input_1)  = long(strmid(data.(3)[input_1],1,2))
+;;    ENDIF
+
+;;     IF match2 GT 0 THEN BEGIN
+;;       input_hour(input_2) = long(strmid(data.(3)[input_2],0,2))
+;;       input_min(input_2)  = long(strmid(data.(3)[input_2],2,2))
+;;    ENDIF
+
+;;     JD_arr=fltarr(1,n_recs)
+;;     JD_arr(0,*)=current_JD
+
 
 
 ;;;_ + Emacs Local Variables
