@@ -2,7 +2,7 @@
 ;;; day_splitter_MET.pro --- split MET data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-24T20:43:31+0000
+;; Last-Updated: 2013-09-26T00:00:01+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -13,10 +13,9 @@
 ;; Example call:
 ;;
 ;; day_splitter_met, '20111015', '20111025', $
-;;                   expand_path('~/tmp/MET'), $
+;;                   expand_path('~/tmp/MET/STD'), $
 ;;                   expand_path('~/tmp/MET/Daily'), $
-;;                   expand_path('met_template.sav'), $
-;;                   'headera, headerb, ...', 60, 'MET'
+;;                   expand_path('met_std_template.sav')
 ;;
 ;; Original comment from BJ (likely) below.
 ;; 
@@ -112,12 +111,13 @@
 ;;; Code:
 
 PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
-                      HEADER, SAMPLERATE, STAMP, OVERWRITE=OVERWRITE
+                      TIME_BEG_IDX, ISAMPLERATE, STAMP, OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 8) THEN $
      message, 'Usage: DAY_SPLITTER_NAV, STARTDATE, ENDDATE, IDIR, ' + $
-              'ODIR, ITEMPLATE_SAV, HEADER, SAMPLERATE, STAMP, [/OVERWRITE]'
+              'ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLERATE, ' + $
+              'STAMP, [/OVERWRITE]'
   IF ((n_elements(startdate) EQ 0) OR (idir EQ '')) THEN $
      message, 'STARTDATE is undefined or is empty string'
   IF ((n_elements(enddate) EQ 0) OR (idir EQ '')) THEN $
@@ -130,10 +130,11 @@ PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      message, 'ODIR is undefined or is empty string'
   IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
      message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF (n_elements(header) EQ 0) THEN $
-     message, 'HEADER is undefined'
-  IF (n_elements(samplerate) EQ 0) THEN $
-     message, 'SAMPLERATE is undefined'
+  IF ((n_elements(time_beg_idx) NE 1) OR $
+      ((size(time_beg_idx, /type) NE 2) || time_beg_idx LT 0)) THEN $
+         message, 'TIME_BEG_IDX must be an integer scalar >= zero'
+  IF (n_elements(isamplerate) EQ 0) THEN $
+     message, 'ISAMPLERATE is undefined'
   IF ((n_elements(stamp) EQ 0) OR (stamp EQ '')) THEN $
      message, 'STAMP is undefined or is empty string'
 
@@ -159,32 +160,35 @@ PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   beg_jd=julday(beg_mon, beg_day, beg_year, 0) ; start at 00:00:00
   end_jd=julday(end_mon, end_day, end_year, 0) ; start at 00:00:00
   n_days=long(end_jd - beg_jd)
-  n_recs=86400 / samplerate     ; records per day
+  n_recs=86400 / isamplerate     ; records per day
   restore, itemplate_sav
-  n_ifields=met_raw_template.FIELDCOUNT ; hard-coding this for now (MUST FIX)
-  header=strsplit(temporary(header), ', ', /extract)
-  n_ofields=n_elements(header)
+  n_fields=itemplate.FIELDCOUNT
+  header=itemplate.FIELDNAMES
+  is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
+  time_fields=where(is_time_field, /NULL)
+  time_field_names=strlowcase(header[time_fields])
+  year_subfield=where(time_field_names EQ 'year') ; locate year
+  month_subfield=where(time_field_names EQ 'month') ; locate month
+  day_subfield=where(time_field_names EQ 'day') ; locate day
+  hour_subfield=where(time_field_names EQ 'hour') ; locate hour
+  minute_subfield=where(time_field_names EQ 'minute') ; locate minute
+  second_subfield=where(time_field_names EQ 'second') ; locate second
+  ;; Check if we have a name with "second" as substring somewhere after the
+  ;; first character; matches e.g.: "decisecond", "millisecond"
+  subsecond_exists=strpos(time_field_names, 'second', 1)
+  subsecond_subfield=where(subsecond_exists GE 0)
 
   ;; Add 1 to the last day to set the breaks for value_locate()
   days=timegen(start=beg_jd, final=end_jd + 1, step_size=1, units='days')
   days=jul2timestamp(temporary(days))
   ;; Add up to 23:59:59 of the last requested day
   times=timegen(start=beg_jd, final=end_jd + (86399.0 / 86400), $
-                step_size=samplerate, units='seconds')
+                step_size=isamplerate, units='seconds')
   times=jul2timestamp(temporary(times))
   ;; ;; Index times in days vector.  Note that value_locate() does work with
   ;; ;; strings, which in this case is appropriate given jul2timestamp()
   ;; pos=value_locate(days, times)
-
-  all_arr=fltarr(n_ofields, size(times, /n_elements))
-  all_arr[*, *]='NaN'
-  all_arr[0, *]=strmid(times, 0, 4)
-  all_arr[1, *]=strmid(times, 5, 2)
-  all_arr[2, *]=strmid(times, 8, 2)
-  all_arr[3, *]=strmid(times, 11, 2)
-  all_arr[4, *]=strmid(times, 14, 2)
-  all_arr[5, *]=strmid(times, 17, 2)
-
+  
   ;; Build file stamps and check output files already there.  We could use
   ;; the vectorized strsplit(), instead of strmid() in IDL >= 8.0
   file_yyyydoy=strmid(days, 0, 4) + $
@@ -204,7 +208,7 @@ PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
            print, 'Daily MET file ' + file_stamps[i] + ' already exists.  ' + $
                   'Overwriting'
         ENDIF ELSE BEGIN
-           print, 'Daily MET file' + file_stamps[i] + ' already exists.  ' + $
+           print, 'Daily MET file ' + file_stamps[i] + ' already exists.  ' + $
                   'Not overwriting'
            skipdays[i]=1
            CONTINUE
@@ -224,43 +228,87 @@ PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      skips=reform(transpose(rebin(skip, nskip, n_recs, /sample) + $
                             (replicate(1, nskip) # indgen(n_recs))), $
                   nskip * n_recs)
-     idx=histogram(skips, min=0, max=(size(all_arr, /dimensions))[1] - 1)
-     ;; Subset the array and other objects
-     all_arr=all_arr[*, where(~idx)]
+     idx=histogram(skips, min=0, max=n_elements(times) - 1)
+     ;; Subset times for matching
      times=times[where(~idx)]
   ENDIF
+
+  ;; We create a hash to hold full time series
+  ts_all=hash(header)           ; just the keys here
+  FOREACH value, ts_all, fld DO BEGIN
+     ifield_type=itemplate.FIELDTYPES[where(itemplate.FIELDNAMES EQ fld)]
+     ;; BECAREFUL HERE: we use NaN only with floats, else empty string
+     val=(ifield_type EQ 4) ? !values.f_nan : ''
+     ts_all[fld]=make_array(n_elements(times), type=ifield_type, value=val)
+  ENDFOREACH
+  ;; ;; Iterate through time fields, and fill the hash with time data. We do
+  ;; ;; not care about matching fractions of seconds, for the high frequency
+  ;; ;; data.  It is treated as a non-time field.
+  ;; FOREACH subtime, time_field_names DO BEGIN
+  ;;    CASE subtime OF
+  ;;       'year': ts_all[subtime]=strmid(times, 0, 4)
+  ;;       'month': ts_all[subtime]=strmid(times, 5, 2)
+  ;;       'day': ts_all[subtime]=strmid(times, 8, 2)
+  ;;       'hour': ts_all[subtime]=strmid(times, 11, 2)
+  ;;       'minute': ts_all[subtime]=strmid(times, 14, 2)
+  ;;       'second': ts_all[subtime]=strmid(times, 17, 2)
+  ;;       ELSE: print, 'Unrecognized sub-time string'
+  ;;    ENDCASE
+  ;; ENDFOREACH
+  ;; Separate times from full hash
+  ts_times=ts_all.remove(time_field_names)
+  ;; Generate skeleton for values for the rest of the keys, set NaN
+  non_time_fields=where(~is_time_field)
 
   ;; Read each file
   FOR k=0L, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
      print, 'Processing File: ' + ifile
-     data=read_ascii(ifile, count=n_inputfile, template=met_raw_template)
-     n_krecs=n_elements(data.(0))
+     idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
+     idata_names=strlowcase(tag_names(idata))
+     n_krecs=n_elements(idata.(time_beg_idx)[0, *])
      ;; Check each line and match against array
      FOR i=0L, n_krecs - 1, 1L DO BEGIN
-        IF (data.(0)[i] LE 0) THEN BEGIN
+        IF (idata.(time_beg_idx)[year_subfield, i] LE 0) THEN BEGIN
            print, i, $
                   format='("Skipping record with unintelligible ' + $
                   'time stamp at: ", i)'
            CONTINUE
         ENDIF
-        yyyymmdd=doy2calendar(data.(1)[i], data.(2)[i])
-        hhmm=string(data.(3)[i], format='(i04)')
-        ss=string(data.(4)[i], format='(i02)')
-        i_ts=strmid(yyyymmdd, 0, 4) + '-' + strmid(yyyymmdd, 4, 2) + $
-             '-' + strmid(yyyymmdd, 6, 2) + ' ' + strmid(hhmm, 0, 2) + $
-             ':' + strmid(hhmm, 2) + ':' + ss
+        yyyy=string(idata.(time_beg_idx)[year_subfield, i], format='(i4)')
+        mo=string(idata.(time_beg_idx)[month_subfield, i], format='(i02)')
+        dd=string(idata.(time_beg_idx)[day_subfield, i], format='(i02)')
+        hh=string(idata.(time_beg_idx)[hour_subfield, i], format='(i02)')
+        mm=string(idata.(time_beg_idx)[minute_subfield, i], format='(i02)')
+        ss=string(idata.(time_beg_idx)[second_subfield, i], format='(i02)')
+        i_ts=yyyy + '-' + mo + '-' + dd + ' ' + hh + ':' + mm + ':' + ss
         match=where(times EQ i_ts, mcount)
-        IF mcount EQ 1 THEN BEGIN
-           FOR col=6, n_ifields - 1, 1L DO BEGIN $
-              all_arr[col, match]=data.(col)[i]
-           ENDFOR
+        IF mcount EQ 1 THEN BEGIN ; fill each field of hash if it matches
+           FOREACH value, ts_times, fld DO BEGIN ; loop time hash
+              match_fld=where(time_field_names EQ strlowcase(fld))
+              ts_times[fld, match]=idata.(time_beg_idx)[match_fld, i]
+           ENDFOREACH
+           FOREACH value, ts_all, fld DO BEGIN ; loop non-time hash
+              match_fld=where(idata_names EQ strlowcase(fld))
+              ts_all[fld, match]=idata.(match_fld)[i]
+           ENDFOREACH
         ENDIF
      ENDFOR
   ENDFOR
 
+  ;; Prepare output
+  ts_full=ts_times + ts_all
+  delvar, ts_times, ts_all
+  ;; ts=ts_full.toStruct(/no_copy)
+  ;; There must be a better way to re-order tags
+  ts=create_struct(header[0], ts_full[header[0]])
+  FOREACH fld, header[1:*] DO BEGIN
+     print, fld
+     ;; ts=create_struct(ts, header[fld], ts_full[fld])
+  ENDFOREACH
+
   ;; Write each daily array
-  fmt_nfields=strtrim(n_ofields - 1, 2)
+  fmt_nfields=strtrim(n_fields - 1, 2)
   fmt_str='(' + fmt_nfields + '(a,","),a)'
   all_arr=strcompress(temporary(all_arr), /remove_all)
   FOR begi=0L, n_elements(times) - 1, n_recs DO BEGIN
@@ -274,65 +322,6 @@ PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
 
 ;;   ;Now start a loop that will go through each of the input files, and then it should be NO PROBLEM
 ;;   ;to match the data with the array using the WHERE function.
-
-;;     ;Some extra processing for the RAD data
-;;     ;--------------------------------------
-;;     ;converting time of 2400 to time of 0000, and adding 1 to Julian Day
-;;     IF stamp EQ 'RAD' THEN BEGIN
-;;       tfclock = where(long(data.(3)[*]) EQ 2400, tfclock_count)
-;;       IF tfclock_count GT 0 THEN BEGIN
-;;         data.(3)[tfclock] = '0'
-;;         data.(2)[tfclock] = data.(2)[tfclock]+1
-;;      ENDIF
-      
-;;       ;for 2011 substituting 'NaN' when the UVS-AB-T sensor was not installed
-;;       ;no data for all days before Julian Day 213 (Aug 1)
-;;       no_uv_sensor = where((data.(1)[*] EQ 2011) AND (data.(2)[*] LT 213), no_uv_count)
-;;       IF no_uv_count GT 0 THEN BEGIN
-;;         data.(14)[no_uv_sensor] = 'NaN'
-;;         data.(15)[no_uv_sensor] = 'NaN'
-;;         data.(16)[no_uv_sensor] = 'NaN'
-;;         data.(24)[no_uv_sensor] = 'NaN'
-;;         data.(25)[no_uv_sensor] = 'NaN'
-;;         data.(26)[no_uv_sensor] = 'NaN'
-;;      ENDIF 
-      
-;;       ;no data for all times before 1515 UTC on Julian Day 213 (Aug 1)
-;;       no_uv_sensor = where((data.(1)[*] EQ 2011) AND (data.(2)[*] EQ 213) AND (long(data.(3)[*] LT 1515)), no_uv_count)
-;;       IF no_uv_count GT 0 THEN BEGIN
-;;         data.(14)[no_uv_sensor] = 'NaN'
-;;         data.(15)[no_uv_sensor] = 'NaN'
-;;         data.(16)[no_uv_sensor] = 'NaN'
-;;         data.(24)[no_uv_sensor] = 'NaN'
-;;         data.(25)[no_uv_sensor] = 'NaN'
-;;         data.(26)[no_uv_sensor] = 'NaN'
-;;      ENDIF
-;;    ENDIF 
-
-;;     ;decode our date/time information
-;;     input_hour = lonarr(1,n_elements(data.(3)[*]))
-;;     input_min  = input_hour
-;;     input_0    = where(long(data.(3)[*]) LT 60, match0)
-;;     input_1    = where((long(data.(3)[*]) GT 59) AND (long(data.(3)[*] LT 1000)),match1)
-;;     input_2    = where(long(data.(3)[*]) GT 999,match2)
-
-;;     IF match0 GT 0 THEN BEGIN
-;;       input_min(input_0) = long(data.(3)[input_0])
-;;    ENDIF
-
-;;     IF match1 GT 0 THEN BEGIN
-;;       input_hour(input_1) = long(strmid(data.(3)[input_1],0,1))
-;;       input_min(input_1)  = long(strmid(data.(3)[input_1],1,2))
-;;    ENDIF
-
-;;     IF match2 GT 0 THEN BEGIN
-;;       input_hour(input_2) = long(strmid(data.(3)[input_2],0,2))
-;;       input_min(input_2)  = long(strmid(data.(3)[input_2],2,2))
-;;    ENDIF
-
-;;     JD_arr=fltarr(1,n_recs)
-;;     JD_arr(0,*)=current_JD
-
 
 ;;     ;START ANALYSIS FOR LOW FREQUENCY DAT
 ;;     ;------------------------------------
