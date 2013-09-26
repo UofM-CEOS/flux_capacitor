@@ -2,7 +2,7 @@
 ;;; day_splitter_MET.pro --- split MET data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-26T00:00:01+0000
+;; Last-Updated: 2013-09-26T17:39:25+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -235,61 +235,77 @@ PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
 
   ;; We create a hash to hold full time series
   ts_all=hash(header)           ; just the keys here
+  ;; Iterate through time fields, and fill the hash with time data and
+  ;; holders for the rest. We do not care about matching fractions of
+  ;; seconds, for the high frequency data.  It is treated as a non-time
+  ;; field.
   FOREACH value, ts_all, fld DO BEGIN
-     ifield_type=itemplate.FIELDTYPES[where(itemplate.FIELDNAMES EQ fld)]
-     ;; BECAREFUL HERE: we use NaN only with floats, else empty string
-     val=(ifield_type EQ 4) ? !values.f_nan : ''
-     ts_all[fld]=make_array(n_elements(times), type=ifield_type, value=val)
+     CASE fld OF
+        'year': ts_all[fld]=strmid(times, 0, 4)
+        'month': ts_all[fld]=strmid(times, 5, 2)
+        'day': ts_all[fld]=strmid(times, 8, 2)
+        'hour': ts_all[fld]=strmid(times, 11, 2)
+        'minute': ts_all[fld]=strmid(times, 14, 2)
+        'second': ts_all[fld]=strmid(times, 17, 2)
+        ELSE: BEGIN
+           fld_idx=where(itemplate.FIELDNAMES EQ fld)
+           ifield_type=itemplate.FIELDTYPES[fld_idx]
+           val=(ifield_type EQ 4) ? !VALUES.F_NAN : ''
+           ts_all[fld]=make_array(n_elements(times), type=ifield_type, $
+                                  value=val)
+        END
+     ENDCASE
   ENDFOREACH
-  ;; ;; Iterate through time fields, and fill the hash with time data. We do
-  ;; ;; not care about matching fractions of seconds, for the high frequency
-  ;; ;; data.  It is treated as a non-time field.
-  ;; FOREACH subtime, time_field_names DO BEGIN
-  ;;    CASE subtime OF
-  ;;       'year': ts_all[subtime]=strmid(times, 0, 4)
-  ;;       'month': ts_all[subtime]=strmid(times, 5, 2)
-  ;;       'day': ts_all[subtime]=strmid(times, 8, 2)
-  ;;       'hour': ts_all[subtime]=strmid(times, 11, 2)
-  ;;       'minute': ts_all[subtime]=strmid(times, 14, 2)
-  ;;       'second': ts_all[subtime]=strmid(times, 17, 2)
-  ;;       ELSE: print, 'Unrecognized sub-time string'
-  ;;    ENDCASE
-  ;; ENDFOREACH
   ;; Separate times from full hash
   ts_times=ts_all.remove(time_field_names)
-  ;; Generate skeleton for values for the rest of the keys, set NaN
   non_time_fields=where(~is_time_field)
+  non_time_field_names=strlowcase(header[non_time_fields])
 
   ;; Read each file
   FOR k=0L, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
      print, 'Processing File: ' + ifile
      idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
+     ;; Extract times and remove quotes or spaces from strings
+     idata_times=idata.(time_beg_idx)
+     idata=remove_structure_tag(idata, (tag_names(idata))[time_beg_idx])
      idata_names=strlowcase(tag_names(idata))
-     n_krecs=n_elements(idata.(time_beg_idx)[0, *])
+     IF size(idata_times, /type) EQ 7 THEN BEGIN
+        FOREACH fld, indgen((size(idata_times, /dimensions))[0]) DO BEGIN
+           ok=strsplit(idata_times[fld, *], '" ', /extract)
+           idata_times[fld, *]=ok.toArray()
+        ENDFOREACH
+     ENDIF
+     FOREACH fld, indgen(n_tags(idata)) DO BEGIN
+        IF size(idata.(fld), /type) EQ 7 THEN BEGIN
+           ok=strsplit(idata.(fld), '" ', /extract)
+           idata.(fld)=ok.toArray()
+        ENDIF
+     ENDFOREACH
+     n_krecs=n_elements(idata_times[0, *])
      ;; Check each line and match against array
      FOR i=0L, n_krecs - 1, 1L DO BEGIN
-        IF (idata.(time_beg_idx)[year_subfield, i] LE 0) THEN BEGIN
+        IF (idata_times[year_subfield, i] LE 0) THEN BEGIN
            print, i, $
                   format='("Skipping record with unintelligible ' + $
                   'time stamp at: ", i)'
            CONTINUE
         ENDIF
-        yyyy=string(idata.(time_beg_idx)[year_subfield, i], format='(i4)')
-        mo=string(idata.(time_beg_idx)[month_subfield, i], format='(i02)')
-        dd=string(idata.(time_beg_idx)[day_subfield, i], format='(i02)')
-        hh=string(idata.(time_beg_idx)[hour_subfield, i], format='(i02)')
-        mm=string(idata.(time_beg_idx)[minute_subfield, i], format='(i02)')
-        ss=string(idata.(time_beg_idx)[second_subfield, i], format='(i02)')
+        yyyy=string(idata_times[year_subfield, i], format='(i4)')
+        mo=string(idata_times[month_subfield, i], format='(i02)')
+        dd=string(idata_times[day_subfield, i], format='(i02)')
+        hh=string(idata_times[hour_subfield, i], format='(i02)')
+        mm=string(idata_times[minute_subfield, i], format='(i02)')
+        ss=string(idata_times[second_subfield, i], format='(i02)')
         i_ts=yyyy + '-' + mo + '-' + dd + ' ' + hh + ':' + mm + ':' + ss
         match=where(times EQ i_ts, mcount)
         IF mcount EQ 1 THEN BEGIN ; fill each field of hash if it matches
            FOREACH value, ts_times, fld DO BEGIN ; loop time hash
               match_fld=where(time_field_names EQ strlowcase(fld))
-              ts_times[fld, match]=idata.(time_beg_idx)[match_fld, i]
+              ts_times[fld, match]=idata_times[match_fld, i]
            ENDFOREACH
            FOREACH value, ts_all, fld DO BEGIN ; loop non-time hash
-              match_fld=where(idata_names EQ strlowcase(fld))
+              match_fld=where(non_time_field_names EQ strlowcase(fld))
               ts_all[fld, match]=idata.(match_fld)[i]
            ENDFOREACH
         ENDIF
@@ -299,103 +315,19 @@ PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   ;; Prepare output
   ts_full=ts_times + ts_all
   delvar, ts_times, ts_all
-  ;; ts=ts_full.toStruct(/no_copy)
-  ;; There must be a better way to re-order tags
-  ts=create_struct(header[0], ts_full[header[0]])
-  FOREACH fld, header[1:*] DO BEGIN
-     print, fld
-     ;; ts=create_struct(ts, header[fld], ts_full[fld])
-  ENDFOREACH
-
   ;; Write each daily array
-  fmt_nfields=strtrim(n_fields - 1, 2)
-  fmt_str='(' + fmt_nfields + '(a,","),a)'
-  all_arr=strcompress(temporary(all_arr), /remove_all)
   FOR begi=0L, n_elements(times) - 1, n_recs DO BEGIN
+     endi=(begi + n_recs - 1)
      file_stamp=file_stamps[begi / n_recs]
-     openw, lun, odir + path_sep() + file_stamp, /get_lun
-     printf, lun, strjoin(header, ', ')
-     printf, lun, all_arr[*, begi:(begi + n_recs - 1)], format=fmt_str
-     free_lun, lun
+     ;; ts=ts_full.toStruct(/no_copy)
+     ;; There must be a better way to re-order tags
+     ts=create_struct(header[0], ts_full[header[0], begi:endi])
+     FOREACH fld, header[1:*] DO BEGIN
+        ts=create_struct(ts, header[where(header EQ fld)], $
+                         ts_full[fld, begi:endi])
+     ENDFOREACH
+     write_csv, odir + path_sep() + file_stamp, ts, header=header
   ENDFOR
-
-
-;;   ;Now start a loop that will go through each of the input files, and then it should be NO PROBLEM
-;;   ;to match the data with the array using the WHERE function.
-
-;;     ;START ANALYSIS FOR LOW FREQUENCY DAT
-;;     ;------------------------------------
-;;     IF samplerate LT 1 THEN GOTO, highfreqrun
-
-;;     ;Loop through each file to see if they match
-;;     FOR y=0L,n_inputfile-1L DO BEGIN
-
-;;       IF stamp EQ 'RAD' THEN BEGIN
-;;         match = where((data.(1)[y] EQ work_arr(0,*)) AND (data.(2)[y] EQ JD_arr(0,*)) AND (input_hour(y) EQ work_arr(3,*)) AND $
-;;                 (input_min(y) EQ work_arr(4,*)),matchcount)
-;;      ENDIF ELSE BEGIN
-;;         match = where((data.(1)[y] EQ work_arr(0,*)) AND (data.(2)[y] EQ JD_arr(0,*)) AND (input_hour(y) EQ work_arr(3,*)) AND $
-;;                 (input_min(y) EQ work_arr(4,*)) AND (data.(4)[y] EQ work_arr(5,*)),matchcount)
-;;      ENDELSE
-
-;;       IF match LT 0 THEN GOTO, skip_pop
-;;       IF stamp EQ 'RAD' THEN BEGIN
-;;         FOR poploop=6,n_field-1 DO BEGIN
-;;           work_str(poploop,match) = strcompress(data.(poploop-2)[y], /REMOVE_ALL)
-;;        ENDFOR
-;;      ENDIF ELSE BEGIN
-;;         FOR poploop=6,n_field-1 DO BEGIN
-;;           work_str(poploop,match)=strcompress(data.(poploop-1)[y],/REMOVE_ALL)
-;;        ENDFOR
-;;      ENDELSE
-
-;;       skip_pop:
-
-;;   ENDFOR
-;;     GOTO, donerun
-
-
-;;     ;START ANALYSIS FOR HIGH FREQUENCY DATA
-;;     ;--------------------------------------
-;;     highfreqrun:
-  
-;;     FOR y=0L,n_inputfile-1L DO BEGIN
-;;       match = where((data.(0)[y] EQ work_arr(0,*)) AND (data.(1)[y] EQ work_arr(1,*)) AND (data.(2)[y] EQ work_arr(2,*)) AND $
-;;               (data.(3)[y] EQ work_arr(3,*)) AND (data.(4)[y] EQ work_arr(4,*)) AND (data.(5)[y] EQ work_arr(5,*)) AND $
-;;               (data.(6)[y] EQ work_arr(6,*)),matchcount)
-;;       IF match LT 0 THEN GOTO, skip_pop2
-;;       FOR poploop=7,n_field-1 DO BEGIN
-;;         work_str(poploop,match)=data.(poploop)[y]
-;;      ENDFOR
-;;       skip_pop2:
-;;    ENDFOR
-;;     GOTO, donerun
-
-;;     donerun:
-;;     close, /all; not sure if this is necessary....
-
-;;     ;if the current filename JD was greater than the current JD, then we can end the loop.
-;;     IF ((ex_JD GT current_JD) AND (ex_year EQ current_year)) THEN GOTO, skipdoom2
-;;     skipdoom:
-;;     close, /all; not sure if this is necessary....
-;;  ENDFOR
-;;   skipdoom2:
-
-;;   ;Print it out
-;;   print_file   = STRCOMPRESS(odir + stamp + '_' + year_stamp + '_JD' + JD_stamp + '_' + date_stamp + '.dat', /REMOVE_ALL)
-;;   formatnum    = strcompress(n_field-1)
-;;   formatstring = strcompress('('+formatnum+'(a,","),a)', /REMOVE_ALL)
-
-;;   ;make the array a string for easy printing, and DO IT
-;;   ;work_str=strcompress(work_arr, /REMOVE_ALL)
-;;   openw, unit1, print_file, /get_lun
-;;   printf, unit1, header
-;;   printf, unit1, work_str, FORMAT = formatstring
-
-;;   skipday:
-;;   close, /all
-;; ENDFOR
-
 
 END
 
