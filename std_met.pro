@@ -2,7 +2,7 @@
 ;;; std_met.pro --- Standardize MET files
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-09-25T17:59:20+0000
+;; Last-Updated: 2013-09-26T15:53:23+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -91,8 +91,8 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
   ENDIF
   restore, itemplate_sav
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
-  oheader=strsplit(oheader, ', ', /extract) ; assuming ", "
-  n_ofields=n_elements(oheader) ; N fields as in input header
+  header=strsplit(oheader, ', ', /extract) ; assuming ", "
+  n_ofields=n_elements(header) ; N fields as in input header
   time_fields=where(itemplate.FIELDGROUPS EQ time_beg_idx, /NULL)
   time_field_names=strlowcase(itemplate.FIELDNAMES[time_fields])
   year_subfield=where(time_field_names EQ 'year') ; locate year
@@ -156,20 +156,20 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
      ENDIF ELSE BEGIN
         doy=idata.(time_beg_idx)[doy_subfield, *]
         calstr=doy2calendar(yyyy, doy)
-        mo=reform(long(strmid(calstr, 4, 2)))
-        dd=reform(long(strmid(calstr, 6, 2)))
+        mo=reform(strmid(calstr, 4, 2))
+        dd=reform(strmid(calstr, 6, 2))
      ENDELSE
      IF hour_subfield GE 0 THEN BEGIN
         hh=reform(idata.(time_beg_idx)[hour_subfield, *])
      ENDIF ELSE BEGIN
         hhmm_str=string(idata.(time_beg_idx)[hourminute_subfield, *], $
                         format='(i04)')
-        hh=reform(long(strmid(hhmm_str, 0, 2)))
-        mm=reform(long(strmid(hhmm_str, 2, 2)))
+        hh=reform(strmid(hhmm_str, 0, 2))
+        mm=reform(strmid(hhmm_str, 2, 2))
      ENDELSE
      IF second_subfield GE 0 THEN $
         ss=reform(idata.(time_beg_idx)[second_subfield, *]) $
-     ELSE ss=reform(long(0), lines)
+     ELSE ss=reform('00', lines)
      
      odata=remove_structure_tag(idata, (tag_names(idata))[0:time_beg_idx])
      IF subsecond_subfield LT 0 THEN BEGIN
@@ -186,8 +186,8 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
      ;; Loop through records (lines)
      FOR exd=0L, lines[0] - 1  DO BEGIN
         ;; Fix things depending on year
-        CASE yyyy[exd] OF
-           2011: BEGIN
+        SWITCH yyyy[exd] OF
+           '2011': BEGIN
               ;; For 2011 RH data set to NaN when sensor was not working
               ;; from 0931 UTC on JD204 through 1435 on JD207. We're sure
               ;; we have DOY in these raw files, so no need to test.
@@ -200,13 +200,13 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
               jd_now=julday(mo[exd], dd[exd], 2011, hh[exd], mm[exd])
               IF (jd_now GE jd_badbeg) AND $
                  (jd_now LE jd_badend) THEN BEGIN
-                 odata.(11)[exd]=!values.f_nan
+                 odata.(11)[exd]=!VALUES.F_NAN
               ENDIF
            END
-        ENDCASE
+        ENDSWITCH
      ENDFOR
 
-     write_csv, ofile_name, odata, header=oheader
+     write_csv, ofile_name, odata, header=header
 
   ENDFOR
 
