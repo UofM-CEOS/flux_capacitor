@@ -2,7 +2,7 @@
 ;;; std_met.pro --- Standardize MET files
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-09-26T15:53:23+0000
+;; Last-Updated: 2013-09-26T18:41:38+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -60,7 +60,7 @@
 ;;                'surface_temperature, wind_speed, wind_direction, ' + $
 ;;                'wind_sd, PAR, pitch, roll'
 ;; STD_MET, expand_path('~/tmp/MET'), expand_path('~/tmp/MET/STD'), $
-;;          'met_template.sav', 1, met_std_header
+;;          'met_raw_template.sav', 1, met_std_header
 ;; 
 ;; - ----------------------------------------------------------------------
 ;;; Code:
