@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-27T14:26:39+0000
+;; Last-Updated: 2013-09-27T20:54:24+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -284,32 +284,25 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      ENDFOREACH
      n_krecs=n_elements(idata_times[0, *])
      ;; Check each line and match against array
-     FOR i=0L, n_krecs - 1, 1L DO BEGIN
-        IF (idata_times[year_subfield, i] LE 0) THEN BEGIN
-           print, i, $
-                  format='("Skipping record with unintelligible ' + $
-                  'time stamp at: ", i)'
-           CONTINUE
-        ENDIF
-        yyyy=string(idata_times[year_subfield, i], format='(i4)')
-        mo=string(idata_times[month_subfield, i], format='(i02)')
-        dd=string(idata_times[day_subfield, i], format='(i02)')
-        hh=string(idata_times[hour_subfield, i], format='(i02)')
-        mm=string(idata_times[minute_subfield, i], format='(i02)')
-        ss=string(idata_times[second_subfield, i], format='(i02)')
-        i_ts=yyyy + '-' + mo + '-' + dd + ' ' + hh + ':' + mm + ':' + ss
-        match=where(times EQ i_ts, mcount)
-        IF mcount EQ 1 THEN BEGIN ; fill each field of hash if it matches
-           FOREACH value, ts_times, fld DO BEGIN ; loop time hash
-              match_fld=where(time_field_names EQ strlowcase(fld))
-              ts_times[fld, match]=idata_times[match_fld, i]
-           ENDFOREACH
-           FOREACH value, ts_all, fld DO BEGIN ; loop non-time hash
-              match_fld=where(non_time_field_names EQ strlowcase(fld))
-              ts_all[fld, match]=idata.(match_fld)[i]
-           ENDFOREACH
-        ENDIF
-     ENDFOR
+     yyyy=string(idata_times[year_subfield, *], format='(i4)')
+     mo=string(idata_times[month_subfield, *], format='(i02)')
+     dd=string(idata_times[day_subfield, *], format='(i02)')
+     hh=string(idata_times[hour_subfield, *], format='(i02)')
+     mm=string(idata_times[minute_subfield, *], format='(i02)')
+     ss=string(idata_times[second_subfield, *], format='(i02)')
+     i_ts=yyyy + '-' + mo + '-' + dd + ' ' + hh + ':' + mm + ':' + ss
+     match2, times, i_ts, times_in_its, i_ts_in_times
+     t_matches=where(times_in_its GE 0, mcount, /null)
+     IF mcount LT 1 THEN CONTINUE
+     its_matches=where(i_ts_in_times GE 0)
+     FOREACH value, ts_times, fld DO BEGIN ; loop time hash
+        match_fld=where(time_field_names EQ strlowcase(fld))
+        ts_times[fld, t_matches]=(idata_times[match_fld, *])[its_matches]
+     ENDFOREACH
+     FOREACH value, ts_all, fld DO BEGIN ; loop non-time hash
+        match_fld=where(non_time_field_names EQ strlowcase(fld))
+        ts_all[fld, t_matches]=idata.(match_fld)[its_matches]
+     ENDFOREACH
   ENDFOR
 
   ;; Prepare output
