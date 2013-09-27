@@ -2,7 +2,7 @@
 ;;; remove_structure_tag.pro --- Remove tag from structure
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-24T15:38:09+0000
-;; Last-Updated: 2013-09-24T15:41:00+0000
+;; Last-Updated: 2013-09-26T20:36:42+0000
 ;;           By: Sebastian Luque
 ;; + ----------------------------------------------------------------------
 ;; NAME:
@@ -37,7 +37,7 @@ FUNCTION REMOVE_STRUCTURE_TAG, STRUCT, TAG_NAME
   tag_names=tag_names(struct)
   a=[-1]
   IF n_elements(tag_name) EQ 1 THEN BEGIN 
-     a=[a, where(tag_names NE search_tag)] 
+     a=[a, where(tag_names NE search_tag[0])] 
   ENDIF ELSE BEGIN
      FOR i=0, n_elements(tag_names) - 1 DO $
         IF (where(search_tag EQ tag_names[i]))[0] EQ -1 THEN a=[a, i]
