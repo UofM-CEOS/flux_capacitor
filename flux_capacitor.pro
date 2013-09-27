@@ -2,7 +2,7 @@
 ;;; flux_capacitor.pro --- 
 ;; Author: Bruce Johnson, Ryan Smith, Sebastian Luque
 ;; Created: 2013-08-23T22:24:25+0000
-;; Last-Updated: 2013-09-17T22:32:53+0000
+;; Last-Updated: 2013-09-26T18:33:05+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary:
@@ -359,6 +359,7 @@ PRO process, event
   ;; ===========================================================
   ;; Call process if RMC and GYRO pre-processing selector was set to Yes
 
+  ;; [SPL] All of this should just be moved to the standardization routines
   IF check_ctrl_var((*pState).rmc_pp) EQ 1 THEN BEGIN
      draw_msg, (*pState).viewer, 'Pre-processing RMC files ...'
      ;; pre_proc_RMC, raw_rmc_dir, pre_rmc_dir, std_rmc_dir, raw_rmc_temp
