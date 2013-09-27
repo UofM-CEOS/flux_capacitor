@@ -2,7 +2,7 @@
 ;;; std_nav.pro --- Standardize NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-28T17:48:36+0000
-;; Last-Updated: 2013-09-27T02:48:28+0000
+;; Last-Updated: 2013-09-27T17:38:09+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
