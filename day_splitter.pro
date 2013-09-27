@@ -1,8 +1,8 @@
 ;; $Id$
-;;; day_splitter_MET.pro --- split MET data into daily files
+;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-26T17:39:25+0000
+;; Last-Updated: 2013-09-27T14:26:39+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -12,10 +12,10 @@
 ;;
 ;; Example call:
 ;;
-;; day_splitter_met, '20111015', '20111025', $
-;;                   expand_path('~/tmp/MET/STD'), $
-;;                   expand_path('~/tmp/MET/Daily'), $
-;;                   expand_path('met_std_template.sav')
+;; day_splitter, '20111015', '20111025', $
+;;               expand_path('~/tmp/MET/STD'), $
+;;               expand_path('~/tmp/MET/Daily'), $
+;;               expand_path('met_std_template.sav')
 ;;
 ;; Original comment from BJ (likely) below.
 ;; 
@@ -110,12 +110,12 @@
 ;; ------------------------------------------------------------------------
 ;;; Code:
 
-PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
-                      TIME_BEG_IDX, ISAMPLERATE, STAMP, OVERWRITE=OVERWRITE
+PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
+                  TIME_BEG_IDX, ISAMPLERATE, STAMP, OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 8) THEN $
-     message, 'Usage: DAY_SPLITTER_NAV, STARTDATE, ENDDATE, IDIR, ' + $
+     message, 'Usage: DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ' + $
               'ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLERATE, ' + $
               'STAMP, [/OVERWRITE]'
   IF ((n_elements(startdate) EQ 0) OR (idir EQ '')) THEN $
@@ -205,11 +205,11 @@ PRO DAY_SPLITTER_MET, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      is_ofile=where(strmatch(odir_files, file_stamps[i]), n_ofiles)
      IF n_ofiles GT 0 THEN BEGIN
         IF keyword_set(overwrite) THEN BEGIN
-           print, 'Daily MET file ' + file_stamps[i] + ' already exists.  ' + $
-                  'Overwriting'
+           print, 'Daily ' + stamp + ' file ' + file_stamps[i] + $
+                  ' already exists.  Overwriting'
         ENDIF ELSE BEGIN
-           print, 'Daily MET file ' + file_stamps[i] + ' already exists.  ' + $
-                  'Not overwriting'
+           print, 'Daily ' + stamp + ' file ' + file_stamps[i] + $
+                  ' already exists.  Not overwriting'
            skipdays[i]=1
            CONTINUE
         ENDELSE
@@ -336,4 +336,4 @@ END
 ;; allout-layout: (-2 + : 0)
 ;; End:
 ;;
-;;; day_splitter_MET.pro ends here
+;;; day_splitter.pro ends here
