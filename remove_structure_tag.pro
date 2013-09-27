@@ -1,4 +1,4 @@
-;; $Id: $
+;; $Id$
 ;;; remove_structure_tag.pro --- Remove tag from structure
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-24T15:38:09+0000
