@@ -2,16 +2,16 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-09-28T02:05:26+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-09-28T21:56:11+0000
+;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;; 
 ;; Example call:
 ;;
-;; nav_avg, expand_path('~/tmp/NAV/Daily'), expand_path('~/tmp/NAV/1min'), $
-;;          1, 60, 15, 16, 17, 'NAV', expand_path('nav_std_template.sav'), $
-;;          'headera, headerb, ...'
+;; nav_avg, expand_path('~/tmp/ArcticNet2011/NAV/Daily'), $
+;;          expand_path('~/tmp/ArcticNet2011/NAV/1min'), $
+;;          1, 60, 15, 16, 17, 'NAV', expand_path('nav_std_template.sav'), 0
 ;;
 ;; Original comments from BJ below.
 ;; 
@@ -95,7 +95,6 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
   ENDIF
 
   restore, itemplate_sav
-  n_fields=itemplate.FIELDCOUNT
   header=itemplate.FIELDNAMES
   is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
   time_fields=where(is_time_field, /NULL)
@@ -114,53 +113,82 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
   subsecond_subfield=where(subsecond_exists GE 0)
 
   ang_cols=[bmag_field, bear_field, head_field]
-  stdevstr=['sog_stdev', 'cog_stdev', 'heading_stdev']
+  stdev_str=['sog_stdev', 'cog_stdev', 'heading_stdev']
   avg_cols_maybe=(cgSetDifference(non_time_fields, ang_cols))
   ;; Only average those fields that are not strings (BECAREFUL HERE)
   avg_cols=avg_cols_maybe[where(itemplate.FIELDTYPES[avg_cols_maybe] NE 7)]
   n_avg_cols=size(avg_cols, /n_elements)
   ncols_osample=osample_rate / isample_rate
   nrows_osample=86400 / osample_rate
-  oheader=[[header, oheader]]
+  oheader=[[time_field_names, header[avg_cols], stdev_str]]
   FOR k=0, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
      print, 'Producing 1-min average for file: ' + ifile
-     data=read_ascii(ifile, count=n_inputfile, template=itemplate)
-     beg_jd=julday(data.FIELD02[0], data.FIELD03[0], data.FIELD01[0], 0)
-     mins=timegen(start=beg_jd, final=beg_jd + (86399.0 / 86400), $
-                  step_size=osample_rate, units='seconds')
-     mins=jul2timestamp(temporary(mins))
-     ;; Make a working array, populate with 'NaN'
-     all_arr=fltarr(n_fields - 3, size(mins, /n_elements))
-     all_arr[*, *]='NaN'
-     all_arr[0, *]=strmid(mins, 0, 4)
-     all_arr[1, *]=strmid(mins, 5, 2)
-     all_arr[2, *]=strmid(mins, 8, 2)
-     all_arr[3, *]=strmid(mins, 11, 2)
-     all_arr[4, *]=strmid(mins, 14, 2)
-     all_arr[5, *]=strmid(mins, 17, 2)
-     all_arr[6,*]=data.FIELD07[0] ; place Program Version
+     idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
+     ;; Extract times and remove quotes or spaces from strings
+     idata_times=idata.(time_beg_idx)
+     idata=remove_structure_tag(idata, (tag_names(idata))[time_beg_idx])
+     idata_names=strlowcase(tag_names(idata))
+     IF size(idata_times, /type) EQ 7 THEN BEGIN
+        FOREACH fld, indgen((size(idata_times, /dimensions))[0]) DO BEGIN
+           ok=strsplit(idata_times[fld, *], '" ', /extract)
+           idata_times[fld, *]=ok.toArray()
+        ENDFOREACH
+     ENDIF
+     FOREACH fld, indgen(n_tags(idata)) DO BEGIN
+        IF size(idata.(fld), /type) EQ 7 THEN BEGIN
+           ok=strsplit(idata.(fld), '" ', /extract)
+           idata.(fld)=ok.toArray()
+        ENDIF
+     ENDFOREACH
+     beg_jd=julday(idata_times[month_subfield, 0], $
+                   idata_times[day_subfield, 0], $
+                   idata_times[year_subfield, 0], 0)
+     otimes=timegen(start=beg_jd, final=beg_jd + (86399.0 / 86400), $
+                    step_size=osample_rate, units='seconds')
+     otimes=jul2timestamp(otimes)
+     ;; Set up hash that will contain output data
+     ohash=hash(oheader)
+     FOREACH value, ohash, fld DO BEGIN
+        CASE fld OF
+           'year': ohash[fld]=strmid(otimes, 0, 4)
+           'month': ohash[fld]=strmid(otimes, 5, 2)
+           'day': ohash[fld]=strmid(otimes, 8, 2)
+           'hour': ohash[fld]=strmid(otimes, 11, 2)
+           'minute': ohash[fld]=strmid(otimes, 14, 2)
+           'second': ohash[fld]=strmid(otimes, 17, 2)
+           ELSE: BEGIN
+              fld_idx=where(itemplate.FIELDNAMES EQ fld)
+              ifield_type=itemplate.FIELDTYPES[fld_idx]
+              val=(ifield_type EQ 4) ? !VALUES.F_NAN : ''
+              ohash[fld]=make_array(n_elements(otimes), type=ifield_type, $
+                                    value=val)
+           END
+        ENDCASE
+     ENDFOREACH
+
      FOREACH col, avg_cols DO BEGIN
-        col_data=reform(data.(col), ncols_osample, nrows_osample)
+        col_idata=reform(idata.(where(idata_names EQ header[col])), $
+                         ncols_osample, nrows_osample)
         ;; This will throw "floating point illegal operand" arithmetic
         ;; error warning when all elements in each row are NaN, which
         ;; should should just be ignored.  In these cases, the result is
         ;; -NaN.
-        avgs=mean(col_data, dimension=1, /nan)
-        all_arr[col - 6, *]=avgs
+        avgs=mean(col_idata, dimension=1, /nan)
+        ohash[header[col]]=avgs
      ENDFOREACH
      ;; Means for SOG, COG, and heading
-     cog=data.(bear_field)
+     cog=idata.(where(idata_names EQ header[bear_field]))
      brg2d=reform(cog, ncols_osample, nrows_osample)
-     sog=data.(bmag_field)
+     sog=idata.(where(idata_names EQ header[bmag_field]))
      bmag2d=reform(sog, ncols_osample, nrows_osample)
-     head=data.(head_field)
+     head=idata.(where(idata_names EQ header[head_field]))
      head2d=reform(head, ncols_osample, nrows_osample)
      brgmag_mean=bearing_avg(brg2d, bmag2d, dimension=1)
-     all_arr[bmag_field - 6, *]=brgmag_mean[*, 1]
-     all_arr[bear_field - 6, *]=brgmag_mean[*, 0]
+     ohash[header[bmag_field]]=brgmag_mean[*, 1]
+     ohash[header[bear_field]]=brgmag_mean[*, 0]
      head_mean=bearing_avg(head2d, 1, dimension=1)
-     all_arr[head_field - 6, *]=head_mean[*, 0]
+     ohash[header[head_field]]=head_mean[*, 0]
      ;; Standard deviations
      FOR i=0, nrows_osample - 1 DO BEGIN
         sog_ok=where(finite(bmag2d[*, i]) GT 0, n_sog_ok, complement=sog_bad)
@@ -168,24 +196,20 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
         head_ok=where(finite(head2d[*, i]) GT 0, n_head_ok, $
                       complement=head_bad)
         IF n_sog_ok GT 10 THEN $
-           all_arr[17, i]=stddev(bmag2d[sog_ok, i])
+           ohash[stdev_str[0], i]=stddev(bmag2d[sog_ok, i])
         IF n_cog_ok GT 10 THEN $
-           all_arr[18, i]=stddev_yamartino(brg2d[cog_ok, i])
+           ohash[stdev_str[1], i]=stddev_yamartino(brg2d[cog_ok, i])
         IF n_head_ok GT 10 THEN $
-           all_arr[19, i]=stdev_yamartino(head2d[head_ok, i])
+           ohash[stdev_str[2], i]=stddev_yamartino(head2d[head_ok, i])
      ENDFOR
      
      file_stamp=file_basename(ifile, '.dat') + '_' + $
                 strtrim(osample_rate, 2) + 's.dat'
-     fmt_nfields=strtrim(n_fields - 4)
-     fmt_str='(' + fmt_nfields + '(a,","),a)'
-     all_arr=strcompress(temporary(all_arr), /remove_all)
-
-     print, 'Writing file: ' + file_stamp
-     openw, lun, odir + path_sep() + file_stamp, /get_lun
-     printf, lun, header_out
-     printf, lun, all_arr, format=fmt_str
-     free_lun, lun
+     ts=create_struct(oheader[0], ohash[oheader[0]])
+     FOREACH fld, oheader[1:*] DO BEGIN
+        ts=create_struct(ts, oheader[where(oheader EQ fld)], ohash[fld])
+     ENDFOREACH
+     write_csv, odir + path_sep() + file_stamp, ts, header=oheader
   ENDFOR
         
 END
