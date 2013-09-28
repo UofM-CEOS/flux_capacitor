@@ -2,8 +2,8 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-09-28T01:56:40+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-09-28T02:05:26+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;; 
@@ -121,7 +121,7 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
   n_avg_cols=size(avg_cols, /n_elements)
   ncols_osample=osample_rate / isample_rate
   nrows_osample=86400 / osample_rate
-  oheader[[]]
+  oheader=[[header, oheader]]
   FOR k=0, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
      print, 'Producing 1-min average for file: ' + ifile
