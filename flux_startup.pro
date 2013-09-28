@@ -7,3 +7,4 @@
 .compile 'setDifference.pro'
 .compile 'stdev_yamartino.pro'
 .compile 'valid_num.pro'
+.compile 'match2.pro'
