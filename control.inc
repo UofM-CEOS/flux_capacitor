@@ -1,7 +1,7 @@
 ;;; control.inc --- Variables for flux_capacitor.pro
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-09-23T17:04:00+0000
+;; Last-Updated: 2013-09-27T21:05:29+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -89,8 +89,8 @@ nav_raw_dir=rootdir + 'TowerData' + path_sep() + 'NAV' + path_sep() + $
 nav_std_dir=rootdir + 'TowerData' + path_sep() + 'NAV' + path_sep() + $
             'std-NAV'
 ;; Daily nav files
-nav_dailydir=rootdir + 'TowerData' + path_sep() + 'NAV' + path_sep() + $
-             'daily-NAV'
+nav_daily_dir=rootdir + 'TowerData' + path_sep() + 'NAV' + path_sep() + $
+              'daily-NAV'
 ;; 1 min nav files
 nav_min_dir=rootdir + 'TowerData' + path_sep() + 'NAV/1min-NAV'
 
@@ -143,7 +143,7 @@ pre_RMC_tem=rootdir + 'Templates' + path_sep() + 'pre_RMC_template.sav'
 ;;;_ : Other template files
 
 met_template=rootdir + 'Templates' + path_sep() + 'met_template.sav'
-nav_template=rootdir + 'Templates' + path_sep() + 'nav_template.sav'
+nav_std_template=rootdir + 'Templates' + path_sep() + 'nav_template.sav'
 dailymet_temp=rootdir + 'Templates' + path_sep() + 'dailymet_temp.sav'
 dailynav_temp=rootdir + 'Templates' + path_sep() + 'dailynav_temp.sav'
 oneminnav_temp=rootdir + 'Templates' + path_sep() + 'oneminnav_temp.sav'
@@ -216,10 +216,10 @@ met_outcolumns=26
 met_stamp='MET'
 met_prefix=8
 
-nav_header='year, month, day, hour, minute, second, prog_version, ' + $
-           'GPSyear, GPSmonth, GPSday, GPShour, GPSmin, GPSsec, ' + $
-           'latitude, longitude, SOG, COG, heading, pitch, roll, ' + $
-           'accel_x, accel_y, accel_z'
+nav_std_header='year, month, day, hour, minute, second, prog_version, ' + $
+               'GPSyear, GPSmonth, GPSday, GPShour, GPSmin, GPSsec, ' + $
+               'latitude, longitude, SOG, COG, heading, pitch, roll, ' + $
+               'accel_x, accel_y, accel_z'
 nav_timing=1
 nav_outcolumns=23
 nav_stamp='NAV'
