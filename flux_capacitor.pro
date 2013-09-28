@@ -2,7 +2,7 @@
 ;;; flux_capacitor.pro --- 
 ;; Author: Bruce Johnson, Ryan Smith, Sebastian Luque
 ;; Created: 2013-08-23T22:24:25+0000
-;; Last-Updated: 2013-09-27T21:11:21+0000
+;; Last-Updated: 2013-09-28T19:54:59+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary:
@@ -338,8 +338,8 @@ PRO process, event
      ;;               nav_daily_dir, nav_std_template, 0, nav_timing, $
      ;;               nav_stamp    ;, /overwrite
      ;; draw_msg, (*pState).viewer, 'Creating 1-min averages of NAV files ...'
-     nav_avg, nav_daily_dir, nav_min_dir, nav_timing, 60, 15, 16, 17, $
-              nav_stamp, nav_std_template, nav_header
+     ;; nav_avg, nav_daily_dir, nav_min_dir, nav_timing, 60, 15, 16, 17, $
+     ;;          nav_stamp, nav_std_template, 0
   ENDIF ELSE BEGIN
      print, 'Skipping splitting of NAV files ...'
   ENDELSE

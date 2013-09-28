@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-27T21:58:22+0000
+;; Last-Updated: 2013-09-28T19:37:07+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -12,10 +12,10 @@
 ;;
 ;; Example call:
 ;;
-;; day_splitter, '20111015', '20111025', $
-;;               expand_path('~/tmp/MET/STD'), $
-;;               expand_path('~/tmp/MET/Daily'), $
-;;               expand_path('met_std_template.sav')
+;; day_splitter, '20110723', '20111022', $
+;;               expand_path('~/tmp/ArcticNet2011/NAV/STD'), $
+;;               expand_path('~/tmp/Arcticnet2011/NAV/Daily'), $
+;;               expand_path('nav_std_template.sav'), 0, 1, 'NAV', /overwrite
 ;;
 ;; Original comment from BJ (likely) below.
 ;; 

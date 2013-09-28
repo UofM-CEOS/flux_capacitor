@@ -2,7 +2,7 @@
 ;;; std_nav.pro --- Standardize NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-28T17:48:36+0000
-;; Last-Updated: 2013-09-27T17:38:09+0000
+;; Last-Updated: 2013-09-28T19:30:11+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -11,11 +11,12 @@
 ;;
 ;; Example call:
 ;;
-;; nav_std_header='Year, Month, Day, Hour, Minute, Second, ProgVers, ' + $
-;;                'GPSYear, GPSMonth, GPSDay, GPSHour, GPSMin, GPSSec, ' + $
-;;                'Latitude, Longitude, SOG(kts), COG(deg), Heading, ' + $
-;;                'Pitch, Roll, Accelx, Accely, Accelz'
-;; std_nav, expand_path('~/tmp/NAV'), expand_path('~/tmp/NAV/STD'), $
+;; nav_std_header='year, month, day, hour, minute, second, prog_version, ' + $
+;;                'gps_year, gps_month, gps_day, gps_hour, gps_min, ' + $
+;;                'gps_sec, latitude, longitude, sog, cog, heading, ' + $
+;;                'pitch, roll, accel_x, accel_y, accel_z'
+;; std_nav, expand_path('~/tmp/ArcticNet2011/NAV'), $
+;;          expand_path('~/tmp/ArcticNet2011/NAV/STD'), $
 ;;          nav_std_header, /overwrite
 ;;
 ;; Below is from Bruce Johnson's comments.
