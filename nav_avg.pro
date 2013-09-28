@@ -2,7 +2,7 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-09-24T20:34:42+0000
+;; Last-Updated: 2013-09-28T01:56:40+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -10,7 +10,7 @@
 ;; Example call:
 ;;
 ;; nav_avg, expand_path('~/tmp/NAV/Daily'), expand_path('~/tmp/NAV/1min'), $
-;;          1, 60, 15, 16, 17, 'NAV', expand_path('nav_template.sav'), $
+;;          1, 60, 15, 16, 17, 'NAV', expand_path('nav_std_template.sav'), $
 ;;          'headera, headerb, ...'
 ;;
 ;; Original comments from BJ below.
@@ -56,13 +56,13 @@
 ;;; Code:
 
 PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
-             BEAR_FIELD, HEAD_FIELD, STAMP, ITEMPLATE_SAV, HEADER
+             BEAR_FIELD, HEAD_FIELD, STAMP, ITEMPLATE_SAV, TIME_BEG_IDX
 
   ;; Check parameters
   IF (n_params() NE 10) THEN $
      message, 'Usage: ONE_MIN_NAV, IDIR, ODIR, ISAMPLE_RATE, ' + $
               'OSAMPLE_RATE, BMAG_FIELD, BEAR_FIELD, HEAD_FIELD, ' + $
-              'STAMP, ITEMPLATE_SAV, HEADER'
+              'STAMP, ITEMPLATE_SAV, TIME_BEG_IDX'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
@@ -83,8 +83,9 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
      message, 'STAMP is undefined or is empty string'
   IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
      message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF (n_elements(header) EQ 0) THEN $
-     message, 'HEADER is undefined'
+  IF ((n_elements(time_beg_idx) NE 1) OR $
+      ((size(time_beg_idx, /type) NE 2) || time_beg_idx LT 0)) THEN $
+         message, 'TIME_BEG_IDX must be an integer scalar >= zero'
 
   idir_files=file_search(idir + path_sep() + '*.dat', count=nidir_files, $
                          /nosort)
@@ -94,23 +95,37 @@ PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
   ENDIF
 
   restore, itemplate_sav
-  n_fields=nav_template.FIELDCOUNT
+  n_fields=itemplate.FIELDCOUNT
+  header=itemplate.FIELDNAMES
+  is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
+  time_fields=where(is_time_field, /NULL)
+  time_field_names=strlowcase(header[time_fields])
+  non_time_fields=where(~is_time_field)
+  non_time_field_names=strlowcase(header[non_time_fields])
+  year_subfield=where(time_field_names EQ 'year') ; locate year
+  month_subfield=where(time_field_names EQ 'month') ; locate month
+  day_subfield=where(time_field_names EQ 'day') ; locate day
+  hour_subfield=where(time_field_names EQ 'hour') ; locate hour
+  minute_subfield=where(time_field_names EQ 'minute') ; locate minute
+  second_subfield=where(time_field_names EQ 'second') ; locate second
+  ;; Check if we have a name with "second" as substring somewhere after the
+  ;; first character; matches e.g.: "decisecond", "millisecond"
+  subsecond_exists=strpos(time_field_names, 'second', 1)
+  subsecond_subfield=where(subsecond_exists GE 0)
+
   ang_cols=[bmag_field, bear_field, head_field]
-  avg_cols=(cgSetDifference(indgen(n_fields - 13) + 13, ang_cols))
+  stdevstr=['sog_stdev', 'cog_stdev', 'heading_stdev']
+  avg_cols_maybe=(cgSetDifference(non_time_fields, ang_cols))
+  ;; Only average those fields that are not strings (BECAREFUL HERE)
+  avg_cols=avg_cols_maybe[where(itemplate.FIELDTYPES[avg_cols_maybe] NE 7)]
   n_avg_cols=size(avg_cols, /n_elements)
   ncols_osample=osample_rate / isample_rate
   nrows_osample=86400 / osample_rate
-  header=strsplit(header, ', ', /extract)
-  header_out=strarr(n_fields - 3)
-  header_out[0:6]=header[0:6]
-  header_out[7:(n_fields - 3 - 4)]=header[13:(n_fields - 1)]
-  stdevstr=['SOG_stdev', 'COG_stdev', 'Heading_stdev']
-  header_out[(n_fields - 6):(n_fields - 4)]=stdevstr
-  header_out=strjoin(header_out, ', ')
+  oheader[[]]
   FOR k=0, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
      print, 'Producing 1-min average for file: ' + ifile
-     data=read_ascii(ifile, count=n_inputfile, template=nav_template)
+     data=read_ascii(ifile, count=n_inputfile, template=itemplate)
      beg_jd=julday(data.FIELD02[0], data.FIELD03[0], data.FIELD01[0], 0)
      mins=timegen(start=beg_jd, final=beg_jd + (86399.0 / 86400), $
                   step_size=osample_rate, units='seconds')
