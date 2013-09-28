@@ -1,10 +1,153 @@
-2013-09-18  Sebastian Luque  <spluque@gmail.com>
+2013-09-28  spluque@gmail.com
+
+	* nav_avg.pro:
+	  Now works with a hash.
+
+	* flux_startup.pro:
+	  Update to reflect new name.
+
+	* stddev_yamartino.pro, stdev_yamartino.pro:
+	  Renaming for consistency.
+
+	* day_splitter.pro:
+	  Fix subscripting.
+
+	* flux_startup.pro:
+	  Added modules.
 
 	* flux_capacitor.pro:
-	Updated calls to subroutines to reflect changes in them.
+	  Update procedure calls.
 
-	* day_splitter_nav.pro:
-	Ensure n_days is long integer, and n_fields gets info from template.
+	* control.inc:
+	  Update variables.
+
+2013-09-27  spluque@gmail.com
+
+	* day_splitter_NAV.pro:
+	  No longer needed.
+
+	* match2.pro, nav_std_template.sav, std_nav.pro:
+	  Adding file and updating template.
+
+	* flux_startup.pro:
+	  Compile utilities first.
+
+	* day_splitter.pro:
+	  Use match2 and eliminate looping through records.
+
+	* day_splitter.pro, nav_std_template.sav, nav_template.sav:
+	  New NAV standard template, and adjust call to day_splitter.
+
+	* day_splitter.pro, day_splitter_MET.pro:
+	  Renaming to just day_splitter.pro, since this should be the main
+	  splitting program.
+
+	* remove_structure_tag.pro:
+	  Extract scalar if only one name is supplied.
+
+2013-09-26  spluque@gmail.com
+
+	* day_splitter_MET.pro:
+	  Properly working version.
+
+	* met_raw_template.sav, met_std_template.sav:
+	  Time fields should be strings.
+
+	* std_met.pro:
+	  Do not work on arguments directly! IDL passes arguments by
+	  reference.
+
+	* doy2calendar.pro:
+	  Do not work on the arguments directly! IDL passes arguments by
+	  reference.
+
+2013-09-25  spluque@gmail.com
+
+	* std_met.pro:
+	  Better argument handling, and correct number of lines to iterate
+	  over.
+
+2013-09-24  spluque@gmail.com
+
+	* day_splitter_MET.pro, met_raw_template.sav, met_template.sav:
+	  Renaming file.
+
+	* nav_avg.pro:
+	  Do not use temporary() for argument manipulations!
+
+	* met_template.sav:
+	  Rename field in itemplate.
+
+	* met_template.sav:
+	  Rename template to itemplate.
+
+	* control.inc:
+	  Improved header variables.
+
+2013-09-23  spluque@gmail.com
+
+	* control.inc:
+	  Standardize header strings.
+
+2013-09-20  spluque@gmail.com
+
+	* nav_avg.pro:
+	  Use stddev(); stdev() is obsolete.
+
+	* day_splitter_MET.pro:
+	  Working version, but not doing all the checks original does.
+
+	* control.inc:
+	  Improved header strings.
+
+	* doy2calendar.pro:
+	  Do not supply Null to caldat!
+
+	* std_nav.pro:
+	  Correct usage.
+
+	* std_nav.pro:
+	  Do not change directory. Rename variables.
+
+	* day_splitter_NAV.pro:
+	  Correct number of arguments in initial check.
+
+	* day_splitter_NAV.pro:
+	  Remove n_prefix argument; not used.
+
+	* day_splitter_MET.pro:
+	  Startup procedures.
+
+	* day_splitter_MET.pro, day_splitter_NAV.pro, day_splitter_nav.pro:
+	  Adding file, and renaming NAV file.
+
+	* nav_avg.pro:
+	  Working version.
+
+2013-09-19  spluque@gmail.com
+
+	* bearing_avg.pro:
+	  First take vectorized function.
+
+2013-09-18  spluque@gmail.com
+
+	* bearing_avg.pro:
+	  Efforts to vectorize this function.
+
+	* nav_avg.pro:
+	  Corrected usage info.
+
+	* nav_avg.pro:
+	  Fixed creation of all_arr to account for output sample rate, and
+	  finished procedure for filling fields of non-angular averages.
+
+	* nav_avg.pro, one_min_nav.pro:
+	  Renaming file.
+
+	* control.inc, day_splitter_nav.pro, doy2calendar.pro,
+	  flux_capacitor.pro, nav_template.sav, one_min_nav.pro,
+	  setDifference.pro, std_nav.pro:
+	  Adding source from most recent work from iMac at work.
 
 2013-09-16  Sebastian Luque  <spluque@gmail.com>
 
