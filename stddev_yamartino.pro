@@ -1,7 +1,7 @@
 ;;; stdev_yamartino.pro --- Standard deviation of wind directions
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-18T20:47:27+0000
-;; Last-Updated: 2013-09-18T20:58:22+0000
+;; Last-Updated: 2013-09-28T21:16:49+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -16,7 +16,7 @@
 ;; ------------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION stdev_yamartino, X
+FUNCTION stddev_yamartino, X
 
   ;;convert to radians
   rads=x * !DTOR
