@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-28T19:37:07+0000
+;; Last-Updated: 2013-09-28T22:29:39+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -299,10 +299,6 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      t_matches=where(times_in_its GE 0, mcount, /null)
      IF mcount LT 1 THEN CONTINUE
      its_matches=where(i_ts_in_times GE 0)
-     FOREACH value, ts_times, fld DO BEGIN ; loop time hash
-        match_fld=where(time_field_names EQ strlowcase(fld))
-        ts_times[fld, t_matches]=(idata_times[match_fld, *])[its_matches]
-     ENDFOREACH
      FOREACH value, ts_all, fld DO BEGIN ; loop non-time hash
         match_fld=where(non_time_field_names EQ strlowcase(fld))
         ;; Note we have to subset the field in the structure, as structure
