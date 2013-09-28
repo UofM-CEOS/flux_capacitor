@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-27T20:54:24+0000
+;; Last-Updated: 2013-09-27T21:58:22+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -284,6 +284,10 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      ENDFOREACH
      n_krecs=n_elements(idata_times[0, *])
      ;; Check each line and match against array
+     is_valid=valid_num(idata_times[year_subfield, *])
+     iok=where(is_valid, vcount) ; work on valid data only
+     IF vcount LT 1 THEN CONTINUE
+     idata_times=idata_times[*, iok]
      yyyy=string(idata_times[year_subfield, *], format='(i4)')
      mo=string(idata_times[month_subfield, *], format='(i02)')
      dd=string(idata_times[day_subfield, *], format='(i02)')
@@ -301,7 +305,9 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      ENDFOREACH
      FOREACH value, ts_all, fld DO BEGIN ; loop non-time hash
         match_fld=where(non_time_field_names EQ strlowcase(fld))
-        ts_all[fld, t_matches]=idata.(match_fld)[its_matches]
+        ;; Note we have to subset the field in the structure, as structure
+        ;; elements cannot have their size/type changed.
+        ts_all[fld, t_matches]=(idata.(match_fld)[iok])[its_matches]
      ENDFOREACH
   ENDFOR
 
