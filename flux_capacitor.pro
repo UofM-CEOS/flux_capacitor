@@ -2,7 +2,7 @@
 ;;; flux_capacitor.pro --- 
 ;; Author: Bruce Johnson, Ryan Smith, Sebastian Luque
 ;; Created: 2013-08-23T22:24:25+0000
-;; Last-Updated: 2013-09-26T18:33:05+0000
+;; Last-Updated: 2013-09-27T21:11:21+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary:
@@ -324,7 +324,7 @@ PRO process, event
 
   IF check_ctrl_var((*pState).nav_std) EQ 1 THEN BEGIN
      draw_msg, (*pState).viewer, 'Standardizing NAV Files ...'
-     ;; std_nav, nav_raw_dir, nav_std_dir, nav_header, /overwrite
+     ;; std_nav, nav_raw_dir, nav_std_dir, nav_std_header, /overwrite
   ENDIF ELSE BEGIN
      print, 'Skipping standardization of NAV files ...'
   ENDELSE
@@ -334,12 +334,12 @@ PRO process, event
 
   IF check_ctrl_var((*pState).nav_split) EQ 1 THEN BEGIN
      draw_msg, (*pState).viewer, 'Splitting NAV files ...'
-     ;; day_splitter_NAV, nav_SDATE[0], nav_EDATE[0], nav_std_dir, $
-     ;;                   nav_dailydir, nav_template, nav_header, $
-     ;;                   nav_timing, nav_stamp, nav_prefix
+     ;; day_splitter, nav_SDATE[0], nav_EDATE[0], nav_std_dir, $
+     ;;               nav_daily_dir, nav_std_template, 0, nav_timing, $
+     ;;               nav_stamp    ;, /overwrite
      ;; draw_msg, (*pState).viewer, 'Creating 1-min averages of NAV files ...'
-     ;; nav_avg, nav_dailydir, nav_min_dir, nav_timing, 60, 15, 16, 17, $
-     ;;          nav_stamp, nav_template, nav_header
+     nav_avg, nav_daily_dir, nav_min_dir, nav_timing, 60, 15, 16, 17, $
+              nav_stamp, nav_std_template, nav_header
   ENDIF ELSE BEGIN
      print, 'Skipping splitting of NAV files ...'
   ENDELSE
