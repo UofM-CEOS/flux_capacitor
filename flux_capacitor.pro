@@ -2,8 +2,8 @@
 ;;; flux_capacitor.pro --- 
 ;; Author: Bruce Johnson, Ryan Smith, Sebastian Luque
 ;; Created: 2013-08-23T22:24:25+0000
-;; Last-Updated: 2013-09-28T19:54:59+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-09-29T13:19:13+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary:
 ;; 
@@ -349,9 +349,9 @@ PRO process, event
 
   IF check_ctrl_var((*pState).met_split) EQ 1 THEN BEGIN
      draw_msg, (*pState).viewer, 'Splitting MET files ...'
-     ;; day_splitter_MET, met_SDATE, met_EDATE, met_idir, met_dailydir, $
-     ;;                   met_template, met_header, met_timing, met_outcolumns, $
-     ;;                   met_stamp, met_prefix
+     ;; day_splitter, met_SDATE, met_EDATE, met_idir, met_daily_dir, $
+     ;;               met_template, met_header, met_timing, met_outcolumns, $
+     ;;               met_stamp, met_prefix
   ENDIF ELSE BEGIN
      print, 'Skipping splitting of MET files ...'
   ENDELSE
@@ -455,7 +455,7 @@ PRO process, event
      ;;                   rad_stamp, rad_prefix
      draw_msg, (*pState).viewer, 'Processing radiation data ...'
      ;; process_RAD, daily_rad_dir, proc_rad_dir, min_rmc_dir, $
-     ;;              met_dailydir, rootdir
+     ;;              met_daily_dir, rootdir
   ENDIF ELSE BEGIN
      print, 'Skipping processing of radiation data ...'
   ENDELSE
@@ -465,8 +465,8 @@ PRO process, event
 
   IF check_ctrl_var((*pState).met_proc) EQ 1 THEN BEGIN
      draw_msg, (*pState).viewer, 'Processing MET Files ...'
-     ;; process_met_an11, met_dailydir, min_gyro_dir, min_rmc_dir, $
-     ;;                   met_procdir, dailymet_temp, met_log_name, $
+     ;; process_met_an11, met_daily_dir, min_gyro_dir, min_rmc_dir, $
+     ;;                   met_proc_dir, dailymet_temp, met_log_name, $
      ;;                   met_log_dir, met_log_template,rootdir
   ENDIF ELSE BEGIN
      print, 'Skipping processing of MET files ...'
@@ -488,7 +488,7 @@ PRO process, event
   IF check_ctrl_var((*pState).flux_ext) EQ 1 THEN BEGIN
      draw_msg, (*pState).viewer, 'Finding flux runs ...'
      ;; filter_flux_runs_AN11, fluxperiod, flux_SDATE, flux_EDATE, t_wind, $
-     ;;                        t_SOG, t_head, run_file, met_procdir, $
+     ;;                        t_SOG, t_head, run_file, met_proc_dir, $
      ;;                        proc_flux_dir_root, met_proctemp
      ;; Run the script for extracting suitable flux runs
      draw_msg, (*pState).viewer, 'Extracting flux runs ...'

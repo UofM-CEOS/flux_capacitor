@@ -1,8 +1,8 @@
 ;;; control.inc --- Variables for flux_capacitor.pro
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-09-27T21:05:29+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-09-28T11:50:04+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
@@ -74,10 +74,10 @@ lag_TU_plot_dir=proc_flux_dir + 'LagTU_plots'
 met_idir=rootdir + 'TowerData' + path_sep() + 'MET' + path_sep() + $
          'raw-MET'
 ;; Daily met files
-met_dailydir=rootdir + 'TowerData' + path_sep() + 'MET' + path_sep() + $
+met_daily_dir=rootdir + 'TowerData' + path_sep() + 'MET' + path_sep() + $
              'daily-MET'
 ;; Processed met files
-met_procdir=rootdir + 'TowerData' + path_sep() + 'MET' + path_sep() + $
+met_proc_dir=rootdir + 'TowerData' + path_sep() + 'MET' + path_sep() + $
             'proc-MET'
 
 ;;;_ : NAV directories
