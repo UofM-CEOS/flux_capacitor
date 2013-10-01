@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-01T16:07:12+0000
+;; Last-Updated: 2013-10-01T19:48:22+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -141,7 +141,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   idir_files=file_search(idir + path_sep() + '*.dat', count=nidir_files, $
                          /nosort)
   IF nidir_files LT 1 THEN BEGIN
-     print, 'No input files found'
+     message, 'No input files found', /informational
      RETURN
   ENDIF
 
@@ -205,11 +205,11 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      is_ofile=where(strmatch(odir_files, file_stamps[i]), n_ofiles)
      IF n_ofiles GT 0 THEN BEGIN
         IF keyword_set(overwrite) THEN BEGIN
-           print, 'Daily ' + stamp + ' file ' + file_stamps[i] + $
-                  ' already exists.  Overwriting'
+           message, 'Daily ' + stamp + ' file ' + file_stamps[i] + $
+                    ' already exists.  Overwriting', /informational
         ENDIF ELSE BEGIN
-           print, 'Daily ' + stamp + ' file ' + file_stamps[i] + $
-                  ' already exists.  Not overwriting'
+           message, 'Daily ' + stamp + ' file ' + file_stamps[i] + $
+                    ' already exists.  Not overwriting', /informational
            skipdays[i]=1
            CONTINUE
         ENDELSE
@@ -264,7 +264,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   ;; Read each file
   FOR k=0L, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
-     print, 'Processing File: ' + ifile
+     message, 'Processing File: ' + ifile, /informational
      idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
      ;; Extract times and remove quotes or spaces from strings
      idata_times=idata.(time_beg_idx)

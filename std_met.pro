@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-01T16:08:36+0000
+;; Last-Updated: 2013-10-01T19:49:35+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -86,7 +86,7 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
   idir_files=file_search(idir + path_sep() + '*.dat', count=nidir_files, $
                          /nosort)
   IF nidir_files LT 1 THEN BEGIN
-     print, 'No input files found'
+     message, 'No input files found', /informational
      RETURN
   ENDIF
   restore, itemplate_sav
@@ -133,17 +133,17 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
                       matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN
         IF keyword_set(overwrite) THEN BEGIN
-           print, 'Standardized MET file ' + ofile_stamp + $
-                  ' already exists.  Overwriting'
+           message, 'Standardized MET file ' + ofile_stamp + $
+                    ' already exists.  Overwriting', /informational
         ENDIF ELSE BEGIN
-        print, 'Standardized MET file ' + ofile_stamp + $
-               ' already exists.  Not overwriting'
+        message, 'Standardized MET file ' + ofile_stamp + $
+                 ' already exists.  Not overwriting', /informational
         CONTINUE
      ENDELSE
      ENDIF
 
      ifile=idir_files[k]
-     print, 'Processing file: ' + ifile
+     message, 'Processing file: ' + ifile, /informational
 
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)

@@ -2,7 +2,7 @@
 ;;; std_nav.pro --- Standardize NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-28T17:48:36+0000
-;; Last-Updated: 2013-09-28T19:30:11+0000
+;; Last-Updated: 2013-10-01T19:50:18+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -57,7 +57,7 @@ PRO STD_NAV, IDIR, ODIR, HEADER, OVERWRITE=OVERWRITE
   idir_files=file_search(idir + path_sep() + '*.dat', count=nidir_files, $
                          /nosort)
   IF nidir_files LT 1 THEN BEGIN
-     print, 'No input files found'
+     message, 'No input files found', /informational
      RETURN
   ENDIF
   ;; Code currently works under these assumptions (silly state of affairs):
@@ -76,17 +76,17 @@ PRO STD_NAV, IDIR, ODIR, HEADER, OVERWRITE=OVERWRITE
                       matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN
         IF keyword_set(overwrite) THEN BEGIN
-           print, 'Standardized NAV file ' + ofile_stamp + $
-                  ' already exists.  Overwriting'
+           message, 'Standardized NAV file ' + ofile_stamp + $
+                    ' already exists.  Overwriting', /informational
         ENDIF ELSE BEGIN
-        print, 'Standardized NAV file ' + ofile_stamp + $
-               ' already exists.  Not overwriting'
+        message, 'Standardized NAV file ' + ofile_stamp + $
+                 ' already exists.  Not overwriting', /informational
         CONTINUE
      ENDELSE
      ENDIF
 
      ifile_nav=idir_files[k]
-     print, 'Processing file: ' + ifile_nav
+     message, 'Processing file: ' + ifile_nav, /informational
 
      ;; Designate number of lines and columns for output file
      lines=file_lines(ifile_nav)

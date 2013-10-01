@@ -2,7 +2,7 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-01T16:07:32+0000
+;; Last-Updated: 2013-10-01T19:48:58+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -89,7 +89,7 @@ PRO NAV_AVG, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
   idir_files=file_search(idir + path_sep() + '*.dat', count=nidir_files, $
                          /nosort)
   IF nidir_files LT 1 THEN BEGIN
-     print, 'No input files found'
+     message, 'No input files found', /informational
      RETURN
   ENDIF
 
@@ -122,7 +122,7 @@ PRO NAV_AVG, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
   oheader=[[time_field_names, header[avg_cols], stdev_str]]
   FOR k=0, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
-     print, 'Producing 1-min average for file: ' + ifile
+     message, 'Producing 1-min average for file: ' + ifile, /informational
      idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
      ;; Extract times and remove quotes or spaces from strings
      idata_times=idata.(time_beg_idx)
