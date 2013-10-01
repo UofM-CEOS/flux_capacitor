@@ -1,7 +1,7 @@
 ;;; control.inc --- Variables for flux_capacitor.pro
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-09-30T21:51:43+0000
+;; Last-Updated: 2013-10-01T16:14:44+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -245,6 +245,7 @@ gyro_prefix=7
 gyro_bear_field=6
 gyro_vec_field=0
 
+rmc_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
 rmc_header='year, month, day, hour, minute, second, ' + $
            'latitude, longitude, SOG, COG, time_difference'
 rmc_timing=1
