@@ -2,8 +2,8 @@
 ;;; flux_capacitor.pro --- 
 ;; Author: Bruce Johnson, Ryan Smith, Sebastian Luque
 ;; Created: 2013-08-23T22:24:25+0000
-;; Last-Updated: 2013-09-29T13:19:13+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-09-30T03:18:50+0000
+;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary:
 ;; 
@@ -349,9 +349,8 @@ PRO process, event
 
   IF check_ctrl_var((*pState).met_split) EQ 1 THEN BEGIN
      draw_msg, (*pState).viewer, 'Splitting MET files ...'
-     ;; day_splitter, met_SDATE, met_EDATE, met_idir, met_daily_dir, $
-     ;;               met_template, met_header, met_timing, met_outcolumns, $
-     ;;               met_stamp, met_prefix
+     day_splitter, met_SDATE[0], met_EDATE[0], met_std_dir, met_daily_dir, $
+                   met_std_template, 0, met_timing, met_stamp, /overwrite
   ENDIF ELSE BEGIN
      print, 'Skipping splitting of MET files ...'
   ENDELSE
