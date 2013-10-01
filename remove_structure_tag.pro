@@ -1,13 +1,12 @@
 ;; $Id$
-;;; remove_structure_tag.pro --- Remove tag from structure
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-24T15:38:09+0000
-;; Last-Updated: 2013-09-26T20:36:42+0000
+;; Last-Updated: 2013-10-01T16:08:19+0000
 ;;           By: Sebastian Luque
 ;; + ----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;;  remove_structure_tag
+;;  remove_structure_tags
 ;; 
 ;; PURPOSE:
 ;; 
@@ -29,7 +28,8 @@
 ;; 
 ;; - ----------------------------------------------------------------------
 ;;; Code:
-FUNCTION REMOVE_STRUCTURE_TAG, STRUCT, TAG_NAME
+
+FUNCTION REMOVE_STRUCTURE_TAGS, STRUCT, TAG_NAME
   COMPILE_OPT idl2
   IF n_params() NE 2 THEN MESSAGE, 'N_PARAMS=2'
   
@@ -60,4 +60,4 @@ END
 ;; allout-layout: (-2 + : 0)
 ;; End:
 ;;
-;;; remove_structure_tag.pro ends here
+;;; remove_structure_tags.pro ends here
