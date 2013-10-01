@@ -8,3 +8,4 @@
 .compile 'stddev_yamartino.pro'
 .compile 'valid_num.pro'
 .compile 'match2.pro'
+.compile 'locate_time_strings.pro'

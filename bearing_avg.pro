@@ -2,8 +2,8 @@
 ;;; bearing_avg.pro --- Average bearing and magnitude
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-18T20:11:56+0000
-;; Last-Updated: 2013-09-19T18:38:02+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-10-01T02:24:47+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;; 
@@ -37,7 +37,7 @@
 ;; ------------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION BEARING_AVG, X, VMAG, dimension=dimension
+FUNCTION BEARING_AVG, X, VMAG, DIMENSION=dimension
 
   ;; Convert to radians
   rads=x * !DTOR

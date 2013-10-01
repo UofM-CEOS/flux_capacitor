@@ -1,3 +1,74 @@
+;;; locate_time_strings.pro --- 
+;; Author: Sebastian P. Luque
+;; Created: 2013-10-01T02:19:03+0000
+;; Last-Updated: 2013-10-01T02:21:23+0000
+;;           By: Sebastian P. Luque
+;; ------------------------------------------------------------------------
+;;; Commentary: 
+;; 
+;; 
+;; + ----------------------------------------------------------------------
+;;  NAME:
+;; 
+;; 
+;; 
+;;  PURPOSE:
+;; 
+;; 
+;; 
+;;  CATEGORY:
+;; 
+;; 
+;; 
+;;  CALLING SEQUENCE:
+;; 
+;; 
+;; 
+;;  INPUTS:
+;; 
+;; 
+;; 
+;;  OPTIONAL INPUTS:
+;; 
+;; 
+;; 
+;;  KEYWORD PARAMETERS:
+;; 
+;; 
+;; 
+;;  OUTPUTS:
+;; 
+;; 
+;; 
+;;  OPTIONAL OUTPUTS:
+;; 
+;; 
+;; 
+;;  COMMON BLOCKS:
+;; 
+;; 
+;; 
+;;  SIDE EFFECTS:
+;; 
+;; 
+;; 
+;;  RESTRICTIONS:
+;; 
+;; 
+;; 
+;;  PROCEDURE:
+;; 
+;; 
+;; 
+;;  EXAMPLE:
+;; 
+;; 
+;; 
+;;  MODIFICATION HISTORY:
+;; 
+;; - ----------------------------------------------------------------------
+;;; Code:
+
 FUNCTION LOCATE_TIME_STRINGS, NAMES
 
   ;; Define a vector with possible names
@@ -65,3 +136,6 @@ FUNCTION LOCATE_TIME_STRINGS, NAMES
   RETURN, [year, month, day, hour, minute, second, subsecond]
 
 END
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; locate_time_strings.pro ends here

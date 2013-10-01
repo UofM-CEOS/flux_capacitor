@@ -2,8 +2,8 @@
 ;;; doy2calendar.pro --- Convert DOY to calendar date
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-28T17:54:17+0000
-;; Last-Updated: 2013-09-26T15:42:58+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-10-01T02:25:23+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
@@ -11,7 +11,7 @@
 ;; ------------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION doy2calendar, year, doy
+FUNCTION DOY2CALENDAR, YEAR, DOY
   
   year_int=fix(year)
   doy_int=fix(doy)
@@ -23,7 +23,7 @@ FUNCTION doy2calendar, year, doy
 
 END
 
-FUNCTION calendar2doy, year, month, day
+FUNCTION CALENDAR2DOY, YEAR, MONTH, DAY
   
   jd=julday(month, day, year)
   caldat, jd, Null0, Null1, year

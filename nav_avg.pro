@@ -2,8 +2,8 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-09-28T21:56:11+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-10-01T02:26:05+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;; 
@@ -39,7 +39,6 @@
 ;; 
 ;; for NAV data
 ;; -------------
-
 ;; idir       = daily_nav_dir   --> file format "NAV_YYYYDOY.dat"
 ;; odir       = min_nav_dir     --> file format "NAV_YYYYDOY_min.dat
 ;; n_fields   = 23
@@ -55,7 +54,7 @@
 ;; ------------------------------------------------------------------------
 ;;; Code:
 
-PRO nav_avg, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
+PRO NAV_AVG, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
              BEAR_FIELD, HEAD_FIELD, STAMP, ITEMPLATE_SAV, TIME_BEG_IDX
 
   ;; Check parameters

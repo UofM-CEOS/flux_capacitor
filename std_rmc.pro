@@ -1,8 +1,8 @@
 ;;; std_rmc.pro --- Standardize RMC files
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-09-30T23:14:57+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-10-01T12:29:07+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;; 
@@ -93,25 +93,25 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
   header=strsplit(oheader, ', ', /extract) ; assuming ", "
   n_ofields=n_elements(header) ; N fields as in input header
-  time_fields=where(itemplate.FIELDGROUPS EQ utc_time_idx, /NULL)
-  time_names=strlowcase(itemplate.FIELDNAMES[time_fields])
-  time_names=strsplit(time_names, '_', /extract)
-  time_names_last=strarr(n_elements(time_names))
-  FOR i=0L, n_elements(time_names) - 1 DO $
-     time_names_last[i]=time_names[i, n_elements(time_names[i]) - 1]
+  tfields=where(itemplate.FIELDGROUPS EQ utc_time_idx, /NULL) ; time fields
+  tnames=strlowcase(field_names[tfields])            ; time names
+  tnamesl=strsplit(time_names, '_', /extract)                 ; split list
+  tnames_last=strarr(n_elements(tnamesl)) ; set up 
+  FOR i=0L, n_elements(tnames) - 1 DO $
+     tnames_last[i]=tnamesl[i, n_elements(tnamesl[i]) - 1]
   ;; Determine where in these names we're supposed to get each time field
   ;; (year, month, day, hour, minute, second, subsecond)
-  time_locations=locate_time_strings(time_names_last)
+  time_locs=locate_time_strings(tnames_last)
   ;; GPS times
-  time_fields_gps=where(itemplate.FIELDGROUPS EQ gps_time_idx, /NULL)
-  time_names_gps=strlowcase(itemplate.FIELDNAMES[time_fields_gps])
-  time_names_gps=strsplit(time_names_gps, '_', /extract)
-  time_names_gps_last=strarr(n_elements(time_names_gps))
-  FOR i=0L, n_elements(time_names_gps) - 1 DO $
-     time_names_gps_last[i]=time_names_gps[i, n_elements(time_names_gps[i]) - 1]
+  tfields_gps=where(itemplate.FIELDGROUPS EQ gps_time_idx, /NULL)
+  tnames_gps=strlowcase(field_names[tfields_gps])
+  tnamesl_gps=strsplit(tnames_gps, '_', /extract)
+  tnames_last_gps=strarr(n_elements(tnamesl_gps))
+  FOR i=0L, n_elements(tnames_gps) - 1 DO $
+     tnames_last_gps[i]=tnamesl_gps[i, n_elements(tnamesl_gps[i]) - 1]
   ;; Determine where in these names we're supposed to get each time field
   ;; (year, month, day, hour, minute, second, subsecond)
-  time_locations_gps=locate_time_strings(time_names_gps_last)
+  time_locs_gps=locate_time_strings(tnames_last_gps)
      
   ;; Loop through files in input directory
   FOR k=0, nidir_files - 1 DO BEGIN
@@ -154,61 +154,61 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
         ENDFOREACH
      ENDIF
      ;; Obtain full UTC time details
-     CASE time_names_last[time_locations[0]] OF
-        'year': yyyy=string(idata_times[time_locations[0], *], $
+     CASE tnames_last[time_locs[0]] OF
+        'year': yyyy=string(idata_times[time_locs[0], *], $
                             format='(i04)')
-        'yyyymmdd': yyyy=strmid(idata_times[time_locations[0], *], 0, 4)
-        'mmddyyyy': yyyy=strmid(idata_times[time_locations[0], *], 4, 4)
-        'ddmmyyyy': yyyy=strmid(idata_times[time_locations[0], *], 4, 4)
+        'yyyymmdd': yyyy=strmid(idata_times[time_locs[0], *], 0, 4)
+        'mmddyyyy': yyyy=strmid(idata_times[time_locs[0], *], 4, 4)
+        'ddmmyyyy': yyyy=strmid(idata_times[time_locs[0], *], 4, 4)
         'ddmmyy': BEGIN
            message, 'Assuming current century', /informational
            tstamp=jul2timestamp(systime(/julian))
            yyyy=strmid(tstamp, 0, 2) + $
-                strmid(idata_times[time_locations[0], *], 4, 2)
+                strmid(idata_times[time_locs[0], *], 4, 2)
         END
         ELSE: message, 'Do not know how to extract year from this field'
      ENDCASE
-     CASE time_names_last[time_locations[1]] OF
-        'month': mo=string(idata_times[time_locations[1], *], $
+     CASE tnames_last[time_locs[1]] OF
+        'month': mo=string(idata_times[time_locs[1], *], $
                            format='(i02)')
-        'yyyymmdd': mo=strmid(idata_times[time_locations[1], *], 4, 2)
-        'mmddyyyy': mo=strmid(idata_times[time_locations[1], *], 0, 2)
-        'ddmmyyyy': mo=strmid(idata_times[time_locations[1], *], 2, 2)
-        'ddmmyy': mo=strmid(idata_times[time_locations[1], *], 2, 2)
+        'yyyymmdd': mo=strmid(idata_times[time_locs[1], *], 4, 2)
+        'mmddyyyy': mo=strmid(idata_times[time_locs[1], *], 0, 2)
+        'ddmmyyyy': mo=strmid(idata_times[time_locs[1], *], 2, 2)
+        'ddmmyy': mo=strmid(idata_times[time_locs[1], *], 2, 2)
         'doy': BEGIN
-           calendar=doy2calendar(yyyy, idata_times[time_locations[1], *])
+           calendar=doy2calendar(yyyy, idata_times[time_locs[1], *])
            mo=strmid(calendar, 4, 2)
         END
         ELSE: message, 'Do not know how to extract month from this field'
      ENDCASE
-     CASE time_names_last[time_locations[2]] OF
-        'day': dd=string(idata_times[time_locations[2], *], $
+     CASE tnames_last[time_locs[2]] OF
+        'day': dd=string(idata_times[time_locs[2], *], $
                          format='(i02)')
-        'yyyymmdd': dd=strmid(idata_times[time_locations[2], *], 6, 2)
-        'mmddyyyy': dd=strmid(idata_times[time_locations[2], *], 2, 2)
-        'ddmmyyyy': dd=strmid(idata_times[time_locations[2], *], 0, 2)
-        'ddmmyy': dd=strmid(idata_times[time_locations[2], *], 0, 2)
+        'yyyymmdd': dd=strmid(idata_times[time_locs[2], *], 6, 2)
+        'mmddyyyy': dd=strmid(idata_times[time_locs[2], *], 2, 2)
+        'ddmmyyyy': dd=strmid(idata_times[time_locs[2], *], 0, 2)
+        'ddmmyy': dd=strmid(idata_times[time_locs[2], *], 0, 2)
         'doy': dd=strmid(calendar, 6, 2) ; we already have calendar
         ELSE: message, 'Do not know how to extract day from this field'
      ENDCASE
-     CASE time_names_last[time_locations[3]] OF
-        'hour': hh=string(idata_times[time_locations[3], *], $
+     CASE tnames_last[time_locs[3]] OF
+        'hour': hh=string(idata_times[time_locs[3], *], $
                           format='(i02)')
-        'hhmmss': hh=strmid(idata_times[time_locations[3], *], 0, 2)
-        'hhmm': hh=strmid(idata_times[time_locations[3], *], 2, 2)
+        'hhmmss': hh=strmid(idata_times[time_locs[3], *], 0, 2)
+        'hhmm': hh=strmid(idata_times[time_locs[3], *], 0, 2)
         ELSE: message, 'Do not know how to extract hour from this field'
      ENDCASE
-     CASE time_names_last[time_locations[4]] OF
-        'minute': mm=string(idata_times[time_locations[4], *], $
+     CASE tnames_last[time_locs[4]] OF
+        'minute': mm=string(idata_times[time_locs[4], *], $
                             format='(i02)')
-        'hhmmss': mm=strmid(idata_times[time_locations[4], *], 2, 2)
-        'hhmm': mm=strmid(idata_times[time_locations[4], *], 2, 2)
+        'hhmmss': mm=strmid(idata_times[time_locs[4], *], 2, 2)
+        'hhmm': mm=strmid(idata_times[time_locs[4], *], 2, 2)
         ELSE: message, 'Do not know how to extract minute from this field'
      ENDCASE
-     CASE time_names_last[time_locations[5]] OF
-        'second': ss=string(idata_times[time_locations[5], *], $
+     CASE tnames_last[time_locs[5]] OF
+        'second': ss=string(idata_times[time_locs[5], *], $
                             format='(i02)')
-        'hhmmss': ss=strmid(idata_times[time_locations[5], *], 4, 2)
+        'hhmmss': ss=strmid(idata_times[time_locs[5], *], 4, 2)
         ELSE: message, 'Do not know how to extract second from this field'
      ENDCASE
 
@@ -216,100 +216,100 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
      gps_time_loc=where(idata_names EQ $
                         strlowcase(field_names[gps_time_idx]))
      idata_times_gps=idata.(gps_time_loc)
-     CASE time_names_gps_last[time_locations_gps[0]] OF
+     CASE tnames_last_gps[time_locs_gps[0]] OF
         'year': $
-           yyyy_gps=string(idata_times_gps[time_locations_gps[0], *], $
+           yyyy_gps=string(idata_times_gps[time_locs_gps[0], *], $
                            format='(i04)')
         'yyyymmdd': $
-           yyyy_gps=strmid(idata_times_gps[time_locations_gps[0], *], $
+           yyyy_gps=strmid(idata_times_gps[time_locs_gps[0], *], $
                            0, 4)
         'mmddyyyy': $
-           yyyy_gps=strmid(idata_times_gps[time_locations_gps[0], *], $
+           yyyy_gps=strmid(idata_times_gps[time_locs_gps[0], *], $
                            4, 4)
         'ddmmyyyy': $
-           yyyy_gps=strmid(idata_times_gps[time_locations_gps[0], *], $
+           yyyy_gps=strmid(idata_times_gps[time_locs_gps[0], *], $
                            4, 4)
         'ddmmyy': BEGIN
            message, 'Assuming current century', /informational
            tstamp=jul2timestamp(systime(/julian))
            yyyy_gps=strmid(tstamp, 0, 2) + $
-                    strmid(idata_times_gps[time_locations_gps[0], *], 4, 2)
+                    strmid(idata_times_gps[time_locs_gps[0], *], 4, 2)
         END
         ELSE: message, 'Do not know how to extract year from this field'
      ENDCASE
-     CASE time_names_gps_last[time_locations_gps[1]] OF
-        'month': mo_gps=string(idata_times_gps[time_locations_gps[1], *], $
+     CASE tnames_last_gps[time_locs_gps[1]] OF
+        'month': mo_gps=string(idata_times_gps[time_locs_gps[1], *], $
                                format='(i02)')
         'yyyymmdd': $
-           mo_gps=strmid(idata_times_gps[time_locations_gps[1], *], 4, 2)
+           mo_gps=strmid(idata_times_gps[time_locs_gps[1], *], 4, 2)
         'mmddyyyy': $
-           mo_gps=strmid(idata_times_gps[time_locations_gps[1], *], 0, 2)
+           mo_gps=strmid(idata_times_gps[time_locs_gps[1], *], 0, 2)
         'ddmmyyyy': $
-           mo_gps=strmid(idata_times_gps[time_locations_gps[1], *], 2, 2)
+           mo_gps=strmid(idata_times_gps[time_locs_gps[1], *], 2, 2)
         'ddmmyy': $
-           mo_gps=strmid(idata_times_gps[time_locations_gps[1], *], 2, 2)
+           mo_gps=strmid(idata_times_gps[time_locs_gps[1], *], 2, 2)
         'doy': BEGIN
            calendar_gps=doy2calendar(yyyy, $
-                                     idata_times_gps[time_locations_gps[1], *])
+                                     idata_times_gps[time_locs_gps[1], *])
            mo_gps=strmid(calendar_gps, 4, 2)
         END
         ELSE: message, 'Do not know how to extract month from this field'
      ENDCASE
-     CASE time_names_gps_last[time_locations[2]] OF
+     CASE tnames_last_gps[time_locs[2]] OF
         'day': $
-           dd_gps=string(idata_times_gps[time_locations_gps[2], *], $
+           dd_gps=string(idata_times_gps[time_locs_gps[2], *], $
                          format='(i02)')
         'yyyymmdd': $
-           dd_gps=strmid(idata_times_gps[time_locations_gps[2], *], $
+           dd_gps=strmid(idata_times_gps[time_locs_gps[2], *], $
                          6, 2)
         'mmddyyyy': $
-           dd_gps=strmid(idata_times_gps[time_locations_gps[2], *], $
+           dd_gps=strmid(idata_times_gps[time_locs_gps[2], *], $
                          2, 2)
         'ddmmyyyy': $
-           dd_gps=strmid(idata_times_gps[time_locations_gps[2], *], $
+           dd_gps=strmid(idata_times_gps[time_locs_gps[2], *], $
                          0, 2)
         'ddmmyy': $
-           dd_gps=strmid(idata_times_gps[time_locations_gps[2], *], $
+           dd_gps=strmid(idata_times_gps[time_locs_gps[2], *], $
                          0, 2)
         'doy': $
            dd_gps=strmid(calendar_gps, 6, 2) ; we already have calendar_gps
         ELSE: message, 'Do not know how to extract day from this field'
      ENDCASE
-     CASE time_names_gps_last[time_locations_gps[3]] OF
-        'hour': hh_gps=string(idata_times_gps[time_locations_gps[3], *], $
+     CASE tnames_last_gps[time_locs_gps[3]] OF
+        'hour': hh_gps=string(idata_times_gps[time_locs_gps[3], *], $
                               format='(i02)')
         'hhmmss': $
-           hh_gps=strmid(idata_times_gps[time_locations_gps[3], *], 0, 2)
+           hh_gps=strmid(idata_times_gps[time_locs_gps[3], *], 0, 2)
         'hhmm': $
-           hh_gps=strmid(idata_times_gps[time_locations_gps[3], *], 2, 2)
+           hh_gps=strmid(idata_times_gps[time_locs_gps[3], *], 0, 2)
         ELSE: message, 'Do not know how to extract hour from this field'
      ENDCASE
-     CASE time_names_gps_last[time_locations_gps[4]] OF
-        'minute': mm_gps=string(idata_times_gps[time_locations_gps[4], *], $
+     CASE tnames_last_gps[time_locs_gps[4]] OF
+        'minute': mm_gps=string(idata_times_gps[time_locs_gps[4], *], $
                                 format='(i02)')
         'hhmmss': $
-           mm_gps=strmid(idata_times_gps[time_locations_gps[4], *], 2, 2)
+           mm_gps=strmid(idata_times_gps[time_locs_gps[4], *], 2, 2)
         'hhmm': $
-           mm_gps=strmid(idata_times_gps[time_locations_gps[4], *], 2, 2)
+           mm_gps=strmid(idata_times_gps[time_locs_gps[4], *], 2, 2)
         ELSE: message, 'Do not know how to extract minute from this field'
      ENDCASE
-     CASE time_names_gps_last[time_locations_gps[5]] OF
-        'second': ss_gps=string(idata_times_gps[time_locations_gps[5], *], $
+     CASE tnames_last_gps[time_locs_gps[5]] OF
+        'second': ss_gps=string(idata_times_gps[time_locs_gps[5], *], $
                                 format='(i02)')
         'hhmmss': $
-           ss_gps=strmid(idata_times_gps[time_locations_gps[5], *], 4, 2)
+           ss_gps=strmid(idata_times_gps[time_locs_gps[5], *], 4, 2)
         ELSE: message, 'Do not know how to extract second from this field'
      ENDCASE
      
      ;; keep=
      odata=remove_structure_tag(idata, (tag_names(idata))[utc_time_idx])
-     IF time_locations[6] LT 0 THEN BEGIN
+     IF time_locs[6] LT 0 THEN BEGIN
         odata=create_struct('year', reform(yyyy), 'month', reform(mo), $
                             'day', reform(dd), 'hour', reform(hh), $
                             'minute', reform(mm), 'second', reform(ss), $
                             odata)
      ENDIF ELSE BEGIN
-        ds=idata_times[time_locations[6], *]
+        ds=idata_times[time_locs[6], *]
         odata=create_struct('year', reform(yyyy), 'month', reform(mo), $
                             'day', reform(dd), 'hour', reform(hh), $
                             'minute', reform(mm), 'second', reform(ss), $
