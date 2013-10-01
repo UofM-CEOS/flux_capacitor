@@ -1,7 +1,7 @@
 ;;; std_rmc.pro --- Standardize RMC files
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-01T18:21:31+0000
+;; Last-Updated: 2013-10-01T19:42:53+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -231,8 +231,9 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
      ENDCASE
      CASE tnames_last[time_locs[5]] OF
         'second': ss=string(idata_times[time_locs[5], *], $
-                            format='(i02)')
-        'hhmmss': ss=strmid(idata_times[time_locs[5], *], 4, 2)
+                            format='(f06.3)')
+        ;; Take up to the end of the string, in case we have fractions
+        'hhmmss': ss=strmid(idata_times[time_locs[5], *], 4)
         ELSE: message, 'Do not know how to extract second from this field'
      ENDCASE
 
@@ -316,9 +317,10 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
      ENDCASE
      CASE tnames_last_gps[time_locs_gps[5]] OF
         'second': ss_gps=string(idata_times_gps[time_locs_gps[5], *], $
-                                format='(i02)')
+                                format='(f06.3)')
+        ;; Take up to the end of the string, in case we have fractions
         'hhmmss': $
-           ss_gps=strmid(idata_times_gps[time_locs_gps[5], *], 4, 2)
+           ss_gps=strmid(idata_times_gps[time_locs_gps[5], *], 4)
         ELSE: message, 'Do not know how to extract second from this field'
      ENDCASE
      
