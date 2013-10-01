@@ -1,8 +1,7 @@
 ;; $Id$
-;;; std_met.pro --- Standardize MET files
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-09-30T03:14:32+0000
+;; Last-Updated: 2013-10-01T16:08:36+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -172,7 +171,7 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
         ss=reform(idata.(time_beg_idx)[second_subfield, *]) $
      ELSE ss=reform('00', lines)
      
-     odata=remove_structure_tag(idata, (tag_names(idata))[0:time_beg_idx])
+     odata=remove_structure_tags(idata, (tag_names(idata))[0:time_beg_idx])
      IF subsecond_subfield LT 0 THEN BEGIN
         odata=create_struct('year', yyyy, 'month', mo, 'day', dd, $
                             'hour', hh, 'minute', mm, 'second', ss, odata)

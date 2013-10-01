@@ -1,7 +1,7 @@
-;;; std_omg.pro --- Standardize OMG files
+;; $Id: $
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T18:38:38+0000
-;; Last-Updated: 2013-09-26T21:51:03+0000
+;; Last-Updated: 2013-10-01T16:09:31+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -217,7 +217,7 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
         ENDELSE
      ENDELSE
      
-     odata=remove_structure_tag(idata, $
+     odata=remove_structure_tags(idata, $
                                 reform((tag_names(idata))[0:time_beg_idx]))
      IF subsecond_subfield LT 0 THEN BEGIN
         odata=create_struct('year', yyyy, 'month', mo, 'day', dd, $

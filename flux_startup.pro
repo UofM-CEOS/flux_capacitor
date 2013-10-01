@@ -3,7 +3,7 @@
 .compile 'bearing_avg.pro'
 .compile 'doy2calendar.pro'
 .compile 'error_message.pro'
-.compile 'remove_structure_tag.pro'
+.compile 'remove_structure_tags.pro'
 .compile 'setDifference.pro'
 .compile 'stddev_yamartino.pro'
 .compile 'valid_num.pro'

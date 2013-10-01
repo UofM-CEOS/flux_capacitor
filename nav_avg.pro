@@ -2,8 +2,8 @@
 ;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-01T02:26:05+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-01T16:07:32+0000
+;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;; 
@@ -126,7 +126,7 @@ PRO NAV_AVG, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $
      idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
      ;; Extract times and remove quotes or spaces from strings
      idata_times=idata.(time_beg_idx)
-     idata=remove_structure_tag(idata, (tag_names(idata))[time_beg_idx])
+     idata=remove_structure_tags(idata, (tag_names(idata))[time_beg_idx])
      idata_names=strlowcase(tag_names(idata))
      IF size(idata_times, /type) EQ 7 THEN BEGIN
         FOREACH fld, indgen((size(idata_times, /dimensions))[0]) DO BEGIN

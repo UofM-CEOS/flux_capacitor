@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-09-28T22:29:39+0000
+;; Last-Updated: 2013-10-01T16:07:12+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -268,7 +268,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
      ;; Extract times and remove quotes or spaces from strings
      idata_times=idata.(time_beg_idx)
-     idata=remove_structure_tag(idata, (tag_names(idata))[time_beg_idx])
+     idata=remove_structure_tags(idata, (tag_names(idata))[time_beg_idx])
      idata_names=strlowcase(tag_names(idata))
      IF size(idata_times, /type) EQ 7 THEN BEGIN
         FOREACH fld, indgen((size(idata_times, /dimensions))[0]) DO BEGIN
