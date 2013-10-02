@@ -1,11 +1,13 @@
+;; $Id: $
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-02T18:10:55+0000
+;; Last-Updated: 2013-10-02T19:26:18+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;; 
-;; 
+;;
+;; ------------------------------------------------------------------------
 ;;; Code:
 
 PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
@@ -310,8 +312,10 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      odata=remove_structure_tags(idata, field_names[tags2remove])
      ;; Find indices to keep
      match2, strlowcase(tag_names(odata)), keep_fields, toss, keep
-     odata=remove_structure_tags(odata, $
-                                 (tag_names(odata))[where(toss LT 0)])
+     tags2remove_odata=where(toss LT 0, nremove)
+     IF nremove GT 0 THEN $
+        odata=remove_structure_tags(odata, $
+                                    (tag_names(odata))[tags2remove_odata])
      odata=create_struct(tnames_id_srv + '_year', utc_year, $
                          tnames_id_srv + '_month', utc_month, $
                          tnames_id_srv + '_day', utc_day, $
