@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-01T19:49:35+0000
+;; Last-Updated: 2013-10-02T17:43:09+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -133,17 +133,17 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
                       matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN
         IF keyword_set(overwrite) THEN BEGIN
-           message, 'Standardized MET file ' + ofile_stamp + $
+           message, 'Standardized file ' + ofile_stamp + $
                     ' already exists.  Overwriting', /informational
         ENDIF ELSE BEGIN
-        message, 'Standardized MET file ' + ofile_stamp + $
+        message, 'Standardized file ' + ofile_stamp + $
                  ' already exists.  Not overwriting', /informational
         CONTINUE
      ENDELSE
      ENDIF
 
      ifile=idir_files[k]
-     message, 'Processing file: ' + ifile, /informational
+     message, 'Processing ' + ifile, /informational
 
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)

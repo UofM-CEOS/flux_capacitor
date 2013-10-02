@@ -1,7 +1,7 @@
 ;;; std_rmc.pro --- Standardize RMC files
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-01T19:46:55+0000
+;; Last-Updated: 2013-10-02T17:43:55+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -69,7 +69,7 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
   ;; Check parameters
   IF (n_params() NE 6) THEN $
      message, 'Usage: STD_MET, IDIR, ODIR, ITEMPLATE_SAV, ' + $
-              'UTC_TIME_IDX, OHEADER'
+              'UTC_TIME_IDX, GPS_TIME_IDX, KEEP_FIELDS'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
@@ -125,22 +125,22 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
      ofile_name=strcompress(odir + path_sep() + iname[0] + '_std.' + $
                             iname[1], /remove_all)
      ofile_stamp=file_basename(ofile_name)
-     out_list=file_search(odir + path_sep() + '*.dat', /nosort)
+     out_list=file_search(odir + path_sep() + '*.' + iname[1], /nosort)
      matchfiles=where(ofile_stamp EQ file_basename(out_list), $
                       matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN
         IF keyword_set(overwrite) THEN BEGIN
-           message, 'Standardized MET file ' + ofile_stamp + $
+           message, 'Standardized file ' + ofile_stamp + $
                     ' already exists.  Overwriting', /informational
         ENDIF ELSE BEGIN
-        message, 'Standardized MET file ' + ofile_stamp + $
+        message, 'Standardized file ' + ofile_stamp + $
                  ' already exists.  Not overwriting', /informational
         CONTINUE
      ENDELSE
      ENDIF
 
      ifile=idir_files[k]
-     message, 'Processing file: ' + ifile, /informational
+     message, 'Processing ' + ifile, /informational
 
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)

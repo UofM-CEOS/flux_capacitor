@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-01T19:48:22+0000
+;; Last-Updated: 2013-10-02T17:41:23+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -264,7 +264,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   ;; Read each file
   FOR k=0L, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
-     message, 'Processing File: ' + ifile, /informational
+     message, 'Processing ' + ifile, /informational
      idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
      ;; Extract times and remove quotes or spaces from strings
      idata_times=idata.(time_beg_idx)
