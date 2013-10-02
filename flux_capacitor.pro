@@ -2,7 +2,7 @@
 ;;; flux_capacitor.pro --- 
 ;; Author: Bruce Johnson, Ryan Smith, Sebastian Luque
 ;; Created: 2013-08-23T22:24:25+0000
-;; Last-Updated: 2013-09-30T03:18:50+0000
+;; Last-Updated: 2013-10-02T18:20:21+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary:
@@ -353,19 +353,6 @@ PRO process, event
                    met_std_template, 0, met_timing, met_stamp, /overwrite
   ENDIF ELSE BEGIN
      print, 'Skipping splitting of MET files ...'
-  ENDELSE
-
-  ;; ===========================================================
-  ;; Call process if RMC and GYRO pre-processing selector was set to Yes
-
-  ;; [SPL] All of this should just be moved to the standardization routines
-  IF check_ctrl_var((*pState).rmc_pp) EQ 1 THEN BEGIN
-     draw_msg, (*pState).viewer, 'Pre-processing RMC files ...'
-     ;; pre_proc_RMC, raw_rmc_dir, pre_rmc_dir, std_rmc_dir, raw_rmc_temp
-     draw_msg, (*pState).viewer, 'Pre-processing Gyro files ...'
-     ;; pre_proc_GYRO, raw_gyro_dir, pre_gyro_dir, std_gyro_dir, raw_gyro_temp
-  ENDIF ELSE BEGIN
-     print, 'Skipping RMC and GYRO pre-processing ...'
   ENDELSE
 
   ;; ==========================================================
