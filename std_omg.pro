@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T18:38:38+0000
-;; Last-Updated: 2013-10-02T19:51:07+0000
+;; Last-Updated: 2013-10-02T20:53:16+0000
 ;;           By: Sebastian Luque
 ;; + ----------------------------------------------------------------------
 ;; NAME:
@@ -47,9 +47,13 @@
 ;; EXAMPLE:
 ;; 
 ;; omg_nav_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
-;; STD_OMG, expand_path('~/tmp/ArcticNet2011/OMG'), $
-;;          expand_path('~/tmp/ArcticNet2011/OMG/STD'), $
-;;          'omg_raw_template.sav', 0, omg_raw_keep_fields
+;; omg_hdg_raw_keep_fields='heading'
+;; STD_OMG, expand_path('~/tmp/ArcticNet2011/OMG/NAV'), $
+;;          expand_path('~/tmp/ArcticNet2011/OMG/NAV/STD'), $
+;;          'omg_nav_raw_template.sav', 0, omg_raw_keep_fields
+;; STD_OMG, expand_path('~/tmp/ArcticNet2011/OMG/HDG'), $
+;;          expand_path('~/tmp/ArcticNet2011/OMG/HDG/STD'), $
+;;          'omg_hdg_raw_template.sav', 0, omg_raw_keep_fields
 ;; 
 ;; - ----------------------------------------------------------------------
 ;;; Code:
@@ -189,14 +193,18 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
         ELSE: message, 'Do not know how to extract minute from this field'
      ENDCASE
      CASE tnames_last[time_locs[5]] OF
-        'second': ss=string(idata_times[time_locs[5], *], format='(f06.3)')
+        ;; Becareful: only output 1 decimal place
+        'second': ss=string(idata_times[time_locs[5], *], format='(f04.1)')
         ;; Take up to the end of the string, in case we have fractions
-        'hhmmss': ss=strmid(idata_times[time_locs[5], *], 4)
+        'hhmmss': BEGIN
+           ss=strmid(idata_times[time_locs[5], *], 4)
+           ss=string(temporary(ss), format='(f04.1)')
+        END
         ELSE: message, 'Do not know how to extract second from this field'
      ENDCASE
      IF time_locs[6] GE 0 THEN $ ; concatenate if we have fractional ss
         ss=temporary(ss) + '.' + $
-           string(idata_times[time_locs[6], *], format='(i03)')
+           string(idata_times[time_locs[6], *], format='(i02)')
      
      odata=remove_structure_tags(idata, field_names[tags2remove])
      ;; Find indices to keep
