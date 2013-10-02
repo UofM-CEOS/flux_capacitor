@@ -1,21 +1,17 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T18:38:38+0000
-;; Last-Updated: 2013-10-02T19:37:14+0000
+;; Last-Updated: 2013-10-02T19:51:07+0000
 ;;           By: Sebastian Luque
-;; ------------------------------------------------------------------------
-;;; Commentary: 
-;; 
-;;
 ;; + ----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; std_omg_nav
+;; std_omg
 ;; 
 ;; PURPOSE:
 ;; 
-;;  Standardize OMG NAV files.  It will likely standardize other files in
-;;  the future.
+;;  Standardize OMG files.  It will likely standardize other files in the
+;;  future.
 ;; 
 ;; CATEGORY:
 ;; 
@@ -23,7 +19,7 @@
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;  STD_OMG_NAV, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Keep_Fields
+;;  STD_OMG, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Keep_Fields
 ;; 
 ;; INPUTS:
 ;; 
@@ -50,16 +46,16 @@
 ;; 
 ;; EXAMPLE:
 ;; 
-;; omg_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
-;; STD_OMG_NAV, expand_path('~/tmp/ArcticNet2011/OMG'), $
-;;              expand_path('~/tmp/ArcticNet2011/OMG/STD'), $
-;;              'omg_raw_template.sav', 0, omg_raw_keep_fields
+;; omg_nav_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
+;; STD_OMG, expand_path('~/tmp/ArcticNet2011/OMG'), $
+;;          expand_path('~/tmp/ArcticNet2011/OMG/STD'), $
+;;          'omg_raw_template.sav', 0, omg_raw_keep_fields
 ;; 
 ;; - ----------------------------------------------------------------------
 ;;; Code:
 
-PRO STD_OMG_NAV, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
-                 OVERWRITE=OVERWRITE
+PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
+             OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 5) THEN $
@@ -227,4 +223,4 @@ END
 ;; allout-layout: (-2 + : 0)
 ;; End:
 ;;
-;;; std_omg_nav.pro ends here
+;;; std_omg.pro ends here
