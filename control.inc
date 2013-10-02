@@ -1,7 +1,7 @@
 ;;; control.inc --- Variables for flux_capacitor.pro
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-10-01T16:14:44+0000
+;; Last-Updated: 2013-10-02T18:54:01+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -254,6 +254,8 @@ rmc_stamp='RMC'
 rmc_prefix=6
 rmc_bear_field=9
 rmc_vec_field=8
+
+omg_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
 
 
 ;;; Emacs local variables
