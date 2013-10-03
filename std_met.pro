@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-03T03:06:57+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-03T15:09:32+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -46,25 +46,24 @@
 ;; 
 ;; EXAMPLE:
 ;; 
-;; met_std_header='year, month, day, hour, minute, second, ' + $
-;;                'prog_version, battery_volt, panel_temperature, ' + $
-;;                'pressure, air_temperature, RH_percent, ' + $
-;;                'surface_temperature, wind_speed, wind_direction, ' + $
-;;                'wind_sd, PAR, pitch, roll'
+;; met_raw_keep_fields=['prog_version', 'battery_voltage', 'panel_temperature', $
+;;                      'pressure', 'air_temperature', 'rh_percent', $
+;;                      'surface_temperature', 'wind_speed', $
+;;                      'wind_direction', 'wind_sd', 'par', 'pitch', 'roll']
 ;; STD_MET, expand_path('~/tmp/ArcticNet2011/MET'), $
 ;;          expand_path('~/tmp/ArcticNet2011/MET/STD'), $
-;;          'met_raw_template.sav', 1, met_std_header, /overwrite
+;;          'met_raw_template.sav', 1, met_raw_keep_fields, /overwrite
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
+PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
              OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 5) THEN $
      message, 'Usage: STD_MET, IDIR, ODIR, ITEMPLATE_SAV, ' + $
-              'TIME_BEG_IDX, OHEADER'
+              'TIME_BEG_IDX, KEEP_FIELDS'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
@@ -73,46 +72,28 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
      message, 'ITEMPLATE_SAV is undefined or is empty string'
   IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
      message, 'TIME_BEG_IDX must be a scalar >= zero'
-  IF (n_elements(oheader) EQ 0) THEN $
-     message, 'OHEADER is undefined'
-
+  IF (n_elements(keep_fields) EQ 0) THEN $
+     message, 'KEEP_FIELDS is undefined'
   idir_files=file_search(idir + path_sep() + '*.dat', count=nidir_files, $
                          /nosort)
-  IF nidir_files LT 1 THEN BEGIN
-     message, 'No input files found', /informational
-     RETURN
-  ENDIF
+  IF nidir_files LT 1 THEN $
+     message, 'No input files found'
+
   restore, itemplate_sav
+  field_names=itemplate.FIELDNAMES
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
-  header=strsplit(oheader, ', ', /extract) ; assuming ", "
-  n_ofields=n_elements(header) ; N fields as in input header
-  time_fields=where(itemplate.FIELDGROUPS EQ time_beg_idx, /NULL)
-  time_field_names=strlowcase(itemplate.FIELDNAMES[time_fields])
-  year_subfield=where(time_field_names EQ 'year') ; locate year
-  month_subfield=where(time_field_names EQ 'month') ; locate month
-  day_subfield=where(time_field_names EQ 'day') ; locate day
-  hour_subfield=where(time_field_names EQ 'hour') ; locate hour
-  minute_subfield=where(time_field_names EQ 'minute') ; locate minute
-  hourminute_subfield=where(time_field_names EQ 'hhmm') ; merged?
-  second_subfield=where(time_field_names EQ 'second') ; locate second
-  ;; Check if we have a name with "second" as substring somewhere after the
-  ;; first character; matches e.g.: "decisecond", "millisecond"
-  subsecond_exists=strpos(time_field_names, 'second', 1)
-  subsecond_subfield=where(subsecond_exists GE 0)
-  doy_subfield=where((time_field_names EQ 'doy') OR $
-                     (time_field_names EQ 'julday')) ; locate DOY
-  IF year_subfield LT 0 THEN $
-     message, 'Cannot determine year using this ITEMPLATE'
-  IF ((month_subfield LT 0) OR (day_subfield LT 0)) AND $
-     (doy_subfield LT 0) THEN BEGIN
-     message, 'Cannot determine month or day using this ITEMPLATE, ' + $
-              'where DOY is also absent'
-  ENDIF
-  IF ((hour_subfield LT 0) OR (minute_subfield LT 0)) AND $
-     (hourminute_subfield LT 0) THEN BEGIN
-     message, 'Cannot determine hour or minute using this ' + $
-              'ITEMPLATE, where merged hour and minute is also absent'
-  ENDIF
+  tags2remove=where(field_names EQ field_names[time_beg_idx])
+  ;; Times
+  tfields=where(itemplate.FIELDGROUPS EQ time_beg_idx, /NULL)
+  tnames=strlowcase(field_names[tfields])
+  tnamesl=strsplit(tnames, '_', /extract)
+  tnames_last=strarr(n_elements(tnamesl))
+  tnames_id=strjoin((tnamesl[0])[0:n_elements(tnamesl[0]) - 2], '_')
+  FOR i=0L, n_elements(tnames) - 1 DO $
+     tnames_last[i]=tnamesl[i, n_elements(tnamesl[i]) - 1]
+  ;; Determine where in these names we're supposed to get each time field
+  ;; (year, month, day, hour, minute, second, subsecond)
+  time_locs=locate_time_strings(tnames_last)
      
   ;; Loop through files in input directory
   FOR k=0, nidir_files - 1 DO BEGIN
@@ -121,7 +102,7 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
      ofile_name=strcompress(odir + path_sep() + iname[0] + '_std.' + $
                             iname[1], /remove_all)
      ofile_stamp=file_basename(ofile_name)
-     out_list=file_search(odir + path_sep() + '*.dat', /nosort)
+     out_list=file_search(odir + path_sep() + '*.' + iname[1], /nosort)
      matchfiles=where(ofile_stamp EQ file_basename(out_list), $
                       matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN
@@ -137,69 +118,121 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $
 
      ifile=idir_files[k]
      message, 'Processing ' + ifile, /informational
-
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)
+     idata_names=strlowcase(tag_names(idata))
+     time_loc=where(idata_names EQ $
+                    strlowcase(field_names[time_beg_idx]))
+     idata_times=idata.(time_loc)
      ;; Number of lines in input
-     lines=n_elements(idata.(time_beg_idx)[0, *])
+     lines=n_elements(idata_times[0, *])
+     ;; Remove quotes and separators
+     IF size(idata_times, /type) EQ 7 THEN BEGIN
+        FOREACH fld, indgen((size(idata_times, $
+                                  /dimensions))[0]) DO BEGIN
+           ok=strsplit(idata_times[fld, *], '" -/:', /extract)
+           ok=(temporary(ok)).toArray()
+           ok=strjoin(transpose(temporary(ok)))
+           idata_times[fld, *]=ok
+        ENDFOREACH
+     ENDIF
+     match2, idata_names, strlowcase(field_names[tags2remove]), is_time
+     FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
+        IF size(idata.(fld), /type) EQ 7 THEN BEGIN
+           ok=strsplit(idata.(fld), '" ', /extract)
+           idata.(fld)=ok.toArray()
+        ENDIF
+     ENDFOREACH
+
      ;; Obtain full time details
-     yyyy=reform(idata.(time_beg_idx)[year_subfield, *])
-     IF month_subfield GE 0 THEN BEGIN 
-        mo=reform(idata.(time_beg_idx)[month_subfield, *])
-     ENDIF ELSE BEGIN
-        doy=idata.(time_beg_idx)[doy_subfield, *]
-        calstr=doy2calendar(yyyy, doy)
-        mo=reform(strmid(calstr, 4, 2))
-        dd=reform(strmid(calstr, 6, 2))
-     ENDELSE
-     IF hour_subfield GE 0 THEN BEGIN
-        hh=reform(idata.(time_beg_idx)[hour_subfield, *])
-     ENDIF ELSE BEGIN
-        hhmm_str=string(idata.(time_beg_idx)[hourminute_subfield, *], $
-                        format='(i04)')
-        hh=reform(strmid(hhmm_str, 0, 2))
-        mm=reform(strmid(hhmm_str, 2, 2))
-     ENDELSE
-     IF second_subfield GE 0 THEN $
-        ss=reform(idata.(time_beg_idx)[second_subfield, *]) $
-     ELSE ss=reform('00', lines)
+     CASE tnames_last[time_locs[0]] OF
+        'year': yyyy=string(idata_times[time_locs[0], *], format='(i04)')
+        'yyyymmdd': yyyy=strmid(idata_times[time_locs[0], *], 0, 4)
+        'mmddyyyy': yyyy=strmid(idata_times[time_locs[0], *], 4, 4)
+        'ddmmyyyy': yyyy=strmid(idata_times[time_locs[0], *], 4, 4)
+        'ddmmyy': BEGIN
+           message, 'Assuming current century', /informational
+           tstamp=jul2timestamp(systime(/julian))
+           yyyy=strmid(tstamp, 0, 2) + $
+                strmid(idata_times[time_locs[0], *], 4, 2)
+        END
+        ELSE: message, 'Do not know how to extract year from this field'
+     ENDCASE
+     CASE tnames_last[time_locs[1]] OF
+        'month': mo=string(idata_times[time_locs[1], *], format='(i02)')
+        'yyyymmdd': mo=strmid(idata_times[time_locs[1], *], 4, 2)
+        'mmddyyyy': mo=strmid(idata_times[time_locs[1], *], 0, 2)
+        'ddmmyyyy': mo=strmid(idata_times[time_locs[1], *], 2, 2)
+        'ddmmyy': mo=strmid(idata_times[time_locs[1], *], 2, 2)
+        'doy': BEGIN
+           calendar=doy2calendar(yyyy, idata_times[time_locs[1], *])
+           mo=strmid(calendar, 4, 2)
+        END
+        ELSE: message, 'Do not know how to extract month from this field'
+     ENDCASE
+     CASE tnames_last[time_locs[2]] OF
+        'day': dd=string(idata_times[time_locs[2], *], format='(i02)')
+        'yyyymmdd': dd=strmid(idata_times[time_locs[2], *], 6, 2)
+        'mmddyyyy': dd=strmid(idata_times[time_locs[2], *], 2, 2)
+        'ddmmyyyy': dd=strmid(idata_times[time_locs[2], *], 0, 2)
+        'ddmmyy': dd=strmid(idata_times[time_locs[2], *], 0, 2)
+        'doy': dd=strmid(calendar, 6, 2) ; we already have calendar
+        ELSE: message, 'Do not know how to extract day from this field'
+     ENDCASE
+     CASE tnames_last[time_locs[3]] OF
+        'hour': hh=string(idata_times[time_locs[3], *], format='(i02)')
+        'hhmmss': hh=strmid(idata_times[time_locs[3], *], 0, 2)
+        'hhmm': hh=strmid(idata_times[time_locs[3], *], 0, 2)
+        ELSE: message, 'Do not know how to extract hour from this field'
+     ENDCASE
+     CASE tnames_last[time_locs[4]] OF
+        'minute': mm=string(idata_times[time_locs[4], *], format='(i02)')
+        'hhmmss': mm=strmid(idata_times[time_locs[4], *], 2, 2)
+        'hhmm': mm=strmid(idata_times[time_locs[4], *], 2, 2)
+        ELSE: message, 'Do not know how to extract minute from this field'
+     ENDCASE
+     CASE tnames_last[time_locs[5]] OF
+        ;; Becareful: only output 1 decimal place
+        'second': ss=string(idata_times[time_locs[5], *], format='(f04.1)')
+        ;; Take up to the end of the string, in case we have fractions
+        'hhmmss': BEGIN
+           ss=strmid(idata_times[time_locs[5], *], 4)
+           ss=string(temporary(ss), format='(f04.1)')
+        END
+        ELSE: message, 'Do not know how to extract second from this field'
+     ENDCASE
+     IF time_locs[6] GE 0 THEN $ ; concatenate if we have fractional ss
+        ss=temporary(ss) + '.' + $
+           string(idata_times[time_locs[6], *], format='(i02)')
      
-     odata=remove_structure_tags(idata, (tag_names(idata))[0:time_beg_idx])
-     IF subsecond_subfield LT 0 THEN BEGIN
-        odata=create_struct('year', yyyy, 'month', mo, 'day', dd, $
-                            'hour', hh, 'minute', mm, 'second', ss, odata)
-     ENDIF ELSE BEGIN
-        ds=idata.(time_beg_idx)[subsecond_subfield, *]
-        odata=create_struct('year', yyyy, 'month', mo, 'day', dd, $
-                            'hour', hh, 'minute', mm, 'second', ss, $
-                            'second_fraction', ds, odata)
-     ENDELSE
+     odata=remove_structure_tags(idata, field_names[tags2remove])
+     ;; Find indices to keep
+     match2, strlowcase(tag_names(odata)), keep_fields, toss, keep
+     tags2remove_odata=where(toss LT 0, nremove)
+     IF nremove GT 0 THEN $
+        odata=remove_structure_tags(odata, $
+                                    (tag_names(odata))[tags2remove_odata])
+     odata=create_struct('year', reform(yyyy), 'month', reform(mo), $
+                         'day', reform(dd), 'hour', reform(hh), $
+                         'minute', reform(mm), 'second', reform(ss), odata)
      delvar, idata
 
-     ;; Loop through records (lines)
-     FOR exd=0L, lines[0] - 1  DO BEGIN
-        ;; Fix things depending on year
-        SWITCH yyyy[exd] OF
-           '2011': BEGIN
-              ;; For 2011 RH data set to NaN when sensor was not working
-              ;; from 0931 UTC on JD204 through 1435 on JD207. We're sure
-              ;; we have DOY in these raw files, so no need to test.
-              cal_bad_beg=doy2calendar(2011, 204)
-              cal_bad_end=doy2calendar(2011, 207)
-              jd_badbeg=julday(strmid(cal_bad_beg, 4, 2), $
-                               strmid(cal_bad_beg, 6, 2), 2011, 9, 31)
-              jd_badend=julday(strmid(cal_bad_end, 4, 2), $
-                               strmid(cal_bad_end, 6, 2), 2011, 14, 35)
-              jd_now=julday(mo[exd], dd[exd], 2011, hh[exd], mm[exd])
-              IF (jd_now GE jd_badbeg) AND $
-                 (jd_now LE jd_badend) THEN BEGIN
-                 odata.(11)[exd]=!VALUES.F_NAN
-              ENDIF
-           END
-        ENDSWITCH
-     ENDFOR
+     ;; Fix things for some years
 
-     write_csv, ofile_name, odata, header=header
+     ;; For 2011 RH data set to NaN when sensor was not working
+     ;; from 0931 UTC on JD204 through 1435 on JD207. We're sure
+     ;; we have DOY in these raw files, so no need to test.
+     cal_badbeg2011=doy2calendar(2011, 204)
+     cal_badend2011=doy2calendar(2011, 207)
+     jd_badbeg2011=julday(strmid(cal_badbeg2011, 4, 2), $
+                          strmid(cal_badbeg2011, 6, 2), 2011, 9, 31)
+     jd_badend2011=julday(strmid(cal_badend2011, 4, 2), $
+                          strmid(cal_badend2011, 6, 2), 2011, 14, 35)
+     jd=julday(mo, dd, yyyy, hh, mm)
+     bad2011=where((jd GE jd_badbeg2011) AND (jd LE jd_badend2011), nbad)
+     IF nbad GT 0 THEN odata.(11)[bad2011]=!VALUES.F_NAN
+
+     write_csv, ofile_name, odata, header=strlowcase(tag_names(odata))
 
   ENDFOR
 
