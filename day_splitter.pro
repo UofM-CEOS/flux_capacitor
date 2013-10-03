@@ -2,8 +2,8 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-03T03:09:30+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-03T17:10:35+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
@@ -216,6 +216,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   non_time_field_names=strlowcase(header[non_time_fields])
 
   ;; Read each file
+  is_match=intarr(n_elements(times)) ; to check how many matches
   FOR k=0L, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
      message, 'Processing ' + ifile, /informational
@@ -252,6 +253,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      match2, times, i_ts, times_in_its, i_ts_in_times
      t_matches=where(times_in_its GE 0, mcount, /null)
      IF mcount LT 1 THEN CONTINUE
+     is_match[t_matches]=1      ; mark matches
      its_matches=where(i_ts_in_times GE 0)
      FOREACH value, ts_all, fld DO BEGIN ; loop non-time hash
         match_fld=where(non_time_field_names EQ strlowcase(fld))
@@ -267,6 +269,8 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   ;; Write each daily array
   FOR begi=0L, n_elements(times) - 1, n_recs DO BEGIN
      endi=(begi + n_recs - 1)
+     day_check=where(is_match[begi:endi] GT 0, n)
+     IF n LT 1 THEN CONTINUE
      file_stamp=file_stamps[begi / n_recs]
      ;; ts=ts_full.toStruct(/no_copy)
      ;; There must be a better way to re-order tags
