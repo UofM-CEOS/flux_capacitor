@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-03T03:08:07+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-03T14:34:03+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -54,18 +54,18 @@
 ;; rmc_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
 ;; STD_RMC, expand_path('~/tmp/ArcticNet2011/RMC'), $
 ;;          expand_path('~/tmp/ArcticNet2011/RMC/STD'), $
-;;          'rmc_raw_template.sav', 2, rmc_raw_keep_fields, /overwrite
+;;          'rmc_raw_template.sav', 3, 0, rmc_raw_keep_fields, /overwrite
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
+PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
              KEEP_FIELDS, OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 6) THEN $
      message, 'Usage: STD_MET, IDIR, ODIR, ITEMPLATE_SAV, ' + $
-              'UTC_TIME_IDX, GPS_TIME_IDX, KEEP_FIELDS'
+              'UTC_TIME_IDX, SERVER_TIME_IDX, KEEP_FIELDS'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
@@ -74,8 +74,8 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
      message, 'ITEMPLATE_SAV is undefined or is empty string'
   IF ((n_elements(utc_time_idx) NE 1) OR (utc_time_idx LT 0)) THEN $
      message, 'UTC_TIME_IDX must be a scalar >= zero'
-  IF ((n_elements(gps_time_idx) NE 1) OR (gps_time_idx LT 0)) THEN $
-     message, 'GPS_TIME_IDX must be a scalar  >= zero'
+  IF ((n_elements(server_time_idx) NE 1) OR (server_time_idx LT 0)) THEN $
+     message, 'SERVER_TIME_IDX must be a scalar  >= zero'
   IF (n_elements(keep_fields) EQ 0) THEN $
      message, 'KEEP_FIELDS is undefined'
 
@@ -89,9 +89,7 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
   field_names=itemplate.FIELDNAMES
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
   tags2remove=where(field_names EQ field_names[utc_time_idx] OR $
-                    field_names EQ field_names[gps_time_idx])
-  ;; header=strsplit(oheader, ', ', /extract) ; assuming ", "
-  ;; n_ofields=n_elements(header) ; N fields as in input header
+                    field_names EQ field_names[server_time_idx])
   tfields=where(itemplate.FIELDGROUPS EQ utc_time_idx, /NULL) ; time fields
   tnames=strlowcase(field_names[tfields])            ; time names
   tnamesl=strsplit(tnames, '_', /extract)                 ; split list
@@ -102,17 +100,17 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
   ;; Determine where in these names we're supposed to get each time field
   ;; (year, month, day, hour, minute, second, subsecond)
   time_locs=locate_time_strings(tnames_last)
-  ;; GPS times
-  tfields_gps=where(itemplate.FIELDGROUPS EQ gps_time_idx, /NULL)
-  tnames_gps=strlowcase(field_names[tfields_gps])
-  tnamesl_gps=strsplit(tnames_gps, '_', /extract)
-  tnames_last_gps=strarr(n_elements(tnamesl_gps))
-  tnames_id_gps=strjoin((tnamesl_gps[0])[0:n_elements(tnamesl_gps[0]) - 2], '_')
-  FOR i=0L, n_elements(tnames_gps) - 1 DO $
-     tnames_last_gps[i]=tnamesl_gps[i, n_elements(tnamesl_gps[i]) - 1]
+  ;; Server times
+  tfields_srv=where(itemplate.FIELDGROUPS EQ server_time_idx, /NULL)
+  tnames_srv=strlowcase(field_names[tfields_srv])
+  tnamesl_srv=strsplit(tnames_srv, '_', /extract)
+  tnames_last_srv=strarr(n_elements(tnamesl_srv))
+  tnames_id_srv=strjoin((tnamesl_srv[0])[0:n_elements(tnamesl_srv[0]) - 2], '_')
+  FOR i=0L, n_elements(tnames_srv) - 1 DO $
+     tnames_last_srv[i]=tnamesl_srv[i, n_elements(tnamesl_srv[i]) - 1]
   ;; Determine where in these names we're supposed to get each time field
   ;; (year, month, day, hour, minute, second, subsecond)
-  time_locs_gps=locate_time_strings(tnames_last_gps)
+  time_locs_srv=locate_time_strings(tnames_last_srv)
      
   ;; Loop through files in input directory
   FOR k=0, nidir_files - 1 DO BEGIN
@@ -143,9 +141,9 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
      idata_names=strlowcase(tag_names(idata))
      idata_times=idata.(where(idata_names EQ $
                               strlowcase(field_names[utc_time_idx])))
-     gps_time_loc=where(idata_names EQ $
-                        strlowcase(field_names[gps_time_idx]))
-     idata_times_gps=idata.(gps_time_loc)
+     srv_time_loc=where(idata_names EQ $
+                        strlowcase(field_names[server_time_idx]))
+     idata_times_srv=idata.(srv_time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])
      ;; Remove quotes and separators
@@ -157,13 +155,13 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
            idata_times[fld, *]=ok
         ENDFOREACH
      ENDIF
-     IF size(idata_times_gps, /type) EQ 7 THEN BEGIN
-        FOREACH fld, indgen((size(idata_times_gps, $
+     IF size(idata_times_srv, /type) EQ 7 THEN BEGIN
+        FOREACH fld, indgen((size(idata_times_srv, $
                                   /dimensions))[0]) DO BEGIN
-           ok=strsplit(idata_times_gps[fld, *], '" -/:', /extract)
+           ok=strsplit(idata_times_srv[fld, *], '" -/:', /extract)
            ok=(temporary(ok)).toArray()
            ok=strjoin(transpose(temporary(ok)))
-           idata_times_gps[fld, *]=ok
+           idata_times_srv[fld, *]=ok
         ENDFOREACH
      ENDIF
      match2, idata_names, strlowcase(field_names[tags2remove]), is_time
@@ -233,98 +231,100 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
         ELSE: message, 'Do not know how to extract second from this field'
      ENDCASE
 
-     ;; Obtain full GPS time details
-     CASE tnames_last_gps[time_locs_gps[0]] OF
+     ;; Obtain full server time details
+     CASE tnames_last_srv[time_locs_srv[0]] OF
         'year': $
-           yyyy_gps=string(idata_times_gps[time_locs_gps[0], *], $
+           yyyy_srv=string(idata_times_srv[time_locs_srv[0], *], $
                            format='(i04)')
         'yyyymmdd': $
-           yyyy_gps=strmid(idata_times_gps[time_locs_gps[0], *], $
+           yyyy_srv=strmid(idata_times_srv[time_locs_srv[0], *], $
                            0, 4)
         'mmddyyyy': $
-           yyyy_gps=strmid(idata_times_gps[time_locs_gps[0], *], $
+           yyyy_srv=strmid(idata_times_srv[time_locs_srv[0], *], $
                            4, 4)
         'ddmmyyyy': $
-           yyyy_gps=strmid(idata_times_gps[time_locs_gps[0], *], $
+           yyyy_srv=strmid(idata_times_srv[time_locs_srv[0], *], $
                            4, 4)
         'ddmmyy': BEGIN
            message, 'Assuming current century', /informational
            tstamp=jul2timestamp(systime(/julian))
-           yyyy_gps=strmid(tstamp, 0, 2) + $
-                    strmid(idata_times_gps[time_locs_gps[0], *], 4, 2)
+           yyyy_srv=strmid(tstamp, 0, 2) + $
+                    strmid(idata_times_srv[time_locs_srv[0], *], 4, 2)
         END
         ELSE: message, 'Do not know how to extract year from this field'
      ENDCASE
-     CASE tnames_last_gps[time_locs_gps[1]] OF
-        'month': mo_gps=string(idata_times_gps[time_locs_gps[1], *], $
+     CASE tnames_last_srv[time_locs_srv[1]] OF
+        'month': mo_srv=string(idata_times_srv[time_locs_srv[1], *], $
                                format='(i02)')
         'yyyymmdd': $
-           mo_gps=strmid(idata_times_gps[time_locs_gps[1], *], 4, 2)
+           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 4, 2)
         'mmddyyyy': $
-           mo_gps=strmid(idata_times_gps[time_locs_gps[1], *], 0, 2)
+           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 0, 2)
         'ddmmyyyy': $
-           mo_gps=strmid(idata_times_gps[time_locs_gps[1], *], 2, 2)
+           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 2, 2)
         'ddmmyy': $
-           mo_gps=strmid(idata_times_gps[time_locs_gps[1], *], 2, 2)
+           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 2, 2)
         'doy': BEGIN
-           calendar_gps=doy2calendar(yyyy, $
-                                     idata_times_gps[time_locs_gps[1], *])
-           mo_gps=strmid(calendar_gps, 4, 2)
+           calendar_srv=doy2calendar(yyyy, $
+                                     idata_times_srv[time_locs_srv[1], *])
+           mo_srv=strmid(calendar_srv, 4, 2)
         END
         ELSE: message, 'Do not know how to extract month from this field'
      ENDCASE
-     CASE tnames_last_gps[time_locs_gps[2]] OF
+     CASE tnames_last_srv[time_locs_srv[2]] OF
         'day': $
-           dd_gps=string(idata_times_gps[time_locs_gps[2], *], $
+           dd_srv=string(idata_times_srv[time_locs_srv[2], *], $
                          format='(i02)')
         'yyyymmdd': $
-           dd_gps=strmid(idata_times_gps[time_locs_gps[2], *], $
+           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
                          6, 2)
         'mmddyyyy': $
-           dd_gps=strmid(idata_times_gps[time_locs_gps[2], *], $
+           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
                          2, 2)
         'ddmmyyyy': $
-           dd_gps=strmid(idata_times_gps[time_locs_gps[2], *], $
+           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
                          0, 2)
         'ddmmyy': $
-           dd_gps=strmid(idata_times_gps[time_locs_gps[2], *], $
+           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
                          0, 2)
         'doy': $
-           dd_gps=strmid(calendar_gps, 6, 2) ; we already have calendar_gps
+           dd_srv=strmid(calendar_srv, 6, 2) ; we already have calendar_srv
         ELSE: message, 'Do not know how to extract day from this field'
      ENDCASE
-     CASE tnames_last_gps[time_locs_gps[3]] OF
-        'hour': hh_gps=string(idata_times_gps[time_locs_gps[3], *], $
+     CASE tnames_last_srv[time_locs_srv[3]] OF
+        'hour': hh_srv=string(idata_times_srv[time_locs_srv[3], *], $
                               format='(i02)')
         'hhmmss': $
-           hh_gps=strmid(idata_times_gps[time_locs_gps[3], *], 0, 2)
+           hh_srv=strmid(idata_times_srv[time_locs_srv[3], *], 0, 2)
         'hhmm': $
-           hh_gps=strmid(idata_times_gps[time_locs_gps[3], *], 0, 2)
+           hh_srv=strmid(idata_times_srv[time_locs_srv[3], *], 0, 2)
         ELSE: message, 'Do not know how to extract hour from this field'
      ENDCASE
-     CASE tnames_last_gps[time_locs_gps[4]] OF
-        'minute': mm_gps=string(idata_times_gps[time_locs_gps[4], *], $
+     CASE tnames_last_srv[time_locs_srv[4]] OF
+        'minute': mm_srv=string(idata_times_srv[time_locs_srv[4], *], $
                                 format='(i02)')
         'hhmmss': $
-           mm_gps=strmid(idata_times_gps[time_locs_gps[4], *], 2, 2)
+           mm_srv=strmid(idata_times_srv[time_locs_srv[4], *], 2, 2)
         'hhmm': $
-           mm_gps=strmid(idata_times_gps[time_locs_gps[4], *], 2, 2)
+           mm_srv=strmid(idata_times_srv[time_locs_srv[4], *], 2, 2)
         ELSE: message, 'Do not know how to extract minute from this field'
      ENDCASE
-     CASE tnames_last_gps[time_locs_gps[5]] OF
-        'second': ss_gps=string(idata_times_gps[time_locs_gps[5], *], $
+     CASE tnames_last_srv[time_locs_srv[5]] OF
+        'second': ss_srv=string(idata_times_srv[time_locs_srv[5], *], $
                                 format='(f06.3)')
         ;; Take up to the end of the string, in case we have fractions
         'hhmmss': $
-           ss_gps=strmid(idata_times_gps[time_locs_gps[5], *], 4)
+           ss_srv=strmid(idata_times_srv[time_locs_srv[5], *], 4)
         ELSE: message, 'Do not know how to extract second from this field'
      ENDCASE
      
      odata=remove_structure_tags(idata, field_names[tags2remove])
      ;; Find indices to keep
      match2, strlowcase(tag_names(odata)), keep_fields, toss, keep
-     odata=remove_structure_tags(odata, $
-                                 (tag_names(odata))[where(toss LT 0)])
+     tags2remove_odata=where(toss LT 0, nremove)
+     IF nremove GT 0 THEN $
+        odata=remove_structure_tags(odata, $
+                                    (tag_names(odata))[tags2remove_odata])
      IF time_locs[6] LT 0 THEN BEGIN
         odata=create_struct(tnames_id + '_year', reform(yyyy), $
                             tnames_id + '_month', reform(mo), $
@@ -332,16 +332,16 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
                             tnames_id + '_hour', reform(hh), $
                             tnames_id + '_minute', reform(mm), $
                             tnames_id + '_second', reform(ss), $
-                            tnames_id_gps + '_year', reform(yyyy_gps), $
-                            tnames_id_gps + '_month', reform(mo_gps), $
-                            tnames_id_gps + '_day', reform(dd_gps), $
-                            tnames_id_gps + '_hour', reform(hh_gps), $
-                            tnames_id_gps + '_minute', reform(mm_gps), $
-                            tnames_id_gps + '_second', reform(ss_gps), $
+                            tnames_id_srv + '_year', reform(yyyy_srv), $
+                            tnames_id_srv + '_month', reform(mo_srv), $
+                            tnames_id_srv + '_day', reform(dd_srv), $
+                            tnames_id_srv + '_hour', reform(hh_srv), $
+                            tnames_id_srv + '_minute', reform(mm_srv), $
+                            tnames_id_srv + '_second', reform(ss_srv), $
                             odata)
      ENDIF ELSE BEGIN
         ds=idata_times[time_locs[6], *]
-        ds_gps=idata_times_gps[time_locs_gps[6], *]
+        ds_srv=idata_times_srv[time_locs_srv[6], *]
         odata=create_struct(tnames_id + '_year', reform(yyyy), $
                             tnames_id + '_month', reform(mo), $
                             tnames_id + '_day', reform(dd), $
@@ -349,29 +349,29 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, GPS_TIME_IDX, $
                             tnames_id + '_minute', reform(mm), $
                             tnames_id + '_second', reform(ss), $
                             tnames_id + '_second_fraction', reform(ds), $
-                            tnames_id_gps + '_year', reform(yyyy_gps), $
-                            tnames_id_gps + '_month', reform(mo_gps), $
-                            tnames_id_gps + '_day', reform(dd_gps), $
-                            tnames_id_gps + '_hour', reform(hh_gps), $
-                            tnames_id_gps + '_minute', reform(mm_gps), $
-                            tnames_id_gps + '_second', reform(ss_gps), $
-                            tnames_id_gps + '_second_fraction', $
-                            reform(ds_gps), odata)
+                            tnames_id_srv + '_year', reform(yyyy_srv), $
+                            tnames_id_srv + '_month', reform(mo_srv), $
+                            tnames_id_srv + '_day', reform(dd_srv), $
+                            tnames_id_srv + '_hour', reform(hh_srv), $
+                            tnames_id_srv + '_minute', reform(mm_srv), $
+                            tnames_id_srv + '_second', reform(ss_srv), $
+                            tnames_id_srv + '_second_fraction', $
+                            reform(ds_srv), odata)
      ENDELSE
      delvar, idata
 
      ;; Fix things for certain years (first odata field)
-     bad_2011=where(odata.(0) EQ 2011, count_2011, /null)
-     IF count_2011 GT 1 THEN BEGIN
+     bad2011=where(odata.(0) EQ 2011, nbad, /null)
+     IF nbad GT 0 THEN BEGIN
         ;; Fix silly format (DDMM.mm) for encoding degrees
-        lat_str=string(odata.latitude[bad_2011], format='(f010.5)')
-        lon_str=string(odata.longitude[bad_2011], format='(f011.5)')
+        lat_str=string(odata.latitude[bad2011], format='(f010.5)')
+        lon_str=string(odata.longitude[bad2011], format='(f011.5)')
         lat_deg=float(strmid(lat_str, 0, 2))
         lat_min=float(strmid(lat_str, 2, 8)) / 60
-        odata.latitude[bad_2011]=lat_deg + lat_min
+        odata.latitude[bad2011]=lat_deg + lat_min
         lon_deg=float(strmid(lon_str, 0, 3))
         lon_min=float(strmid(lon_str, 3, 8)) / 60
-        odata.longitude[bad_2011]=-1 * (lon_deg + lon_min)
+        odata.longitude[bad2011]=-1 * (lon_deg + lon_min)
      ENDIF
 
      write_csv, ofile_name, odata, header=strlowcase(tag_names(odata))
