@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-03T03:06:35+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-03T14:12:15+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
@@ -184,7 +184,7 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
         ENDIF
      ENDFOREACH
 
-     ;; Obtain full SERVER time details
+     ;; Obtain full server time details
      CASE tnames_last_srv[time_locs_srv[0]] OF
         'year': $
            yyyy_srv=string(idata_times_srv[time_locs_srv[0], *], $
