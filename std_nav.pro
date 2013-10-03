@@ -1,45 +1,68 @@
 ;; $Id$
-;;; std_nav.pro --- Standardize NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-08-28T17:48:36+0000
-;; Last-Updated: 2013-10-02T17:43:23+0000
-;;           By: Sebastian Luque
-;; ------------------------------------------------------------------------
-;;; Commentary: 
+;; Last-Updated: 2013-10-03T03:11:59+0000
+;;           By: Sebastian P. Luque
+;;+ -----------------------------------------------------------------------
+;; NAME:
 ;;
-;; Check ChangeLog for history.
 ;;
-;; Example call:
 ;;
-;; nav_std_header='year, month, day, hour, minute, second, prog_version, ' + $
-;;                'gps_year, gps_month, gps_day, gps_hour, gps_min, ' + $
-;;                'gps_sec, latitude, longitude, sog, cog, heading, ' + $
-;;                'pitch, roll, accel_x, accel_y, accel_z'
-;; std_nav, expand_path('~/tmp/ArcticNet2011/NAV'), $
-;;          expand_path('~/tmp/ArcticNet2011/NAV/STD'), $
-;;          nav_std_header, /overwrite
+;; PURPOSE:
 ;;
-;; Below is from Bruce Johnson's comments.
-;; 
-;; raw_nav_dir = input directory for raw files
-;; out_columns = number of columns in output file
-;; out_dir     = output directory for standardized files
-;; header      = header information for output file
-;; 
-;; parameters for standardizing Nav data
-;; -------------------------------------
 ;;
-;; Input directory for raw files
-;; raw_nav_dir = '/ArcticNet2011/TowerData/NAV/raw-NAV'
-;; number of columns in the output file
-;; out_columns = 23
-;; output directory for plots
-;; out_dir     = '/ArcticNet2011/TowerData/NAV/std-NAV'
-;; header      = 'Year, Month, Day, Hour, Minute, Second, ProgVers, GPSDate,
-;;                GPSTime, Latitude, Longitude, SOG, COG, 
-;;                Heading, Roll, Pitch, Accelx, Accely, Accelz'
 ;;
-;; ------------------------------------------------------------------------
+;; CATEGORY:
+;;
+;;
+;;
+;; CALLING SEQUENCE:
+;;
+;;
+;;
+;; INPUTS:
+;;
+;;
+;;
+;; OPTIONAL INPUTS:
+;;
+;;
+;;
+;; KEYWORD PARAMETERS:
+;;
+;;
+;;
+;; OUTPUTS:
+;;
+;;
+;;
+;; OPTIONAL OUTPUTS:
+;;
+;;
+;;
+;; COMMON BLOCKS:
+;;
+;;
+;;
+;; SIDE EFFECTS:
+;;
+;;
+;;
+;; RESTRICTIONS:
+;;
+;;
+;;
+;; PROCEDURE:
+;;
+;;
+;;
+;; EXAMPLE:
+;;
+;;
+;;
+;; MODIFICATION HISTORY:
+;;
+;;- -----------------------------------------------------------------------
 ;;; Code:
 
 PRO STD_NAV, IDIR, ODIR, HEADER, OVERWRITE=OVERWRITE

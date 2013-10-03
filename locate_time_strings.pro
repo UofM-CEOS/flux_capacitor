@@ -1,72 +1,68 @@
-;;; locate_time_strings.pro --- 
+;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-10-01T02:19:03+0000
-;; Last-Updated: 2013-10-01T02:21:23+0000
+;; Last-Updated: 2013-10-03T03:09:53+0000
 ;;           By: Sebastian P. Luque
-;; ------------------------------------------------------------------------
-;;; Commentary: 
-;; 
-;; 
-;; + ----------------------------------------------------------------------
-;;  NAME:
+;;+ -----------------------------------------------------------------------
+;; NAME:
 ;; 
 ;; 
 ;; 
-;;  PURPOSE:
+;; PURPOSE:
 ;; 
 ;; 
 ;; 
-;;  CATEGORY:
+;; CATEGORY:
 ;; 
 ;; 
 ;; 
-;;  CALLING SEQUENCE:
+;; CALLING SEQUENCE:
 ;; 
 ;; 
 ;; 
-;;  INPUTS:
+;; INPUTS:
 ;; 
 ;; 
 ;; 
-;;  OPTIONAL INPUTS:
+;; OPTIONAL INPUTS:
 ;; 
 ;; 
 ;; 
-;;  KEYWORD PARAMETERS:
+;; KEYWORD PARAMETERS:
 ;; 
 ;; 
 ;; 
-;;  OUTPUTS:
+;; OUTPUTS:
 ;; 
 ;; 
 ;; 
-;;  OPTIONAL OUTPUTS:
+;; OPTIONAL OUTPUTS:
 ;; 
 ;; 
 ;; 
-;;  COMMON BLOCKS:
+;; COMMON BLOCKS:
 ;; 
 ;; 
 ;; 
-;;  SIDE EFFECTS:
+;; SIDE EFFECTS:
 ;; 
 ;; 
 ;; 
-;;  RESTRICTIONS:
+;; RESTRICTIONS:
 ;; 
 ;; 
 ;; 
-;;  PROCEDURE:
+;; PROCEDURE:
 ;; 
 ;; 
 ;; 
-;;  EXAMPLE:
+;; EXAMPLE:
 ;; 
 ;; 
 ;; 
-;;  MODIFICATION HISTORY:
+;; MODIFICATION HISTORY:
 ;; 
-;; - ----------------------------------------------------------------------
+;;- -----------------------------------------------------------------------
 ;;; Code:
 
 FUNCTION LOCATE_TIME_STRINGS, NAMES
@@ -137,5 +133,10 @@ FUNCTION LOCATE_TIME_STRINGS, NAMES
 
 END
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;_ + Emacs Local Variables
+;; Local variables:
+;; allout-layout: (-2 + : 0)
+;; End:
+;;
 ;;; locate_time_strings.pro ends here

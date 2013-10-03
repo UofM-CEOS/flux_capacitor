@@ -1,13 +1,66 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-02T19:26:18+0000
-;;           By: Sebastian Luque
-;; ------------------------------------------------------------------------
-;;; Commentary: 
-;; 
+;; Last-Updated: 2013-10-03T03:06:35+0000
+;;           By: Sebastian P. Luque
+;;+ -----------------------------------------------------------------------
+;; NAME:
 ;;
-;; ------------------------------------------------------------------------
+;;
+;;
+;; PURPOSE:
+;;
+;;
+;;
+;; CATEGORY:
+;;
+;;
+;;
+;; CALLING SEQUENCE:
+;;
+;;
+;;
+;; INPUTS:
+;;
+;;
+;;
+;; OPTIONAL INPUTS:
+;;
+;;
+;;
+;; KEYWORD PARAMETERS:
+;;
+;;
+;;
+;; OUTPUTS:
+;;
+;;
+;;
+;; OPTIONAL OUTPUTS:
+;;
+;;
+;;
+;; COMMON BLOCKS:
+;;
+;;
+;;
+;; SIDE EFFECTS:
+;;
+;;
+;;
+;; RESTRICTIONS:
+;;
+;;
+;;
+;; PROCEDURE:
+;;
+;;
+;;
+;; EXAMPLE:
+;;
+;;
+;;
+;;- -----------------------------------------------------------------------
 ;;; Code:
 
 PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $

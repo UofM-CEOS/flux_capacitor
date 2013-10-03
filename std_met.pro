@@ -1,16 +1,9 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-02T17:43:09+0000
-;;           By: Sebastian Luque
-;; ------------------------------------------------------------------------
-;;; Commentary: 
-;;
-;; This is based on std_nav.pro.
-;;
-;; Check ChangeLog for history.
-;;
-;; + ----------------------------------------------------------------------
+;; Last-Updated: 2013-10-03T03:06:57+0000
+;;           By: Sebastian P. Luque
+;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
 ;; std_met
@@ -62,7 +55,7 @@
 ;;          expand_path('~/tmp/ArcticNet2011/MET/STD'), $
 ;;          'met_raw_template.sav', 1, met_std_header, /overwrite
 ;; 
-;; - ----------------------------------------------------------------------
+;;- -----------------------------------------------------------------------
 ;;; Code:
 
 PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, OHEADER, $

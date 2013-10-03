@@ -1,9 +1,9 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T18:38:38+0000
-;; Last-Updated: 2013-10-02T20:53:16+0000
-;;           By: Sebastian Luque
-;; + ----------------------------------------------------------------------
+;; Last-Updated: 2013-10-03T03:07:50+0000
+;;           By: Sebastian P. Luque
+;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
 ;; std_omg
@@ -55,7 +55,7 @@
 ;;          expand_path('~/tmp/ArcticNet2011/OMG/HDG/STD'), $
 ;;          'omg_hdg_raw_template.sav', 0, omg_raw_keep_fields
 ;; 
-;; - ----------------------------------------------------------------------
+;;- -----------------------------------------------------------------------
 ;;; Code:
 
 PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $

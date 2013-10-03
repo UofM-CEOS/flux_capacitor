@@ -1,57 +1,68 @@
 ;; $Id$
-;;; nav_avg.pro --- calculate averages in NAV files
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-02T17:42:20+0000
-;;           By: Sebastian Luque
-;; ------------------------------------------------------------------------
-;;; Commentary: 
-;; 
-;; Example call:
+;; Last-Updated: 2013-10-03T03:05:06+0000
+;;           By: Sebastian P. Luque
+;;+ -----------------------------------------------------------------------
+;; NAME:
 ;;
-;; nav_avg, expand_path('~/tmp/ArcticNet2011/NAV/Daily'), $
-;;          expand_path('~/tmp/ArcticNet2011/NAV/1min'), $
-;;          1, 60, 15, 16, 17, 'NAV', expand_path('nav_std_template.sav'), 0
 ;;
-;; Original comments from BJ below.
-;; 
-;; This program takes daily 1 second files and makes 1 minute averages
-;; NOTE: will need a new one for higher freq data (i.e. 10Hz), but should
-;; be easy to modify.
-;; 
-;; THIS PROGRAM HAS BEEN MODIFIED FOR EXCLUSIVE USE WITH NAV DATA FROM
-;; CR1000 LOGGER -- in addition to calculating the averages of SOG and COG,
-;; it also calculates the StdDev.  For SOG, this is done in a straight
-;; stdev calc, for COG, it is done using the Yamartino method
-;; 
-;; VARIABLE
-;; idir       - input directory
-;; odir       - output directory
-;; temp_sav   - ASCII template save file
-;; n_fields   - number of fields in the data being processed (i.e. input
-;;              file)
-;; bear_field - set the number of a field which has bearing (compass) data
-;;              (set to 0 for no data)
-;; vec_field  - set the number of a field which has vector magnitude data
-;;              associated with the bearing field (set to 0 for no data)
-;; stamp      - stamp you wish to add
-;; header     - header for the file
-;; 
-;; for NAV data
-;; -------------
-;; idir       = daily_nav_dir   --> file format "NAV_YYYYDOY.dat"
-;; odir       = min_nav_dir     --> file format "NAV_YYYYDOY_min.dat
-;; n_fields   = 23
-;; vec_field  = 15
-;; bear_field = 16
-;; head_field = 17
-;; stamp      = 'NAV'
-;; header     = 'Year, Month, Day, Hour, Minute, Second, ProgVers,
-;;               Latitude, Longitude, SOG(kts), COG(deg), Heading, Pitch,
-;;               Roll, Accelx, Accely, Accelz, SOG_stdev, COG_stdev,
-;;               Heading_stdev'
 ;;
-;; ------------------------------------------------------------------------
+;; PURPOSE:
+;;
+;;
+;;
+;; CATEGORY:
+;;
+;;
+;;
+;; CALLING SEQUENCE:
+;;
+;;
+;;
+;; INPUTS:
+;;
+;;
+;;
+;; OPTIONAL INPUTS:
+;;
+;;
+;;
+;; KEYWORD PARAMETERS:
+;;
+;;
+;;
+;; OUTPUTS:
+;;
+;;
+;;
+;; OPTIONAL OUTPUTS:
+;;
+;;
+;;
+;; COMMON BLOCKS:
+;;
+;;
+;;
+;; SIDE EFFECTS:
+;;
+;;
+;;
+;; RESTRICTIONS:
+;;
+;;
+;;
+;; PROCEDURE:
+;;
+;;
+;;
+;; EXAMPLE:
+;;
+;;
+;;
+;; MODIFICATION HISTORY:
+;;
+;;- -----------------------------------------------------------------------
 ;;; Code:
 
 PRO NAV_AVG, IDIR, ODIR, ISAMPLE_RATE, OSAMPLE_RATE, BMAG_FIELD, $

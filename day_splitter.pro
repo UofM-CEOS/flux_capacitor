@@ -2,112 +2,66 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-02T17:41:23+0000
-;;           By: Sebastian Luque
-;; ------------------------------------------------------------------------
-;;; Commentary: 
+;; Last-Updated: 2013-10-03T03:09:30+0000
+;;           By: Sebastian P. Luque
+;;+ -----------------------------------------------------------------------
+;; NAME:
 ;;
-;; This is a complete mess; lots to be done here.  Why are MET files not
-;; standardized, as NAV are?
 ;;
-;; Example call:
 ;;
-;; day_splitter, '20110723', '20111022', $
-;;               expand_path('~/tmp/ArcticNet2011/NAV/STD'), $
-;;               expand_path('~/tmp/Arcticnet2011/NAV/Daily'), $
-;;               expand_path('nav_std_template.sav'), 0, 1, 'NAV', /overwrite
+;; PURPOSE:
 ;;
-;; Original comment from BJ (likely) below.
-;; 
-;; This program takes all of the .dat files in an input directory, and
-;; breaks them up into individual day files.  It will create a day file for
-;; each day input between startdate-enddate and fill any missing data with
-;; 'NaN'
-;; 
-;; NOTE: in it's present configuration, you CANNOT process more than 1 year
-;; of data However, you can process across a calendar year (e.g. from
-;; 20071001 to 20080701) It may slog a bit across a calendar year... try to
-;; avoid this.
-;; 
-;; NOTE: this program might be a bit inefficient when it comes to
-;; processing large flux files
-;; 
-;; NOTE: for this to work, the input files should have the dates/times in
-;; their first columns: For 1min or 1sec data: year,month,day,hour,min,sec
-;; For high frequency data: year,month,day,hour,min,sec,tenth of sec
-;; 
-;; NOTE: this program has NOT been thoroughly tested for anything except
-;; 60s data.
-;; 
-;; NOTE: you need to double check that the time stamp on the files is
-;; correct (i.e. the proper day (UTC) it was downloaded)
-;; 
-;; Input variables:
-;; 
-;;   startdate     - first day for generating daily files (YYYYMMDD)
-;;   enddate       - last day for generating daily files (YYYYMMDD)
-;;   idir          - input directory of files to be processed
-;;   odir          - output directory for new daily files
-;;   itemplate_sav - directory of .sav file of template being used NOTE:
-;;                   the template must have been saved with the variable
-;;                   name "mytemplate"
-;;   header        - text string that defines the header
-;;   samplerate    - The sample rate which data was collected in seconds
-;;                   (e.g. 1, 60)
-;;   nfields       - The number of fields that are in the data file to be
-;;                   created
-;;   stamp         - gives a prefix to the output files (e.g. if set to
-;;                   pCO2, files will be pCO2_YYYY_JD_MMDD.dat)
-;;   n_prefix      - gives the number of characters BEFORE the date of the
-;;                   input file name (e.g. for pAMD_pCO2_071028.dat, the
-;;                   number is 10)
-;;  
-;; For MET data files:
-;; 
-;;  idir           = met_idir --> 'raw-MET/' -- file format
-;;                                              "AMD_MET_mmdd_hhmm.dat"
-;;  odir           = met_dailydir --> 'daily-MET/' -- file format
-;;                                                    "MET_yyyy_JDxxx_mmdd.dat"
-;;  itemplate_sav  = met_template --> 'met_template.sav'
-;;  header         = met_header --> 'Year, Month, Day, Hour, Minute,
-;;                                      Sec, Prog Version, Battery(V),
-;;                                      Panel_T(C), Pressure(kPa),
-;;                                      Air_T(C),' +$ 'RH(%), Surface_T(C),
-;;                                      Raw Wind Speed(m/s), Raw Wind
-;;                                      Direction(deg), Wind StdDev,
-;;                                      PAR(umol/m2/s), Pitch(deg),' +$
-;;                                      'Roll (deg), Battery StdDev,
-;;                                      Panel_T StdDev, Pressure StDev,
-;;                                      Air_T StDev, RH StDev, Surface_T
-;;                                      StDev, PAR StDev'
-;;  samplerate     = met_timing --> 60
-;;  nfields        = met_outcolumns --> 26
-;;  stamp          = met_stamp --> 'MET'
-;;  n_prefix       = met_prefix     --> 8
-;; 
-;; For RAD data files:
-;; 
-;;  idir           = raw_rad_dir --> '/ArcticNet2011/RadData/raw-RAD'
-;;  odir           = daily_rad_dir --> '/ArcticNet2011/RadData/daily-RAD/'
-;;  itemplate_sav  = Rad_template --> '/ArcticNet2011/Templates/RAD_template.sav'
-;;  header         = RAD_head --> 'Year, Month, Day, Hour, Minute, Sec,
-;;                                      Battery(V), Panel_T(C), Batt_stdev,
-;;                                      PanelT_stdev, Kdown(W/m2),
-;;                                      Thermopile,' +$
-;;                                      'Tcase(K),Tdome_avg, LWin(W/m2),
-;;                                      PAR(umol/m2/s), Tuv(C), UVb(W/m2),
-;;                                      UVa(W/m2), UVbroad(W/m2),
-;;                                      Kdown_stdev,' +$ 'Thermopile_stdev,
-;;                                      Tcase_stdev, Tdome_stdev,
-;;                                      LWin_stdev, PAR_stdev, Tuv_stdev,
-;;                                      Uvb_stdev, Uva_stdev,
-;;                                      UVbroad_stdev'
-;;  samplerate     = rad_timing     --> 60
-;;  nfields        = rad_outcolumns --> 30
-;;  stamp          = rad_stamp      --> 'RAD'
-;;  n_prefix       = rad_prefix     --> 8
-;; 
-;; ------------------------------------------------------------------------
+;;
+;;
+;; CATEGORY:
+;;
+;;
+;;
+;; CALLING SEQUENCE:
+;;
+;;
+;;
+;; INPUTS:
+;;
+;;
+;;
+;; OPTIONAL INPUTS:
+;;
+;;
+;;
+;; KEYWORD PARAMETERS:
+;;
+;;
+;;
+;; OUTPUTS:
+;;
+;;
+;;
+;; OPTIONAL OUTPUTS:
+;;
+;;
+;;
+;; COMMON BLOCKS:
+;;
+;;
+;;
+;; SIDE EFFECTS:
+;;
+;;
+;;
+;; RESTRICTIONS:
+;;
+;;
+;;
+;; PROCEDURE:
+;;
+;;
+;;
+;; EXAMPLE:
+;;
+;;
+;;
+;;- -----------------------------------------------------------------------
 ;;; Code:
 
 PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
