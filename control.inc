@@ -1,7 +1,7 @@
 ;;; control.inc --- Variables for flux_capacitor.pro
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-10-02T18:54:01+0000
+;; Last-Updated: 2013-10-03T14:51:30+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -198,6 +198,10 @@ IRGA_dir=rootdir + 'TowerData' + path_sep() + 'IRGA'
 ;; vec_field  - field number which has vector magnitude data associated
 ;;              with the bearing field (set to 0 for no data)
 
+met_raw_keep_fields=['prog_version', 'battery_volt', 'panel_temperature', $
+                     'pressure', 'air_temperature', 'rh_percent', $
+                     'surface_temperature', 'wind_speed', $
+                     'wind_direction', 'wind_sd', 'par', 'pitch', 'roll']
 met_std_header='year, month, day, hour, minute, second, ' + $
                'prog_version, battery_volt, panel_temperature, ' + $
                'pressure, air_temperature, RH_percent, ' + $
