@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-03T14:34:03+0000
+;; Last-Updated: 2013-10-03T20:54:21+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -172,151 +172,10 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
         ENDIF
      ENDFOREACH
      ;; Obtain full UTC time details
-     CASE tnames_last[time_locs[0]] OF
-        'year': yyyy=string(idata_times[time_locs[0], *], $
-                            format='(i04)')
-        'yyyymmdd': yyyy=strmid(idata_times[time_locs[0], *], 0, 4)
-        'mmddyyyy': yyyy=strmid(idata_times[time_locs[0], *], 4, 4)
-        'ddmmyyyy': yyyy=strmid(idata_times[time_locs[0], *], 4, 4)
-        'ddmmyy': BEGIN
-           message, 'Assuming current century', /informational
-           tstamp=jul2timestamp(systime(/julian))
-           yyyy=strmid(tstamp, 0, 2) + $
-                strmid(idata_times[time_locs[0], *], 4, 2)
-        END
-        ELSE: message, 'Do not know how to extract year from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[1]] OF
-        'month': mo=string(idata_times[time_locs[1], *], $
-                           format='(i02)')
-        'yyyymmdd': mo=strmid(idata_times[time_locs[1], *], 4, 2)
-        'mmddyyyy': mo=strmid(idata_times[time_locs[1], *], 0, 2)
-        'ddmmyyyy': mo=strmid(idata_times[time_locs[1], *], 2, 2)
-        'ddmmyy': mo=strmid(idata_times[time_locs[1], *], 2, 2)
-        'doy': BEGIN
-           calendar=doy2calendar(yyyy, idata_times[time_locs[1], *])
-           mo=strmid(calendar, 4, 2)
-        END
-        ELSE: message, 'Do not know how to extract month from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[2]] OF
-        'day': dd=string(idata_times[time_locs[2], *], $
-                         format='(i02)')
-        'yyyymmdd': dd=strmid(idata_times[time_locs[2], *], 6, 2)
-        'mmddyyyy': dd=strmid(idata_times[time_locs[2], *], 2, 2)
-        'ddmmyyyy': dd=strmid(idata_times[time_locs[2], *], 0, 2)
-        'ddmmyy': dd=strmid(idata_times[time_locs[2], *], 0, 2)
-        'doy': dd=strmid(calendar, 6, 2) ; we already have calendar
-        ELSE: message, 'Do not know how to extract day from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[3]] OF
-        'hour': hh=string(idata_times[time_locs[3], *], $
-                          format='(i02)')
-        'hhmmss': hh=strmid(idata_times[time_locs[3], *], 0, 2)
-        'hhmm': hh=strmid(idata_times[time_locs[3], *], 0, 2)
-        ELSE: message, 'Do not know how to extract hour from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[4]] OF
-        'minute': mm=string(idata_times[time_locs[4], *], $
-                            format='(i02)')
-        'hhmmss': mm=strmid(idata_times[time_locs[4], *], 2, 2)
-        'hhmm': mm=strmid(idata_times[time_locs[4], *], 2, 2)
-        ELSE: message, 'Do not know how to extract minute from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[5]] OF
-        'second': ss=string(idata_times[time_locs[5], *], $
-                            format='(f06.3)')
-        ;; Take up to the end of the string, in case we have fractions
-        'hhmmss': ss=strmid(idata_times[time_locs[5], *], 4)
-        ELSE: message, 'Do not know how to extract second from this field'
-     ENDCASE
-
+     itimes_utc_std=parse_times(idata_times, tnames_last, time_locs)
      ;; Obtain full server time details
-     CASE tnames_last_srv[time_locs_srv[0]] OF
-        'year': $
-           yyyy_srv=string(idata_times_srv[time_locs_srv[0], *], $
-                           format='(i04)')
-        'yyyymmdd': $
-           yyyy_srv=strmid(idata_times_srv[time_locs_srv[0], *], $
-                           0, 4)
-        'mmddyyyy': $
-           yyyy_srv=strmid(idata_times_srv[time_locs_srv[0], *], $
-                           4, 4)
-        'ddmmyyyy': $
-           yyyy_srv=strmid(idata_times_srv[time_locs_srv[0], *], $
-                           4, 4)
-        'ddmmyy': BEGIN
-           message, 'Assuming current century', /informational
-           tstamp=jul2timestamp(systime(/julian))
-           yyyy_srv=strmid(tstamp, 0, 2) + $
-                    strmid(idata_times_srv[time_locs_srv[0], *], 4, 2)
-        END
-        ELSE: message, 'Do not know how to extract year from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[1]] OF
-        'month': mo_srv=string(idata_times_srv[time_locs_srv[1], *], $
-                               format='(i02)')
-        'yyyymmdd': $
-           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 4, 2)
-        'mmddyyyy': $
-           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 0, 2)
-        'ddmmyyyy': $
-           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 2, 2)
-        'ddmmyy': $
-           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 2, 2)
-        'doy': BEGIN
-           calendar_srv=doy2calendar(yyyy, $
-                                     idata_times_srv[time_locs_srv[1], *])
-           mo_srv=strmid(calendar_srv, 4, 2)
-        END
-        ELSE: message, 'Do not know how to extract month from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[2]] OF
-        'day': $
-           dd_srv=string(idata_times_srv[time_locs_srv[2], *], $
-                         format='(i02)')
-        'yyyymmdd': $
-           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
-                         6, 2)
-        'mmddyyyy': $
-           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
-                         2, 2)
-        'ddmmyyyy': $
-           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
-                         0, 2)
-        'ddmmyy': $
-           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
-                         0, 2)
-        'doy': $
-           dd_srv=strmid(calendar_srv, 6, 2) ; we already have calendar_srv
-        ELSE: message, 'Do not know how to extract day from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[3]] OF
-        'hour': hh_srv=string(idata_times_srv[time_locs_srv[3], *], $
-                              format='(i02)')
-        'hhmmss': $
-           hh_srv=strmid(idata_times_srv[time_locs_srv[3], *], 0, 2)
-        'hhmm': $
-           hh_srv=strmid(idata_times_srv[time_locs_srv[3], *], 0, 2)
-        ELSE: message, 'Do not know how to extract hour from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[4]] OF
-        'minute': mm_srv=string(idata_times_srv[time_locs_srv[4], *], $
-                                format='(i02)')
-        'hhmmss': $
-           mm_srv=strmid(idata_times_srv[time_locs_srv[4], *], 2, 2)
-        'hhmm': $
-           mm_srv=strmid(idata_times_srv[time_locs_srv[4], *], 2, 2)
-        ELSE: message, 'Do not know how to extract minute from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[5]] OF
-        'second': ss_srv=string(idata_times_srv[time_locs_srv[5], *], $
-                                format='(f06.3)')
-        ;; Take up to the end of the string, in case we have fractions
-        'hhmmss': $
-           ss_srv=strmid(idata_times_srv[time_locs_srv[5], *], 4)
-        ELSE: message, 'Do not know how to extract second from this field'
-     ENDCASE
+     itimes_srv_std=parse_times(idata_times_srv, tnames_last_srv, $
+                                time_locs_srv)
      
      odata=remove_structure_tags(idata, field_names[tags2remove])
      ;; Find indices to keep
@@ -325,39 +184,31 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
      IF nremove GT 0 THEN $
         odata=remove_structure_tags(odata, $
                                     (tag_names(odata))[tags2remove_odata])
-     IF time_locs[6] LT 0 THEN BEGIN
-        odata=create_struct(tnames_id + '_year', reform(yyyy), $
-                            tnames_id + '_month', reform(mo), $
-                            tnames_id + '_day', reform(dd), $
-                            tnames_id + '_hour', reform(hh), $
-                            tnames_id + '_minute', reform(mm), $
-                            tnames_id + '_second', reform(ss), $
-                            tnames_id_srv + '_year', reform(yyyy_srv), $
-                            tnames_id_srv + '_month', reform(mo_srv), $
-                            tnames_id_srv + '_day', reform(dd_srv), $
-                            tnames_id_srv + '_hour', reform(hh_srv), $
-                            tnames_id_srv + '_minute', reform(mm_srv), $
-                            tnames_id_srv + '_second', reform(ss_srv), $
-                            odata)
-     ENDIF ELSE BEGIN
-        ds=idata_times[time_locs[6], *]
-        ds_srv=idata_times_srv[time_locs_srv[6], *]
-        odata=create_struct(tnames_id + '_year', reform(yyyy), $
-                            tnames_id + '_month', reform(mo), $
-                            tnames_id + '_day', reform(dd), $
-                            tnames_id + '_hour', reform(hh), $
-                            tnames_id + '_minute', reform(mm), $
-                            tnames_id + '_second', reform(ss), $
-                            tnames_id + '_second_fraction', reform(ds), $
-                            tnames_id_srv + '_year', reform(yyyy_srv), $
-                            tnames_id_srv + '_month', reform(mo_srv), $
-                            tnames_id_srv + '_day', reform(dd_srv), $
-                            tnames_id_srv + '_hour', reform(hh_srv), $
-                            tnames_id_srv + '_minute', reform(mm_srv), $
-                            tnames_id_srv + '_second', reform(ss_srv), $
-                            tnames_id_srv + '_second_fraction', $
-                            reform(ds_srv), odata)
-     ENDELSE
+     odata=create_struct(tnames_id + '_year', $
+                         reform(itimes_utc_std[0, *]), $
+                         tnames_id + '_month', $
+                         reform(itimes_utc_std[1, *]), $
+                         tnames_id + '_day', $
+                         reform(itimes_utc_std[2, *]), $
+                         tnames_id + '_hour', $
+                         reform(itimes_utc_std[3, *]), $
+                         tnames_id + '_minute', $
+                         reform(itimes_utc_std[4, *]), $
+                         tnames_id + '_second', $
+                         reform(itimes_utc_std[5, *]), $
+                         tnames_id_srv + '_year', $
+                         reform(itimes_srv_std[0, *]), $
+                         tnames_id_srv + '_month', $
+                         reform(itimes_srv_std[1, *]), $
+                         tnames_id_srv + '_day', $
+                         reform(itimes_srv_std[2, *]), $
+                         tnames_id_srv + '_hour', $
+                         reform(itimes_srv_std[3, *]), $
+                         tnames_id_srv + '_minute', $
+                         reform(itimes_srv_std[4, *]), $
+                         tnames_id_srv + '_second', $
+                         reform(itimes_srv_std[5, *]), $
+                         odata)
      delvar, idata
 
      ;; Fix things for certain years (first odata field)

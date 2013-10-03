@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-03T15:09:32+0000
+;; Last-Updated: 2013-10-03T20:31:22+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -144,66 +144,8 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
         ENDIF
      ENDFOREACH
 
-     ;; Obtain full time details
-     CASE tnames_last[time_locs[0]] OF
-        'year': yyyy=string(idata_times[time_locs[0], *], format='(i04)')
-        'yyyymmdd': yyyy=strmid(idata_times[time_locs[0], *], 0, 4)
-        'mmddyyyy': yyyy=strmid(idata_times[time_locs[0], *], 4, 4)
-        'ddmmyyyy': yyyy=strmid(idata_times[time_locs[0], *], 4, 4)
-        'ddmmyy': BEGIN
-           message, 'Assuming current century', /informational
-           tstamp=jul2timestamp(systime(/julian))
-           yyyy=strmid(tstamp, 0, 2) + $
-                strmid(idata_times[time_locs[0], *], 4, 2)
-        END
-        ELSE: message, 'Do not know how to extract year from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[1]] OF
-        'month': mo=string(idata_times[time_locs[1], *], format='(i02)')
-        'yyyymmdd': mo=strmid(idata_times[time_locs[1], *], 4, 2)
-        'mmddyyyy': mo=strmid(idata_times[time_locs[1], *], 0, 2)
-        'ddmmyyyy': mo=strmid(idata_times[time_locs[1], *], 2, 2)
-        'ddmmyy': mo=strmid(idata_times[time_locs[1], *], 2, 2)
-        'doy': BEGIN
-           calendar=doy2calendar(yyyy, idata_times[time_locs[1], *])
-           mo=strmid(calendar, 4, 2)
-        END
-        ELSE: message, 'Do not know how to extract month from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[2]] OF
-        'day': dd=string(idata_times[time_locs[2], *], format='(i02)')
-        'yyyymmdd': dd=strmid(idata_times[time_locs[2], *], 6, 2)
-        'mmddyyyy': dd=strmid(idata_times[time_locs[2], *], 2, 2)
-        'ddmmyyyy': dd=strmid(idata_times[time_locs[2], *], 0, 2)
-        'ddmmyy': dd=strmid(idata_times[time_locs[2], *], 0, 2)
-        'doy': dd=strmid(calendar, 6, 2) ; we already have calendar
-        ELSE: message, 'Do not know how to extract day from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[3]] OF
-        'hour': hh=string(idata_times[time_locs[3], *], format='(i02)')
-        'hhmmss': hh=strmid(idata_times[time_locs[3], *], 0, 2)
-        'hhmm': hh=strmid(idata_times[time_locs[3], *], 0, 2)
-        ELSE: message, 'Do not know how to extract hour from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[4]] OF
-        'minute': mm=string(idata_times[time_locs[4], *], format='(i02)')
-        'hhmmss': mm=strmid(idata_times[time_locs[4], *], 2, 2)
-        'hhmm': mm=strmid(idata_times[time_locs[4], *], 2, 2)
-        ELSE: message, 'Do not know how to extract minute from this field'
-     ENDCASE
-     CASE tnames_last[time_locs[5]] OF
-        ;; Becareful: only output 1 decimal place
-        'second': ss=string(idata_times[time_locs[5], *], format='(f04.1)')
-        ;; Take up to the end of the string, in case we have fractions
-        'hhmmss': BEGIN
-           ss=strmid(idata_times[time_locs[5], *], 4)
-           ss=string(temporary(ss), format='(f04.1)')
-        END
-        ELSE: message, 'Do not know how to extract second from this field'
-     ENDCASE
-     IF time_locs[6] GE 0 THEN $ ; concatenate if we have fractional ss
-        ss=temporary(ss) + '.' + $
-           string(idata_times[time_locs[6], *], format='(i02)')
+     ;; Obtain full time details array
+     itimes_std=parse_times(idata_times, tnames_last, time_locs)
      
      odata=remove_structure_tags(idata, field_names[tags2remove])
      ;; Find indices to keep
@@ -212,9 +154,12 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      IF nremove GT 0 THEN $
         odata=remove_structure_tags(odata, $
                                     (tag_names(odata))[tags2remove_odata])
-     odata=create_struct('year', reform(yyyy), 'month', reform(mo), $
-                         'day', reform(dd), 'hour', reform(hh), $
-                         'minute', reform(mm), 'second', reform(ss), odata)
+     odata=create_struct('year', reform(itimes_std[0, *]), $
+                         'month', reform(itimes_std[1, *]), $
+                         'day', reform(itimes_std[2, *]), $
+                         'hour', reform(itimes_std[3, *]), $
+                         'minute', reform(itimes_std[4, *]), $
+                         'second', reform(itimes_std[5, *]), odata)
      delvar, idata
 
      ;; Fix things for some years
@@ -228,7 +173,7 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
                           strmid(cal_badbeg2011, 6, 2), 2011, 9, 31)
      jd_badend2011=julday(strmid(cal_badend2011, 4, 2), $
                           strmid(cal_badend2011, 6, 2), 2011, 14, 35)
-     jd=julday(mo, dd, yyyy, hh, mm)
+     jd=julday(odata.month, odata.day, odata.year, odata.hour, odata.minute)
      bad2011=where((jd GE jd_badbeg2011) AND (jd LE jd_badend2011), nbad)
      IF nbad GT 0 THEN odata.(11)[bad2011]=!VALUES.F_NAN
 

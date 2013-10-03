@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-03T14:12:15+0000
+;; Last-Updated: 2013-10-03T21:47:07+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -185,97 +185,14 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      ENDFOREACH
 
      ;; Obtain full server time details
-     CASE tnames_last_srv[time_locs_srv[0]] OF
-        'year': $
-           yyyy_srv=string(idata_times_srv[time_locs_srv[0], *], $
-                           format='(i04)')
-        'yyyymmdd': $
-           yyyy_srv=strmid(idata_times_srv[time_locs_srv[0], *], $
-                           0, 4)
-        'mmddyyyy': $
-           yyyy_srv=strmid(idata_times_srv[time_locs_srv[0], *], $
-                           4, 4)
-        'ddmmyyyy': $
-           yyyy_srv=strmid(idata_times_srv[time_locs_srv[0], *], $
-                           4, 4)
-        'ddmmyy': BEGIN
-           message, 'Assuming current century', /informational
-           tstamp=jul2timestamp(systime(/julian))
-           yyyy_srv=strmid(tstamp, 0, 2) + $
-                    strmid(idata_times_srv[time_locs_srv[0], *], 4, 2)
-        END
-        ELSE: message, 'Do not know how to extract year from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[1]] OF
-        'month': mo_srv=string(idata_times_srv[time_locs_srv[1], *], $
-                               format='(i02)')
-        'yyyymmdd': $
-           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 4, 2)
-        'mmddyyyy': $
-           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 0, 2)
-        'ddmmyyyy': $
-           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 2, 2)
-        'ddmmyy': $
-           mo_srv=strmid(idata_times_srv[time_locs_srv[1], *], 2, 2)
-        'doy': BEGIN
-           calendar_srv=doy2calendar(yyyy, $
-                                     idata_times_srv[time_locs_srv[1], *])
-           mo_srv=strmid(calendar_srv, 4, 2)
-        END
-        ELSE: message, 'Do not know how to extract month from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[2]] OF
-        'day': $
-           dd_srv=string(idata_times_srv[time_locs_srv[2], *], $
-                         format='(i02)')
-        'yyyymmdd': $
-           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
-                         6, 2)
-        'mmddyyyy': $
-           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
-                         2, 2)
-        'ddmmyyyy': $
-           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
-                         0, 2)
-        'ddmmyy': $
-           dd_srv=strmid(idata_times_srv[time_locs_srv[2], *], $
-                         0, 2)
-        'doy': $
-           dd_srv=strmid(calendar_srv, 6, 2) ; we already have calendar_srv
-        ELSE: message, 'Do not know how to extract day from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[3]] OF
-        'hour': hh_srv=string(idata_times_srv[time_locs_srv[3], *], $
-                              format='(i02)')
-        'hhmmss': $
-           hh_srv=strmid(idata_times_srv[time_locs_srv[3], *], 0, 2)
-        'hhmm': $
-           hh_srv=strmid(idata_times_srv[time_locs_srv[3], *], 0, 2)
-        ELSE: message, 'Do not know how to extract hour from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[4]] OF
-        'minute': mm_srv=string(idata_times_srv[time_locs_srv[4], *], $
-                                format='(i02)')
-        'hhmmss': $
-           mm_srv=strmid(idata_times_srv[time_locs_srv[4], *], 2, 2)
-        'hhmm': $
-           mm_srv=strmid(idata_times_srv[time_locs_srv[4], *], 2, 2)
-        ELSE: message, 'Do not know how to extract minute from this field'
-     ENDCASE
-     CASE tnames_last_srv[time_locs_srv[5]] OF
-        'second': ss_srv=string(idata_times_srv[time_locs_srv[5], *], $
-                                format='(f06.3)')
-        ;; Take up to the end of the string, in case we have fractions
-        'hhmmss': $
-           ss_srv=strmid(idata_times_srv[time_locs_srv[5], *], 4)
-        ELSE: message, 'Do not know how to extract second from this field'
-     ENDCASE
-     IF time_locs_srv[6] GE 0 THEN $ ; concatenate if we have fractional ss
-        ss_srv=temporary(ss_srv) + '.' + $
-               string(idata_times_srv[time_locs_srv[6], *], format='(i03)')
-     gyro_srv_jd=julday(long(mo_srv), long(dd_srv), long(yyyy_srv), $
-                        long(hh_srv), long(mm_srv), float(ss_srv))
-     gyro_srv_jd=reform(gyro_srv_jd, /overwrite)
+     itimes_srv_std=parse_times(idata_times_srv, tnames_last_srv, $
+                                time_locs_srv)
+     gyro_srv_jd=reform(julday(long(itimes_srv_std[1, *]), $
+                               long(itimes_srv_std[2, *]), $
+                               long(itimes_srv_std[0, *]), $
+                               long(itimes_srv_std[3, *]), $
+                               long(itimes_srv_std[4, *]), $
+                               float(itimes_srv_std[5, *])))
 
      ;; Read matching RMC file
      ifile_strl=strsplit(ifile, '_.', /extract) ; break string
@@ -302,21 +219,20 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
            rmc_times_srv[fld, *]=ok
         ENDFOREACH
      ENDIF
-     rmc_srv_jd=(rmc_times_srv_dims[0] EQ 6) ? $
-                julday(long(rmc_times_srv[1, *]), $
-                       long(rmc_times_srv[2, *]), $
-                       long(rmc_times_srv[0, *]), $
-                       long(rmc_times_srv[3, *]), $
-                       long(rmc_times_srv[4, *]), $
-                       float(rmc_times_srv[5, *])) : $
-                julday(long(rmc_times_srv[1, *]), $
-                       long(rmc_times_srv[2, *]), $
-                       long(rmc_times_srv[0, *]), $
-                       long(rmc_times_srv[3, *]), $
-                       long(rmc_times_srv[4, *]), $
-                       float(rmc_times_srv[5, *]), $
-                       float(rmc_times_srv[6, *]))
-     rmc_srv_jd=reform(rmc_srv_jd, /overwrite)
+     rmc_srv_jd=reform((rmc_times_srv_dims[0] EQ 6) ? $
+                       julday(long(rmc_times_srv[1, *]), $
+                              long(rmc_times_srv[2, *]), $
+                              long(rmc_times_srv[0, *]), $
+                              long(rmc_times_srv[3, *]), $
+                              long(rmc_times_srv[4, *]), $
+                              float(rmc_times_srv[5, *])) : $
+                       julday(long(rmc_times_srv[1, *]), $
+                              long(rmc_times_srv[2, *]), $
+                              long(rmc_times_srv[0, *]), $
+                              long(rmc_times_srv[3, *]), $
+                              long(rmc_times_srv[4, *]), $
+                              float(rmc_times_srv[5, *] + '.' + $
+                                    rmc_times_srv[6, *])))
      ;; Obtain UTC times and convert to Julian
      rmc_utc_time_loc=where(rmc_names EQ $
                             rmc_template_names[rmc_utc_time_idx])
@@ -332,21 +248,20 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
            rmc_times_utc[fld, *]=ok
         ENDFOREACH
      ENDIF
-     rmc_utc_jd=(rmc_times_utc_dims[0] EQ 6) ? $
-                julday(long(rmc_times_utc[1, *]), $
-                       long(rmc_times_utc[2, *]), $
-                       long(rmc_times_utc[0, *]), $
-                       long(rmc_times_utc[3, *]), $
-                       long(rmc_times_utc[4, *]), $
-                       float(rmc_times_utc[5, *])) : $
-                julday(long(rmc_times_utc[1, *]), $
-                       long(rmc_times_utc[2, *]), $
-                       long(rmc_times_utc[0, *]), $
-                       long(rmc_times_utc[3, *]), $
-                       long(rmc_times_utc[4, *]), $
-                       float(rmc_times_utc[5, *]), $
-                       float(rmc_times_utc[6, *]))
-     rmc_utc_jd=reform(rmc_utc_jd, /overwrite)
+     rmc_utc_jd=reform((rmc_times_utc_dims[0] EQ 6) ? $
+                       julday(long(rmc_times_utc[1, *]), $
+                              long(rmc_times_utc[2, *]), $
+                              long(rmc_times_utc[0, *]), $
+                              long(rmc_times_utc[3, *]), $
+                              long(rmc_times_utc[4, *]), $
+                              float(rmc_times_utc[5, *])) : $
+                       julday(long(rmc_times_utc[1, *]), $
+                              long(rmc_times_utc[2, *]), $
+                              long(rmc_times_utc[0, *]), $
+                              long(rmc_times_utc[3, *]), $
+                              long(rmc_times_utc[4, *]), $
+                              float(rmc_times_utc[5, *] + '.' + $
+                                    rmc_times_utc[6, *])))
 
      ;; Find interpolate UTC time at the server time
      gyro_utc_jd=interpol(rmc_utc_jd, rmc_srv_jd, gyro_srv_jd)
@@ -369,12 +284,12 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      IF nremove GT 0 THEN $
         odata=remove_structure_tags(odata, $
                                     (tag_names(odata))[tags2remove_odata])
-     odata=create_struct(tnames_id_srv + '_year', utc_year, $
-                         tnames_id_srv + '_month', utc_month, $
-                         tnames_id_srv + '_day', utc_day, $
-                         tnames_id_srv + '_hour', utc_hour, $
-                         tnames_id_srv + '_minute', utc_minute, $
-                         tnames_id_srv + '_second', utc_second, $
+     odata=create_struct(tnames_id + '_year', utc_year, $
+                         tnames_id + '_month', utc_month, $
+                         tnames_id + '_day', utc_day, $
+                         tnames_id + '_hour', utc_hour, $
+                         tnames_id + '_minute', utc_minute, $
+                         tnames_id + '_second', utc_second, $
                          odata)
      delvar, idata
 
