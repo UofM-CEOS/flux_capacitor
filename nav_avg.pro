@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-03T03:05:06+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-04T15:45:50+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
@@ -59,8 +59,6 @@
 ;; EXAMPLE:
 ;;
 ;;
-;;
-;; MODIFICATION HISTORY:
 ;;
 ;;- -----------------------------------------------------------------------
 ;;; Code:
