@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-03T21:47:07+0000
+;; Last-Updated: 2013-10-04T16:06:23+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -92,7 +92,6 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      message, 'RMC_SERVER_TIME_IDX must be a scalar  >= zero'
   IF (n_elements(keep_fields) EQ 0) THEN $
      message, 'KEEP_FIELDS is undefined'
-
   idir_files=file_search(idir + path_sep() + '*.raw', count=nidir_files, $
                          /nosort, /fold_case)
   IF nidir_files LT 1 THEN BEGIN
@@ -284,12 +283,12 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      IF nremove GT 0 THEN $
         odata=remove_structure_tags(odata, $
                                     (tag_names(odata))[tags2remove_odata])
-     odata=create_struct(tnames_id + '_year', utc_year, $
-                         tnames_id + '_month', utc_month, $
-                         tnames_id + '_day', utc_day, $
-                         tnames_id + '_hour', utc_hour, $
-                         tnames_id + '_minute', utc_minute, $
-                         tnames_id + '_second', utc_second, $
+     odata=create_struct('UTC_year', utc_year, $
+                         'UTC_month', utc_month, $
+                         'UTC_day', utc_day, $
+                         'UTC_hour', utc_hour, $
+                         'UTC_minute', utc_minute, $
+                         'UTC_second', utc_second, $
                          odata)
      delvar, idata
 
