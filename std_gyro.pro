@@ -1,64 +1,53 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-04T16:06:23+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-10-05T19:59:45+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
-;;
+;;     STD_GYRO
 ;;
 ;; PURPOSE:
 ;;
-;;
-;;
-;; CATEGORY:
-;;
-;;
+;;     Standardize Gyro (ship) files, correcting time based on offset from
+;;     corresponding RMC file.
 ;;
 ;; CALLING SEQUENCE:
 ;;
-;;
+;;     STD_GYRO, Idir, Odir, Itemplate_Sav, ' + $
+;;               Server_Time_Idx, Rmc_Std_Dir, Rmc_Std_Itemplate_Sav, ' + $
+;;               Rmc_Utc_Time_Idx, Rmc_Server_Time_Idx, Keep_Fields
 ;;
 ;; INPUTS:
 ;;
-;;
-;;
-;; OPTIONAL INPUTS:
-;;
-;;
+;;     Idir:                  Input directory (no trailing separator).
+;;     Odir:                  Output directory (no trailing separator).
+;;     Itemplate_Sav:         Ascii template to read input files.
+;;     Server_Time_Idx:       Index (in template) where server time is.
+;;     Rmc_Std_Dir:           Directory of matching RMC files.
+;;     Rmc_Std_Itemplate_Sav: Ascii template for reading RMC files.
+;;     Rmc_Utc_Time_Idx:      Index (in template) where UTC time is.
+;;     Rmc_Server_Time_Idx:   Index (in template) where server time is.
+;;     Keep_Fields:           String array or scalar with names of fields
+;;                            to keep.
 ;;
 ;; KEYWORD PARAMETERS:
 ;;
-;;
-;;
-;; OUTPUTS:
-;;
-;;
-;;
-;; OPTIONAL OUTPUTS:
-;;
-;;
-;;
-;; COMMON BLOCKS:
-;;
-;;
+;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;;
 ;; SIDE EFFECTS:
 ;;
-;;
-;;
-;; RESTRICTIONS:
-;;
-;;
-;;
-;; PROCEDURE:
-;;
-;;
+;;     Writes files to Odir.
 ;;
 ;; EXAMPLE:
 ;;
-;;
+;;     STD_GYRO, expand_path('~/tmp/ArcticNet2011/GYRO'), $
+;;               expand_path('~/tmp/ArcticNet2011/GYRO/STD'), $
+;;               'gyro_raw_template.sav', 0, $
+;;               expand_path('~/tmp/ArcticNet2011/RMC/STD'), $
+;;               'rmc_std_template.sav', 0, 6, gyro_raw_keep_fields,
+;;               /OVERWRITE 
 ;;
 ;;- -----------------------------------------------------------------------
 ;;; Code:
@@ -104,6 +93,7 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      message, 'No standard RMC files found, so ' + $
               'cannot correct GYRO files.  Exiting'
   ENDIF
+
   restore, itemplate_sav
   ;; We make a copy, since the RMC template is also called itemplate
   gyro_template=itemplate

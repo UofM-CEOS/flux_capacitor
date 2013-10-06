@@ -1,58 +1,45 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-03T20:54:21+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-10-05T20:07:13+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; std_rmc
+;;     STD_RMC
 ;; 
 ;; PURPOSE:
 ;; 
-;;  Standardize RMC files.  It will likely standardize other files in the
-;;  future.
-;; 
-;; CATEGORY:
-;; 
-;;  General Input/Output
+;;     Standardize RMC files.  It will likely standardize other files in
+;;     the future.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;  STD_RMC, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Oheader
+;;      STD_RMC, Idir, Odir, Itemplate_Sav, Utc_Time_Idx, Server_Time_Idx,
+;;               Keep_Fields
 ;; 
 ;; INPUTS:
 ;; 
-;;  Idir: Input directory path, without trailing path separator.
-;;  
-;;  Odir: Output directory path, without trailing path separator.
-;;  
-;;  Itemplate_Sav: ascii_template template. Must contain a template
-;;   structure named 'itemplate'.
-;;  
-;;  UTC_Time_Idx: Index (0-based) of first field with UTC time definition.
-;;   This is typically the year field.
-;;
-;;  GPS_Time_Idx: Index (0-based) of first field with GPS time definition.
-;;   This is typically the year field.  NOTE: We assume both UTC and GPS
-;;   have the same resolution (i.e. if there's sub-seconds in one, there'd
-;;   better be sub-seconds in the other!).
-;;
-;;  Keep_Fields: String listing the fields (excluding time fields above) to
-;;   keeep in output file.  These must match names in Itemplate_Sav.
+;;     Idir:                  Input directory (no trailing separator).
+;;     Odir:                  Output directory (no trailing separator).
+;;     Itemplate_Sav:         Ascii template to read input files.
+;;     Utc_Time_Idx:          Index (in template) where UTC time is.
+;;     Server_Time_Idx:       Index (in template) where server time is.
+;;     Keep_Fields:           String array or scalar with names of fields
+;;                            to keep.
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
-;;  Overwrite: Whether to overwrite files in Odir.
+;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;; 
 ;; SIDE EFFECTS:
 ;; 
-;; Writes files in Odir.
+;;     Writes files in Odir.
 ;; 
 ;; EXAMPLE:
 ;; 
-;; rmc_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
-;; STD_RMC, expand_path('~/tmp/ArcticNet2011/RMC'), $
+;;     rmc_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
+;;     RMC, expand_path('~/tmp/ArcticNet2011/RMC'), $
 ;;          expand_path('~/tmp/ArcticNet2011/RMC/STD'), $
 ;;          'rmc_raw_template.sav', 3, 0, rmc_raw_keep_fields, /overwrite
 ;; 

@@ -1,60 +1,75 @@
 ;; $Id$
 ;; Author: Sebastian Luque
-;; Created: 2013-09-26T18:38:38+0000
-;; Last-Updated: 2013-10-05T20:03:33+0000
+;; Created: 2013-10-04T17:25:14+0000
+;; Last-Updated: 2013-10-06T19:51:57+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;;     STD_OMG
+;; 
 ;; 
 ;; PURPOSE:
 ;; 
-;;     Standardize OMG files.  It will likely standardize other files in
-;;     the future.
+;; 
+;; 
+;; CATEGORY:
+;; 
+;; 
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;     STD_OMG, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Keep_Fields
+;; 
 ;; 
 ;; INPUTS:
 ;; 
-;;     Idir:                  Input directory (no trailing separator).
-;;     Odir:                  Output directory (no trailing separator).
-;;     Itemplate_Sav:         Ascii template to read input files.
-;;     Time_Beg_Idx:          Index (in template) where time is.
-;;     Keep_Fields:           String array or scalar with names of fields
-;;                            to keep.
+;; 
+;; 
+;; OPTIONAL INPUTS:
+;; 
+;; 
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
-;;     OVERWRITE:             Whether to overwrite files in Odir.
+;; 
+;; 
+;; OUTPUTS:
+;; 
+;; 
+;; 
+;; OPTIONAL OUTPUTS:
+;; 
+;; 
+;; 
+;; COMMON BLOCKS:
+;; 
+;; 
 ;; 
 ;; SIDE EFFECTS:
 ;; 
-;;     Writes files in Odir.
+;; 
+;; 
+;; RESTRICTIONS:
+;; 
+;; 
+;; 
+;; PROCEDURE:
+;; 
+;; 
 ;; 
 ;; EXAMPLE:
 ;; 
-;;     omg_nav_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
-;;     omg_hdg_raw_keep_fields='heading'
-;;     STD_OMG, expand_path('~/tmp/ArcticNet2011/OMG/NAV'), $
-;;              expand_path('~/tmp/ArcticNet2011/OMG/NAV/STD'), $
-;;              'omg_nav_raw_template.sav', 0, omg_raw_keep_fields
-;;     STD_OMG, expand_path('~/tmp/ArcticNet2011/OMG/HDG'), $
-;;              expand_path('~/tmp/ArcticNet2011/OMG/HDG/STD'), $
-;;              'omg_hdg_raw_template.sav', 0, omg_raw_keep_fields
+;; 
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
-             OVERWRITE=OVERWRITE
+PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
+                   SAMPLE_RATE, OVERWRITE=OVERWRITE
 
   ;; Check parameters
-  IF (n_params() NE 5) THEN $
-     message, 'Usage: STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, ' + $
-              'TIME_BEG_IDX, KEEP_FIELDS'
+  IF (n_params() NE 6) THEN $
+     message, 'Usage: FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, ' + $
+              'TIME_BEG_IDX, ANGLE_FIELDS, SAMPLE_RATE'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
@@ -63,19 +78,24 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      message, 'ITEMPLATE_SAV is undefined or is empty string'
   IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
      message, 'TIME_BEG_IDX must be a scalar >= zero'
-  IF (n_elements(keep_fields) EQ 0) THEN $
-     message, 'KEEP_FIELDS is undefined'
-  idir_files=file_search(idir + path_sep() + '*.txt', count=nidir_files, $
+  IF (n_elements(angle_fields) EQ 0) THEN $
+     message, 'ANGLE_FIELDS is undefined'
+  IF ((n_elements(sample_rate) NE 1) OR (sample_rate LT 0)) THEN $
+     message, 'SAMPLE_RATE must be a a scalar >= zero'
+  idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort)
   IF nidir_files LT 1 THEN $
      message, 'No input files found'
 
   restore, itemplate_sav
   field_names=itemplate.FIELDNAMES
+  is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
+  non_time_fields=where(~is_time_field)
+  non_time_field_names=strlowcase(field_names[non_time_fields])
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
   tags2remove=where(field_names EQ field_names[time_beg_idx])
   ;; Times
-  tfields=where(itemplate.FIELDGROUPS EQ time_beg_idx, /NULL)
+  tfields=where(is_time_field, /NULL)
   tnames=strlowcase(field_names[tfields])
   tnamesl=strsplit(tnames, '_', /extract)
   tnames_last=strarr(n_elements(tnamesl))
@@ -101,10 +121,10 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
            message, 'Standardized file ' + ofile_stamp + $
                     ' already exists.  Overwriting', /informational
         ENDIF ELSE BEGIN
-           message, 'Standardized file ' + ofile_stamp + $
-                    ' already exists.  Not overwriting', /informational
-           CONTINUE
-        ENDELSE
+        message, 'Standardized file ' + ofile_stamp + $
+                 ' already exists.  Not overwriting', /informational
+        CONTINUE
+     ENDELSE
      ENDIF
 
      ifile=idir_files[k]
@@ -135,10 +155,39 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
         ENDIF
      ENDFOREACH
 
-     ;; Obtain full time details
+     ;; Obtain full time details array
      itimes_std=parse_times(idata_times, tnames_last, time_locs)
+     itimes_jd=reform(julday(itimes_std[1, *], $
+                             itimes_std[2, *], $
+                             itimes_std[0, *], $
+                             itimes_std[3, *], $
+                             itimes_std[4, *], $
+                             itimes_std[5, *]))
+     beg_jd=julday(itimes_std[1, 0], itimes_std[2, 0], itimes_std[0, 0], $
+                   itimes_std[3, 0], itimes_std[4, 0], $
+                   floor(fix(itimes_std[5, 0])))
+     end_jd=julday(itimes_std[1, lines - 1], $
+                   itimes_std[2, lines - 1], $
+                   itimes_std[0, lines - 1], $
+                   itimes_std[3, lines - 1], $
+                   itimes_std[4, lines - 1], $
+                   floor(fix(itimes_std[5, lines - 1])))
+     otimes_jd=timegen(start=beg_jd, final=end_jd, $
+                       step_size=sample_rate, units='seconds')
+     ;; Set up output hash
      
+     FOREACH fld, field_names[angle_fields] DO BEGIN
+        fld_idx=where(idata_names EQ fld)
+        xs=sin(idata.(fld_idx) * !DTOR)
+        ys=cos(idata.(fld_idx) * !DTOR)
+        oxs=interpol(xs, itimes_jd, otimes_jd)
+        oys=interpol(ys, itimes_jd, otimes_jd)
+        oang=atan(oxs, oys) / !DTOR
+        negs=where(oang LE 0, /null)
+        oang[negs]=oang[negs] + 360
+     ENDFOREACH
      odata=remove_structure_tags(idata, field_names[tags2remove])
+     otimes=1
      ;; Find indices to keep
      match2, strlowcase(tag_names(odata)), keep_fields, toss, keep
      tags2remove_odata=where(toss LT 0, nremove)
@@ -153,6 +202,21 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
                          'second', reform(itimes_std[5, *]), odata)
      delvar, idata
 
+     ;; Fix things for some years
+
+     ;; For 2011 RH data set to NaN when sensor was not working
+     ;; from 0931 UTC on JD204 through 1435 on JD207. We're sure
+     ;; we have DOY in these raw files, so no need to test.
+     cal_badbeg2011=doy2calendar(2011, 204)
+     cal_badend2011=doy2calendar(2011, 207)
+     jd_badbeg2011=julday(strmid(cal_badbeg2011, 4, 2), $
+                          strmid(cal_badbeg2011, 6, 2), 2011, 9, 31)
+     jd_badend2011=julday(strmid(cal_badend2011, 4, 2), $
+                          strmid(cal_badend2011, 6, 2), 2011, 14, 35)
+     jd=julday(odata.month, odata.day, odata.year, odata.hour, odata.minute)
+     bad2011=where((jd GE jd_badbeg2011) AND (jd LE jd_badend2011), nbad)
+     IF nbad GT 0 THEN odata.(11)[bad2011]=!VALUES.F_NAN
+
      write_csv, ofile_name, odata, header=strlowcase(tag_names(odata))
 
   ENDFOR
@@ -160,10 +224,9 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
 END
 
 
-
 ;;;_ + Emacs Local Variables
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
 ;;
-;;; std_omg.pro ends here
+;;; filter_series.pro ends here

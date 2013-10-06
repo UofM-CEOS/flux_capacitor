@@ -1,69 +1,32 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-18T20:47:27+0000
-;; Last-Updated: 2013-10-03T03:08:26+0000
+;; Last-Updated: 2013-10-05T20:09:45+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;;  NAME:
 ;; 
-;;   Original comment by BJ (probably) below.
-;; 
-;;   This program calculates the standard deviation of wind direction using
-;;   the Yamartino method (same method used by Campbell, see
-;;   http://www.wikidoc.org/index.php/Yamartino_method).
-;; 
+;;      STDDEV_YAMARTINO
 ;; 
 ;;  PURPOSE:
 ;; 
+;;      Original comment by BJ (probably) below.
 ;; 
-;; 
-;;  CATEGORY:
-;; 
-;; 
+;;      This program calculates the standard deviation of wind direction
+;;      using the Yamartino method (same method used by Campbell, see
+;;      http://www.wikidoc.org/index.php/Yamartino_method).
 ;; 
 ;;  CALLING SEQUENCE:
 ;; 
-;; 
+;;      STDDEV_YAMARTINO, X
 ;; 
 ;;  INPUTS:
 ;; 
-;; 
-;; 
-;;  OPTIONAL INPUTS:
-;; 
-;; 
-;; 
-;;  KEYWORD PARAMETERS:
-;; 
-;; 
-;; 
-;;  OUTPUTS:
-;; 
-;; 
-;; 
-;;  OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
-;;  COMMON BLOCKS:
-;; 
-;; 
-;; 
-;;  SIDE EFFECTS:
-;; 
-;; 
-;; 
-;;  RESTRICTIONS:
-;; 
-;; 
-;; 
-;;  PROCEDURE:
-;; 
-;; 
+;;      X: Vector.
 ;; 
 ;;  EXAMPLE:
 ;; 
-;; 
+;;      Result=STDDEV_YAMARTINO(x)
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:

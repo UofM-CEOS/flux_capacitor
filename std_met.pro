@@ -1,44 +1,34 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-03T20:31:22+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-10-05T20:01:25+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; std_met
+;;     STD_MET
 ;; 
 ;; PURPOSE:
 ;; 
-;;  Standardize MET files.  It will likely standardize other files in the
-;;  future.
-;; 
-;; CATEGORY:
-;; 
-;;  General Input/Output
+;;     Standardize MET files.  It will likely standardize other files in
+;;     the future.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;  STD_MET, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Oheader
+;;     STD_MET, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Keep_Fields
 ;; 
 ;; INPUTS:
 ;; 
-;;  Idir: Input directory path, without trailing path separator.
-;;  
-;;  Odir: Output directory path, without trailing path separator.
-;;  
-;;  Itemplate_Sav: ascii_template template. Must contain a template
-;;   structure named 'itemplate'.
-;;  
-;;  Time_Beg_Idx: Index (0-based) of first field with time definition.
-;;   This is typically the year field.
-;;
-;;  Oheader: Output header string with each field name, separated by
-;;   commas.
+;;     Idir:                  Input directory (no trailing separator).
+;;     Odir:                  Output directory (no trailing separator).
+;;     Itemplate_Sav:         Ascii template to read input files.
+;;     Time_Beg_Idx:          Index (in template) where time is.
+;;     Keep_Fields:           String array or scalar with names of fields
+;;                            to keep.
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
-;;  Overwrite: Whether to overwrite files in Odir.
+;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;; 
 ;; SIDE EFFECTS:
 ;; 
@@ -46,13 +36,16 @@
 ;; 
 ;; EXAMPLE:
 ;; 
-;; met_raw_keep_fields=['prog_version', 'battery_voltage', 'panel_temperature', $
-;;                      'pressure', 'air_temperature', 'rh_percent', $
-;;                      'surface_temperature', 'wind_speed', $
-;;                      'wind_direction', 'wind_sd', 'par', 'pitch', 'roll']
-;; STD_MET, expand_path('~/tmp/ArcticNet2011/MET'), $
-;;          expand_path('~/tmp/ArcticNet2011/MET/STD'), $
-;;          'met_raw_template.sav', 1, met_raw_keep_fields, /overwrite
+;;     met_raw_keep_fields=['prog_version', 'battery_voltage', $
+;;                          'panel_temperature', 'pressure', $
+;;                          'air_temperature', 'rh_percent', $
+;;                          'surface_temperature', 'wind_speed', $
+;;                          'wind_direction', 'wind_sd', 'par', 'pitch',
+;;                          'roll']
+;;     STD_MET, expand_path('~/tmp/ArcticNet2011/MET'), $
+;;              expand_path('~/tmp/ArcticNet2011/MET/STD'), $
+;;              'met_raw_template.sav', 1, met_raw_keep_fields,
+;;              /OVERWRITE
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
