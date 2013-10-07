@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-28T17:54:17+0000
-;; Last-Updated: 2013-10-03T03:03:24+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-07T18:40:59+0000
+;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
@@ -38,7 +38,7 @@ FUNCTION JUL2TIMESTAMP, JUL
                        string(dd, format='(i02, " ")') + $
                        string(hh, format='(i02, ":")') + $
                        string(mm, format='(i02, ":")') + $
-                       string(ss, format='(i02)'))
+                       string(ss, format='(f06.3)'))
   RETURN, calendar
 END
 
