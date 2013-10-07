@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-05T19:59:45+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-07T18:42:59+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
@@ -264,7 +264,7 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      utc_minute=string(utc_minute, format='(i02)')
      ;; Becareful here with the format, since we may need more decimal
      ;; places, depending on the interpolation
-     utc_second=string(utc_second, format='(f08.5)')
+     utc_second=string(utc_second, format='(f06.3)')
 
      odata=remove_structure_tags(idata, field_names[tags2remove])
      ;; Find indices to keep
