@@ -9,3 +9,4 @@
 .compile 'valid_num.pro'
 .compile 'match2.pro'
 .compile 'locate_time_strings.pro'
+.compile 'parse_times.pro'
