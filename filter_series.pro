@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-10-06T19:51:57+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-07T22:35:28+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -89,9 +89,15 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
 
   restore, itemplate_sav
   field_names=itemplate.FIELDNAMES
+  field_types=itemplate.FIELDTYPES
   is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
   non_time_fields=where(~is_time_field)
   non_time_field_names=strlowcase(field_names[non_time_fields])
+  ;; Locate non-angular fields; check if any via nnoang
+  noang_cols_maybe=cgSetDifference(non_time_fields, angle_fields, $
+                                   count=nnoang)
+  ;; Only interpolate those fields that are not strings (BECAREFUL HERE)
+  noang_cols=noang_cols_maybe[where(field_types[noang_cols_maybe] NE 7)]
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
   tags2remove=where(field_names EQ field_names[time_beg_idx])
   ;; Times
@@ -110,8 +116,9 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
   FOR k=0, nidir_files - 1 DO BEGIN
      iname=strsplit(file_basename(idir_files[k]), '.', /extract)
      ;; Get a path for the file, check if it already exists
-     ofile_name=strcompress(odir + path_sep() + iname[0] + '_std.' + $
-                            iname[1], /remove_all)
+     ofile_name=strcompress(odir + path_sep() + iname[0] + '_' + $
+                            strtrim(sample_rate, 2) + 's.' + iname[1], $
+                            /remove_all)
      ofile_stamp=file_basename(ofile_name)
      out_list=file_search(odir + path_sep() + '*.' + iname[1], /nosort)
      matchfiles=where(ofile_stamp EQ file_basename(out_list), $
@@ -174,8 +181,18 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
                    floor(fix(itimes_std[5, lines - 1])))
      otimes_jd=timegen(start=beg_jd, final=end_jd, $
                        step_size=sample_rate, units='seconds')
+     caldat, otimes_jd, mo, dd, yyyy, hh, mm, ss
+
      ;; Set up output hash
-     
+     ohash=hash(field_names)
+     ;; Note we use our time_locs variable to locate each time info
+     ohash[tnames[time_locs[0]]]=string(yyyy, format='(i04)')
+     ohash[tnames[time_locs[1]]]=string(mo, format='(i02)')
+     ohash[tnames[time_locs[2]]]=string(dd, format='(i02)')
+     ohash[tnames[time_locs[3]]]=string(hh, format='(i02)')
+     ohash[tnames[time_locs[4]]]=string(mm, format='(i02)')
+     ;; Becareful here with the decimal places formatting
+     ohash[tnames[time_locs[5]]]=string(ss, format='(f06.3)')
      FOREACH fld, field_names[angle_fields] DO BEGIN
         fld_idx=where(idata_names EQ fld)
         xs=sin(idata.(fld_idx) * !DTOR)
@@ -183,41 +200,27 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
         oxs=interpol(xs, itimes_jd, otimes_jd)
         oys=interpol(ys, itimes_jd, otimes_jd)
         oang=atan(oxs, oys) / !DTOR
-        negs=where(oang LE 0, /null)
-        oang[negs]=oang[negs] + 360
+        negs=where(oang LE 0, nneg)
+        IF nneg GT 0 THEN $
+           oang[negs]=oang[negs] + 360
+        ohash[fld]=oang
      ENDFOREACH
-     odata=remove_structure_tags(idata, field_names[tags2remove])
-     otimes=1
-     ;; Find indices to keep
-     match2, strlowcase(tag_names(odata)), keep_fields, toss, keep
-     tags2remove_odata=where(toss LT 0, nremove)
-     IF nremove GT 0 THEN $
-        odata=remove_structure_tags(odata, $
-                                    (tag_names(odata))[tags2remove_odata])
-     odata=create_struct('year', reform(itimes_std[0, *]), $
-                         'month', reform(itimes_std[1, *]), $
-                         'day', reform(itimes_std[2, *]), $
-                         'hour', reform(itimes_std[3, *]), $
-                         'minute', reform(itimes_std[4, *]), $
-                         'second', reform(itimes_std[5, *]), odata)
+     IF nnoang GT 0 THEN BEGIN
+        FOREACH fld, field_names[noang_fields] DO BEGIN
+           fld_idx=where(idata_names EQ fld)
+           noang=interpol(idata.(fld_idx), itimes_jd, otimes_jd)
+           ohash[fld]=noang
+        ENDFOREACH
+     ENDIF
      delvar, idata
 
-     ;; Fix things for some years
-
-     ;; For 2011 RH data set to NaN when sensor was not working
-     ;; from 0931 UTC on JD204 through 1435 on JD207. We're sure
-     ;; we have DOY in these raw files, so no need to test.
-     cal_badbeg2011=doy2calendar(2011, 204)
-     cal_badend2011=doy2calendar(2011, 207)
-     jd_badbeg2011=julday(strmid(cal_badbeg2011, 4, 2), $
-                          strmid(cal_badbeg2011, 6, 2), 2011, 9, 31)
-     jd_badend2011=julday(strmid(cal_badend2011, 4, 2), $
-                          strmid(cal_badend2011, 6, 2), 2011, 14, 35)
-     jd=julday(odata.month, odata.day, odata.year, odata.hour, odata.minute)
-     bad2011=where((jd GE jd_badbeg2011) AND (jd LE jd_badend2011), nbad)
-     IF nbad GT 0 THEN odata.(11)[bad2011]=!VALUES.F_NAN
-
-     write_csv, ofile_name, odata, header=strlowcase(tag_names(odata))
+     ts=create_struct(field_names[0], ohash[field_names[0]])
+     FOREACH fld, field_names[1:*] DO BEGIN
+        ts=create_struct(ts, $
+                         field_names[where(field_names EQ fld)], $
+                         ohash[fld])
+     ENDFOREACH
+     write_csv, ofile_name, ts, header=strlowcase(tag_names(ts))
 
   ENDFOR
 
