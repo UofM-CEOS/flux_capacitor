@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-07T18:42:59+0000
+;; Last-Updated: 2013-10-08T18:31:13+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -81,14 +81,15 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      message, 'RMC_SERVER_TIME_IDX must be a scalar  >= zero'
   IF (n_elements(keep_fields) EQ 0) THEN $
      message, 'KEEP_FIELDS is undefined'
-  idir_files=file_search(idir + path_sep() + '*.raw', count=nidir_files, $
-                         /nosort, /fold_case)
+  idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
+                         /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN BEGIN
      message, 'No input files found', /informational
      RETURN
   ENDIF
-  rmc_std_files=file_search(rmc_std_dir + path_sep() + '*.raw', $
-                            count=nrmc_files, /nosort, /fold_case)
+  rmc_std_files=file_search(rmc_std_dir + path_sep() + '*', $
+                            count=nrmc_files, /nosort, /fold_case, $
+                            /test_regular)
   IF nrmc_files LT 1 THEN BEGIN
      message, 'No standard RMC files found, so ' + $
               'cannot correct GYRO files.  Exiting'
@@ -131,7 +132,8 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      ofile_name=strcompress(odir + path_sep() + iname[0] + '_std.' + $
                             iname[1], /remove_all)
      ofile_stamp=file_basename(ofile_name)
-     out_list=file_search(odir + path_sep() + '*.' + iname[1], /nosort)
+     out_list=file_search(odir + path_sep() + '*.' + iname[1], $
+                          /nosort, /fold_case, /test_regular)
      matchfiles=where(ofile_stamp EQ file_basename(out_list), $
                       matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN

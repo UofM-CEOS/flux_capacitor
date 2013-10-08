@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T18:38:38+0000
-;; Last-Updated: 2013-10-05T20:03:33+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-08T18:32:04+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -65,8 +65,8 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      message, 'TIME_BEG_IDX must be a scalar >= zero'
   IF (n_elements(keep_fields) EQ 0) THEN $
      message, 'KEEP_FIELDS is undefined'
-  idir_files=file_search(idir + path_sep() + '*.txt', count=nidir_files, $
-                         /nosort)
+  idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
+                         /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN $
      message, 'No input files found'
 
@@ -93,7 +93,8 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      ofile_name=strcompress(odir + path_sep() + iname[0] + '_std.' + $
                             iname[1], /remove_all)
      ofile_stamp=file_basename(ofile_name)
-     out_list=file_search(odir + path_sep() + '*.' + iname[1], /nosort)
+     out_list=file_search(odir + path_sep() + '*.' + iname[1], $
+                          /nosort, /fold_case, /test_regular)
      matchfiles=where(ofile_stamp EQ file_basename(out_list), $
                       matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN

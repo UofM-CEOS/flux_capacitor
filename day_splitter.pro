@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-07T21:49:04+0000
+;; Last-Updated: 2013-10-08T18:30:06+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -93,7 +93,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      message, 'STAMP is undefined or is empty string'
 
   idir_files=file_search(idir + path_sep() + '*std*', count=nidir_files, $
-                         /nosort)
+                         /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN BEGIN
      message, 'No input files found', /informational
      RETURN
@@ -158,7 +158,8 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   file_stamps=strcompress(stamp + '_' + file_yyyydoy + '.dat', $
                           /remove_all)
   odir_files=file_basename(file_search(odir + path_sep() + '*.dat', $
-                                       count=nodir_files, /nosort))
+                                       count=nodir_files, /nosort, $
+                                       /fold_case, /test_regular))
 
   skipdays=intarr(size(days, /n_elements))
   FOR i=0L, n_days, 1L DO BEGIN

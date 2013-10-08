@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-10-07T22:35:28+0000
+;; Last-Updated: 2013-10-08T18:30:29+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -83,7 +83,7 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
   IF ((n_elements(sample_rate) NE 1) OR (sample_rate LT 0)) THEN $
      message, 'SAMPLE_RATE must be a a scalar >= zero'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
-                         /nosort)
+                         /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN $
      message, 'No input files found'
 
@@ -120,7 +120,8 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
                             strtrim(sample_rate, 2) + 's.' + iname[1], $
                             /remove_all)
      ofile_stamp=file_basename(ofile_name)
-     out_list=file_search(odir + path_sep() + '*.' + iname[1], /nosort)
+     out_list=file_search(odir + path_sep() + '*.' + iname[1], $
+                          /nosort, /fold_case, /test_regular)
      matchfiles=where(ofile_stamp EQ file_basename(out_list), $
                       matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN
