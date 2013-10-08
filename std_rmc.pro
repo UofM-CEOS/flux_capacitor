@@ -1,22 +1,23 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-05T20:07:13+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-08T22:04:33+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;;     STD_RMC
+;;     STD_2TIMES
 ;; 
 ;; PURPOSE:
 ;; 
-;;     Standardize RMC files.  It will likely standardize other files in
-;;     the future.
+;;     Standardize files by parsing times and selecting columns to keep
+;;     from un-processed files.  It also allows conversion of each field to
+;;     keep to a given data type.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;      STD_RMC, Idir, Odir, Itemplate_Sav, Utc_Time_Idx, Server_Time_Idx,
-;;               Keep_Fields
+;;      STD_2TIMES, Idir, Odir, Itemplate_Sav, Utc_Time_Idx, Server_Time_Idx,
+;;                  Keep_Fields
 ;; 
 ;; INPUTS:
 ;; 
@@ -30,6 +31,9 @@
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
+;;     Keep_Types:            Array of data type codes for each element of
+;;                            Keep_Fields.
+;;     File_Type:             String scalar with file type (NAV, RMC, RAD, etc.)
 ;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;; 
 ;; SIDE EFFECTS:
@@ -38,20 +42,25 @@
 ;; 
 ;; EXAMPLE:
 ;; 
-;;     rmc_raw_keep_fields=['latitude', 'longitude', 'sog', 'cog']
-;;     RMC, expand_path('~/tmp/ArcticNet2011/RMC'), $
-;;          expand_path('~/tmp/ArcticNet2011/RMC/STD'), $
-;;          'rmc_raw_template.sav', 3, 0, rmc_raw_keep_fields, /overwrite
+;; nav_raw_keep_fields=['prog_version', 'latitude', 'longitude', $
+;;                      'sog', 'cog', 'heading', 'pitch', 'roll', $
+;;                      'accel_x', 'accel_y', 'accel_z']
+;; nav_raw_keep_types=[7, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+;; STD_2TIMES, expand_path('~/tmp/ArcticNet2011/NAV'), $
+;;             expand_path('~/tmp/ArcticNet2011/NAV/STD'), $
+;;             'nav_raw_template.sav', 6, 1, nav_raw_keep_fields, $
+;;             keep_types=nav_raw_keep_types, file_type='NAV', /overwrite
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
-             KEEP_FIELDS, OVERWRITE=OVERWRITE
+PRO STD_2TIMES, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
+                KEEP_FIELDS, KEEP_TYPES=KEEP_TYPES, FILE_TYPE=FILE_TYPE, $
+                OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 6) THEN $
-     message, 'Usage: STD_MET, IDIR, ODIR, ITEMPLATE_SAV, ' + $
+     message, 'Usage: STD_2TIMES, IDIR, ODIR, ITEMPLATE_SAV, ' + $
               'UTC_TIME_IDX, SERVER_TIME_IDX, KEEP_FIELDS'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
@@ -63,15 +72,20 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
      message, 'UTC_TIME_IDX must be a scalar >= zero'
   IF ((n_elements(server_time_idx) NE 1) OR (server_time_idx LT 0)) THEN $
      message, 'SERVER_TIME_IDX must be a scalar  >= zero'
-  IF (n_elements(keep_fields) EQ 0) THEN $
-     message, 'KEEP_FIELDS is undefined'
-
-  idir_files=file_search(idir + path_sep() + '*.raw', count=nidir_files, $
-                         /nosort, /fold_case)
+  n_kf=n_elements(keep_fields)
+  IF (n_kf EQ 0) THEN message, 'KEEP_FIELDS is undefined'
+  n_kt=n_elements(keep_types)
+  IF (n_kt GT 0) AND (n_kt NE n_kf) THEN $
+     message, 'KEEP_TYPES and KEEP_FIELDS must have the same number of elements'
+  IF ((n_elements(file_type) EQ 0) OR (odir EQ '')) THEN $
+     message, 'FILE_TYPE is undefined or is empty string'
+  idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
+                         /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN BEGIN
      message, 'No input files found', /informational
      RETURN
   ENDIF
+
   restore, itemplate_sav
   field_names=itemplate.FIELDNAMES
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
@@ -106,7 +120,8 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
      ofile_name=strcompress(odir + path_sep() + iname[0] + '_std.' + $
                             iname[1], /remove_all)
      ofile_stamp=file_basename(ofile_name)
-     out_list=file_search(odir + path_sep() + '*.' + iname[1], /nosort)
+     out_list=file_search(odir + path_sep() + '*.' + iname[1], $
+                          /nosort, /fold_case, /test_regular)
      matchfiles=where(ofile_stamp EQ file_basename(out_list), $
                       matchfilecount)
      IF matchfilecount GT 0 THEN BEGIN
@@ -171,6 +186,19 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
      IF nremove GT 0 THEN $
         odata=remove_structure_tags(odata, $
                                     (tag_names(odata))[tags2remove_odata])
+     onames=tag_names(odata)
+     IF n_kt GT 0 THEN BEGIN
+        ohash=hash(odata)
+        FOREACH value, ohash, fld DO BEGIN
+           match_type=keep_types[where(onames EQ fld)]
+           ohash[fld]=fix(ohash[fld], type=match_type)
+        ENDFOREACH
+        odata=create_struct(onames[0], ohash[onames[0]])
+        FOREACH fld, onames[1:*] DO BEGIN
+           odata=create_struct(odata, onames[where(onames EQ fld)], $
+                               ohash[fld])
+        ENDFOREACH
+     ENDIF
      odata=create_struct(tnames_id + '_year', $
                          reform(itimes_utc_std[0, *]), $
                          tnames_id + '_month', $
@@ -198,19 +226,58 @@ PRO STD_RMC, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
                          odata)
      delvar, idata
 
-     ;; Fix things for certain years (first odata field)
-     bad2011=where(odata.(0) EQ 2011, nbad, /null)
-     IF nbad GT 0 THEN BEGIN
-        ;; Fix silly format (DDMM.mm) for encoding degrees
-        lat_str=string(odata.latitude[bad2011], format='(f010.5)')
-        lon_str=string(odata.longitude[bad2011], format='(f011.5)')
-        lat_deg=float(strmid(lat_str, 0, 2))
-        lat_min=float(strmid(lat_str, 2, 8)) / 60
-        odata.latitude[bad2011]=lat_deg + lat_min
-        lon_deg=float(strmid(lon_str, 0, 3))
-        lon_min=float(strmid(lon_str, 3, 8)) / 60
-        odata.longitude[bad2011]=-1 * (lon_deg + lon_min)
-     ENDIF
+     ;; Fix things for certain file types
+     CASE file_type OF
+        'NAV': BEGIN
+           ;; Original comment: check for bad compass data showing up as
+           ;; missing accel_z
+           badcompass=where(~ finite(odata.accel_z), nbadcompass)
+           IF nbadcompass GT 0 THEN BEGIN
+              badflds=['heading', 'pitch', 'roll', $
+                       'accel_x', 'accel_y', 'accel_z']
+              FOREACH fld, badflds DO BEGIN
+                 match_fld=where(strupcase(fld) EQ tag_names(odata))
+                 odata.(match_fld)[badcompass]=!VALUES.F_NAN
+              ENDFOREACH
+           ENDIF
+           badlat=where((odata.latitude LT 0.0) OR $
+                        (odata.latitude GT 90.0), nbadlat)
+           badlon=where((odata.longitude LT -180.0) OR $
+                        (odata.longitude GT 0.0), nbadlon)
+           badsog=where((odata.sog LT 0.0) OR $
+                        (odata.sog GT 20.0), nbadsog)
+           badcog=where((odata.cog LT 0.0) OR $
+                        (odata.cog GT 360.0), nbadcog)
+           badhead=where((odata.heading LT 0.0) OR $
+                         (odata.heading GT 360.0), nbadhead)
+           badroll=where((odata.roll LT -3.0) OR $
+                         (odata.roll GT 3.0), nbadroll)
+           badpitch=where((odata.pitch LT -3.0) OR $
+                          (odata.pitch GT 3.0), nbadpitch)
+           IF nbadlat GT 0 THEN odata.latitude[badlat]=!VALUES.F_NAN
+           IF nbadlon GT 0 THEN odata.longitude[badlon]=!VALUES.F_NAN
+           IF nbadsog GT 0 THEN odata.sog[badsog]=!VALUES.F_NAN
+           IF nbadcog GT 0 THEN odata.cog[badcog]=!VALUES.F_NAN
+           IF nbadhead GT 0 THEN odata.heading[badhead]=!VALUES.F_NAN
+           IF nbadroll GT 0 THEN odata.roll[badroll]=!VALUES.F_NAN
+           IF nbadpitch GT 0 THEN odata.pitch[badpitch]=!VALUES.F_NAN
+        END
+        'RMC': BEGIN
+           ;; Fix things for certain years (first odata field)
+           bad2011=where(odata.(0) EQ 2011, nbad, /null)
+           IF nbad GT 0 THEN BEGIN
+              ;; Fix silly format (DDMM.mm) for encoding degrees
+              lat_str=string(odata.latitude[bad2011], format='(f010.5)')
+              lon_str=string(odata.longitude[bad2011], format='(f011.5)')
+              lat_deg=float(strmid(lat_str, 0, 2))
+              lat_min=float(strmid(lat_str, 2, 8)) / 60
+              odata.latitude[bad2011]=lat_deg + lat_min
+              lon_deg=float(strmid(lon_str, 0, 3))
+              lon_min=float(strmid(lon_str, 3, 8)) / 60
+              odata.longitude[bad2011]=-1 * (lon_deg + lon_min)
+           ENDIF
+        END
+     ENDCASE
 
      write_csv, ofile_name, odata, header=strlowcase(tag_names(odata))
 
