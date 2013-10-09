@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-09T16:47:54+0000
+;; Last-Updated: 2013-10-09T18:52:35+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -278,13 +278,15 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      IF n LT 1 THEN CONTINUE
      file_stamp=file_stamps[begi / n_recs]
      ;; ts=ts_full.toStruct(/no_copy)
-     ;; There must be a better way to re-order tags
+     ;; There must be a better way to re-order tags.
+     ;; We could use day_idcs[day_matches] instead of begi:endi to output
+     ;; only the matches for the day, but the end the average_series.pro
+     ;; needs to change.
      ts=create_struct(field_names[0], $
-                      ts_full[field_names[0], $
-                              day_idcs[day_matches]])
+                      ts_full[field_names[0], begi:endi])
      FOREACH fld, field_names[1:*] DO BEGIN
         ts=create_struct(ts, field_names[where(field_names EQ fld)], $
-                         ts_full[fld, day_idcs[day_matches]])
+                         ts_full[fld, begi:endi])
      ENDFOREACH
      write_csv, odir + path_sep() + file_stamp, ts, $
                 header=strlowcase(tag_names(ts))
