@@ -1,3 +1,132 @@
+2013-10-09  spluque@gmail.com
+
+	* std.pro, std2.pro:
+	  Fixed message call at the last case statement.
+
+	* omg_hdg_raw_template.sav, omg_nav_raw_template.sav:
+	  Modified template's time names so that it contains a leading
+	  string to indicate what sort of time stamp it is (assuming UTC).
+	  This is needed so that we can parse the time strings.
+
+	* average_series.pro:
+	  Eliminating unused argument.
+
+	* met_raw_template.sav:
+	  Modified template's time names so that it contains a leading
+	  string to indicate what sort of time stamp it is (assuming UTC).
+	  This is needed so that we can parse the time strings.
+
+	* std_met.pro:
+	  Generalized procedure for any file with a single time input
+	  column, or where other time input columns just don't matter.
+
+	* std2.pro:
+	  Exit if no input files.
+
+	* average_series.pro:
+	  Generalized averaging for angles and magnitudes.
+
+	* day_splitter.pro:
+	  Reverting to output entire day's data, as it is required for
+	  averaging.
+
+	* std2.pro:
+	  Set invalid time numbers to the empty string prior to passing to
+	  parse_times().
+
+	* day_splitter.pro:
+	  Fix silly mistake when ignoring other non-time groups.
+
+	* nav_std_template.sav:
+	  Changing template specification to match output from STD2.
+
+	* parse_times.pro:
+	  Fixed typo (important).
+
+2013-10-08  spluque@gmail.com
+
+	* filter_series.pro, std_gyro.pro, std_met.pro, std_nav.pro,
+	  std_omg.pro:
+	  Correct input and output file search.
+
+	* day_splitter.pro:
+	  Correct input file search.
+
+2013-10-07  spluque@gmail.com
+
+	* std_gyro.pro:
+	  Fixed output second format.
+
+	* filter_series.pro:
+	  Working revision.
+
+	* doy2calendar.pro:
+	  Format seconds as float to allow for sub-second frequencies.
+
+	* day_splitter.pro:
+	  Use time parsing code, changing argument name to STEP_TIME.
+
+2013-10-04  spluque@gmail.com
+
+	* std_gyro.pro:
+	  Label output time as UTC, as assumed.
+
+	* gyro_std_template.sav:
+	  Corrected field names.
+
+2013-10-03  spluque@gmail.com
+
+	* std_gyro.pro, std_met.pro, std_omg.pro, std_rmc.pro:
+	  Successfully factored out parsing of times.
+
+	* parse_times.pro:
+	  Utility function for parsing times.
+
+	* day_splitter.pro:
+	  Do not write file if we have no data for a day.
+
+	* std_met.pro:
+	  Use new function to determine how to extract time info.
+
+	* std_rmc.pro:
+	  Use 'server' instead of 'gps' to refer to the time info that
+	  corresponds to the computer or whatever means data were
+	  downloaded from.
+
+	* met_raw_template.sav:
+	  Use DOY instead of julday.
+
+2013-10-02  spluque@gmail.com
+
+	* std_omg.pro:
+	  Output only one decimal place for seconds.
+
+	* gyro_std_template.sav, omg_hdg_raw_template.sav,
+	  omg_hdg_std_template.sav, omg_nav_std_template.sav:
+	  Adding templates.
+
+	* std_omg.pro:
+	  Working version. Preparing to rename.
+
+	* std_gyro.pro:
+	  Check if we have any tags to remove at the end.
+
+	* rmc_raw_template.sav:
+	  Corrected template.
+
+2013-10-01  spluque@gmail.com
+
+	* day_splitter.pro, nav_avg.pro, std_met.pro, std_nav.pro,
+	  std_omg.pro, std_rmc.pro:
+	  Use MESSAGE instead of PRINT.
+
+	* std_rmc.pro:
+	  Take seconds from whatever seconds field we have through the end
+	  of it.
+
+	* std_rmc.pro:
+	  Working version.
+
 2013-09-28  spluque@gmail.com
 
 	* nav_avg.pro:
