@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-09T20:36:48+0000
+;; Last-Updated: 2013-10-09T22:07:29+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -15,39 +15,34 @@
 ;; CALLING SEQUENCE:
 ;;
 ;;     AVERAGE_SERIES, Idir, Odir, Itemplate_Sav, Time_Beg_Idx,
-;;                     Isample_Rate, Osample_Rate, Stamp
+;;                     Isample_Rate, Osample_Rate
 ;;
 ;; INPUTS:
 ;;
-;;
-;;
-;; OPTIONAL INPUTS:
-;;
-;;
+;;     Idir:                  Input directory (no trailing separator).
+;;     Odir:                  Output directory (no trailing separator).
+;;     Itemplate_Sav:         Ascii template to read input files.
+;;     Time_Beg_Idx:          Index (in template) where time is.
+;;     Isample_Rate:          Scalar indicating the frequency (s) with
+;;                            which input data were sampled.
+;;     Osample_Rate:          Scalar indicating the frequency (s) with
+;;                            which output data should be averaged over.
 ;;
 ;; KEYWORD PARAMETERS:
 ;;
-;;
-;;
-;; OUTPUTS:
-;;
-;;
-;;
-;; OPTIONAL OUTPUTS:
-;;
-;;
-;;
-;; COMMON BLOCKS:
-;;
-;;
-;;
-;; SIDE EFFECTS:
-;;
-;;
+;;     ANGLE_FIELDS:          An integer array indicating which fields in
+;;                            the input template should be treated as
+;;                            angular data.
+;;     MAGNITUDE_FIELDS:      An integer array indicating which fields in
+;;                            the input template should be treated as
+;;                            magnitude for each field in ANGLE_FIELDS.  If
+;;                            an element is -1, then magnitude is assumed
+;;                            to be 1 for the corresponding angle.
+;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;;
 ;; RESTRICTIONS:
 ;;
-;;     Input must have a full day's data; i.e. daily split.
+;;     Input MUST have a full day's data; i.e. daily split.
 ;;
 ;; PROCEDURE:
 ;;
@@ -61,13 +56,12 @@
 ;;; Code:
 
 PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
-                    ISAMPLE_RATE, OSAMPLE_RATE, STAMP, $
-                    ANGLE_FIELDS=ANGLE_FIELDS, $
+                    ISAMPLE_RATE, OSAMPLE_RATE, ANGLE_FIELDS=ANGLE_FIELDS, $
                     MAGNITUDE_FIELDS=MAGNITUDE_FIELDS, $
                     OVERWRITE=OVERWRITE
 
   ;; Check parameters
-  IF (n_params() NE 7) THEN $
+  IF (n_params() NE 6) THEN $
      message, 'Usage: AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, ' + $
               'TIME_BEG_IDX, ISAMPLE_RATE, OSAMPLE_RATE, ' + $
               'ANGLE_FIELDS, MAGNITUDE_FIELDS, STAMP'
@@ -86,8 +80,6 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
      message, 'OSAMPLE_RATE is undefined or is empty string'
   IF ((osample_rate MOD isample_rate) NE 0) THEN $
      message, 'ISAMPLE_RATE must be an integer divisor of OSAMPLE_RATE'
-  IF ((n_elements(stamp) EQ 0) OR (stamp EQ '')) THEN $
-     message, 'STAMP is undefined or is empty string'
   n_af=n_elements(angle_fields)
   n_mf=n_elements(magnitude_fields)
   IF (n_af GT 0 AND n_mf EQ 0) || (n_mf GT 0 AND n_af EQ 0) THEN $
