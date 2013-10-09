@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-08T18:31:28+0000
+;; Last-Updated: 2013-10-09T21:07:59+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -42,16 +42,16 @@
 ;;                          'surface_temperature', 'wind_speed', $
 ;;                          'wind_direction', 'wind_sd', 'par', 'pitch',
 ;;                          'roll']
-;;     STD_MET, expand_path('~/tmp/ArcticNet2011/MET'), $
-;;              expand_path('~/tmp/ArcticNet2011/MET/STD'), $
-;;              'met_raw_template.sav', 1, met_raw_keep_fields,
-;;              /OVERWRITE
+;;     STD, expand_path('~/tmp/ArcticNet2011/MET'), $
+;;          expand_path('~/tmp/ArcticNet2011/MET/STD'), $
+;;          'met_raw_template.sav', 1, met_raw_keep_fields,
+;;          file_type='MET', /OVERWRITE
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
-             OVERWRITE=OVERWRITE
+PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
+         KEEP_TYPES=KEEP_TYPES, FILE_TYPE=FILE_TYPE, OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 5) THEN $
@@ -65,8 +65,13 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      message, 'ITEMPLATE_SAV is undefined or is empty string'
   IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
      message, 'TIME_BEG_IDX must be a scalar >= zero'
-  IF (n_elements(keep_fields) EQ 0) THEN $
-     message, 'KEEP_FIELDS is undefined'
+  n_kf=n_elements(keep_fields)
+  IF (n_kf EQ 0) THEN message, 'KEEP_FIELDS is undefined'
+  n_kt=n_elements(keep_types)
+  IF (n_kt GT 0) AND (n_kt NE n_kf) THEN $
+     message, 'KEEP_TYPES and KEEP_FIELDS must have the same number of elements'
+  IF ((n_elements(file_type) EQ 0) OR (odir EQ '')) THEN $
+     message, 'FILE_TYPE is undefined or is empty string'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN $
@@ -120,14 +125,18 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      idata_times=idata.(time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])
-     ;; Remove quotes and separators
+     ;; Remove quotes and separators. Also set invalid numbers to empty
+     ;; string to avoid errors in parse_times()
      IF size(idata_times, /type) EQ 7 THEN BEGIN
-        FOREACH fld, indgen((size(idata_times, $
-                                  /dimensions))[0]) DO BEGIN
+        FOREACH fld, indgen((size(idata_times, /dimensions))[0]) DO BEGIN
            ok=strsplit(idata_times[fld, *], '" -/:', /extract)
            ok=(temporary(ok)).toArray()
            ok=strjoin(transpose(temporary(ok)))
            idata_times[fld, *]=ok
+           is_valid=valid_num(idata_times[fld, *])
+           ibad=where(~is_valid, bcount)
+           IF bcount GT 0 THEN $
+              idata_times[fld, ibad]=''
         ENDFOREACH
      ENDIF
      match2, idata_names, strlowcase(field_names[tags2remove]), is_time
@@ -137,7 +146,6 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
            idata.(fld)=ok.toArray()
         ENDIF
      ENDFOREACH
-
      ;; Obtain full time details array
      itimes_std=parse_times(idata_times, tnames_last, time_locs)
      
@@ -148,28 +156,51 @@ PRO STD_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      IF nremove GT 0 THEN $
         odata=remove_structure_tags(odata, $
                                     (tag_names(odata))[tags2remove_odata])
-     odata=create_struct('year', reform(itimes_std[0, *]), $
-                         'month', reform(itimes_std[1, *]), $
-                         'day', reform(itimes_std[2, *]), $
-                         'hour', reform(itimes_std[3, *]), $
-                         'minute', reform(itimes_std[4, *]), $
-                         'second', reform(itimes_std[5, *]), odata)
+     onames=tag_names(odata)
+     IF n_kt GT 0 THEN BEGIN
+        ohash=hash(odata)
+        FOREACH value, ohash, fld DO BEGIN
+           match_type=keep_types[where(onames EQ fld)]
+           ohash[fld]=fix(ohash[fld], type=match_type)
+        ENDFOREACH
+        odata=create_struct(onames[0], ohash[onames[0]])
+        FOREACH fld, onames[1:*] DO BEGIN
+           odata=create_struct(odata, onames[where(onames EQ fld)], $
+                               ohash[fld])
+        ENDFOREACH
+     ENDIF
+     odata=create_struct(tnames_id + '_year', reform(itimes_std[0, *]), $
+                         tnames_id + '_month', reform(itimes_std[1, *]), $
+                         tnames_id + '_day', reform(itimes_std[2, *]), $
+                         tnames_id + '_hour', reform(itimes_std[3, *]), $
+                         tnames_id + '_minute', reform(itimes_std[4, *]), $
+                         tnames_id + '_second', reform(itimes_std[5, *]), $
+                         odata)
      delvar, idata
 
-     ;; Fix things for some years
+     ;; Fix things for certain file types
+     CASE file_type OF
+        'MET': BEGIN
+           ;; Fix things for some years
 
-     ;; For 2011 RH data set to NaN when sensor was not working
-     ;; from 0931 UTC on JD204 through 1435 on JD207. We're sure
-     ;; we have DOY in these raw files, so no need to test.
-     cal_badbeg2011=doy2calendar(2011, 204)
-     cal_badend2011=doy2calendar(2011, 207)
-     jd_badbeg2011=julday(strmid(cal_badbeg2011, 4, 2), $
-                          strmid(cal_badbeg2011, 6, 2), 2011, 9, 31)
-     jd_badend2011=julday(strmid(cal_badend2011, 4, 2), $
-                          strmid(cal_badend2011, 6, 2), 2011, 14, 35)
-     jd=julday(odata.month, odata.day, odata.year, odata.hour, odata.minute)
-     bad2011=where((jd GE jd_badbeg2011) AND (jd LE jd_badend2011), nbad)
-     IF nbad GT 0 THEN odata.(11)[bad2011]=!VALUES.F_NAN
+           ;; For 2011 RH data set to NaN when sensor was not working
+           ;; from 0931 UTC on JD204 through 1435 on JD207. We're sure
+           ;; we have DOY in these raw files, so no need to test.
+           cal_badbeg2011=doy2calendar(2011, 204)
+           cal_badend2011=doy2calendar(2011, 207)
+           jd_badbeg2011=julday(strmid(cal_badbeg2011, 4, 2), $
+                                strmid(cal_badbeg2011, 6, 2), $
+                                2011, 9, 31)
+           jd_badend2011=julday(strmid(cal_badend2011, 4, 2), $
+                                strmid(cal_badend2011, 6, 2), $
+                                2011, 14, 35)
+           jd=julday(odata.(1), odata.(2), odata.(0), $
+                     odata.(3), odata.(4))
+           bad2011=where((jd GE jd_badbeg2011) AND (jd LE jd_badend2011), $
+                         nbad)
+           IF nbad GT 0 THEN odata.(11)[bad2011]=!VALUES.F_NAN
+        END
+     ENDCASE
 
      write_csv, ofile_name, odata, header=strlowcase(tag_names(odata))
 
