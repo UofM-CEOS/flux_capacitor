@@ -1,6 +1,6 @@
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-03T19:23:21+0000
-;; Last-Updated: 2013-10-03T21:07:05+0000
+;; Last-Updated: 2013-10-09T00:25:12+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -71,7 +71,7 @@ FUNCTION PARSE_TIMES, TIMES, TIME_NAMES, LOCATIONS
         yyyy=string(times[locations[0], *], format='(i04)')
      'yyyymmdd': BEGIN
         ystr=string(times[locations[0], *], format='(i08)')
-        yyyyv=strmid(ystr, 0, 4)
+        yyyy=strmid(ystr, 0, 4)
      END
      'mmddyyyy': BEGIN
         ystr=string(times[locations[0], *], format='(i08)')
