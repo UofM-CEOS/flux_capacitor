@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-09T20:42:11+0000
+;; Last-Updated: 2013-10-09T22:28:19+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -284,6 +284,8 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
               odata.longitude[bad2011]=-1 * (lon_deg + lon_min)
            ENDIF
         END
+        ELSE: message, 'No further processing for ' + $
+                       file_type, /informational
      ENDCASE
 
      write_csv, ofile_name, odata, header=strlowcase(tag_names(odata))

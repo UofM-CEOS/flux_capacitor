@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-09T21:41:49+0000
+;; Last-Updated: 2013-10-09T22:28:01+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -200,6 +200,8 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
                          nbad)
            IF nbad GT 0 THEN odata.(11)[bad2011]=!VALUES.F_NAN
         END
+        ELSE: message, 'No further processing for ' + $
+                       file_type, /informational
      ENDCASE
 
      write_csv, ofile_name, odata, header=strlowcase(tag_names(odata))
