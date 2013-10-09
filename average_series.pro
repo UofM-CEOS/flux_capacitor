@@ -1,24 +1,21 @@
 ;; $Id$
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-08T18:29:30+0000
+;; Last-Updated: 2013-10-09T20:36:48+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
-;;
+;;     AVERAGE_SERIES
 ;;
 ;; PURPOSE:
 ;;
-;;
-;;
-;; CATEGORY:
-;;
-;;
+;;     Calculate temporal averages for input file.
 ;;
 ;; CALLING SEQUENCE:
 ;;
-;;
+;;     AVERAGE_SERIES, Idir, Odir, Itemplate_Sav, Time_Beg_Idx,
+;;                     Isample_Rate, Osample_Rate, Stamp
 ;;
 ;; INPUTS:
 ;;
@@ -50,7 +47,7 @@
 ;;
 ;; RESTRICTIONS:
 ;;
-;;
+;;     Input must have a full day's data; i.e. daily split.
 ;;
 ;; PROCEDURE:
 ;;
@@ -117,16 +114,24 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   field_names=itemplate.FIELDNAMES
   field_types=itemplate.FIELDTYPES
   is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
+  ;; Ignore other groups when reading the data
+  itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
+  itemplate.FIELDGROUPS[where(is_time_field)]=time_beg_idx
   non_time_fields=where(~is_time_field)
   non_time_field_names=strlowcase(field_names[non_time_fields])
+  ;; Check which magnitude fields we have, since negative indices mean
+  ;; magnitude is just scalar 1
+  mag_fields=where(magnitude_fields GE 0, mcount)
+  IF mcount GT 0 THEN mag_fields=magnitude_fields[mag_fields]
   ;; Locate non-angular fields; check if any via nnoang
   noang_cols_maybe=n_af GT 0 || n_mf GT 0 ? $
                    cgSetDifference(non_time_fields, $
-                                   [angle_fields, magnitude_fields], $
+                                   [angle_fields, mag_fields], $
                                    count=nnoang) : $
                    non_time_fields
-  ;; Only interpolate those fields that are not strings (BECAREFUL HERE)
+  ;; Only average those fields that are not strings (BECAREFUL HERE)
   noang_cols=noang_cols_maybe[where(field_types[noang_cols_maybe] NE 7)]
+  avg_cols=[noang_cols, angle_fields, mag_fields]
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
   tags2remove=where(field_names EQ field_names[time_beg_idx])
   ;; Times
@@ -140,6 +145,8 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   ;; Determine where in these names we're supposed to get each time field
   ;; (year, month, day, hour, minute, second, subsecond)
   time_locs=locate_time_strings(tnames_last)
+  ncols_osample=osample_rate / isample_rate
+  nrows_osample=86400 / osample_rate
 
   ;; ang_cols=[bmag_field, bear_field, head_field]
   ;; stdev_str=['sog_stdev', 'cog_stdev', 'heading_stdev']
@@ -147,8 +154,6 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   ;; ;; Only average those fields that are not strings (BECAREFUL HERE)
   ;; avg_cols=avg_cols_maybe[where(itemplate.FIELDTYPES[avg_cols_maybe] NE 7)]
   ;; n_avg_cols=size(avg_cols, /n_elements)
-  ;; ncols_osample=osample_rate / isample_rate
-  ;; nrows_osample=86400 / osample_rate
   ;; oheader=[[time_field_names, header[avg_cols], stdev_str]]
   FOR k=0, nidir_files - 1 DO BEGIN
      iname=strsplit(file_basename(idir_files[k]), '.', /extract)
@@ -175,89 +180,101 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
      ifile=idir_files[k]
      message, 'Producing ' + strtrim(osample_rate, 2) + 's average for ' + $
               ifile, /informational
-     idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
+     idata=read_ascii(ifile, template=itemplate)
      idata_names=strlowcase(tag_names(idata))
      time_loc=where(idata_names EQ $
                     strlowcase(field_names[time_beg_idx]))
      idata_times=idata.(time_loc)
-
+     ;; Number of lines in input
+     lines=n_elements(idata_times[0, *])
      ;; Extract times and remove quotes or spaces from strings
-     idata_times=idata.(time_beg_idx)
-     idata=remove_structure_tags(idata, (tag_names(idata))[time_beg_idx])
-     idata_names=strlowcase(tag_names(idata))
      IF size(idata_times, /type) EQ 7 THEN BEGIN
         FOREACH fld, indgen((size(idata_times, /dimensions))[0]) DO BEGIN
            ok=strsplit(idata_times[fld, *], '" ', /extract)
            idata_times[fld, *]=ok.toArray()
         ENDFOREACH
      ENDIF
-     FOREACH fld, indgen(n_tags(idata)) DO BEGIN
+     match2, idata_names, strlowcase(field_names[tags2remove]), is_time
+     FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
         IF size(idata.(fld), /type) EQ 7 THEN BEGIN
            ok=strsplit(idata.(fld), '" ', /extract)
            idata.(fld)=ok.toArray()
         ENDIF
      ENDFOREACH
-     beg_jd=julday(idata_times[month_subfield, 0], $
-                   idata_times[day_subfield, 0], $
-                   idata_times[year_subfield, 0], 0)
+
+     ;; Obtain full time details array
+     itimes_std=parse_times(idata_times, tnames_last, time_locs)
+     beg_jd=julday(itimes_std[1, 0], $
+                   itimes_std[2, 0], $
+                   itimes_std[0, 0], 0)
      otimes=timegen(start=beg_jd, final=beg_jd + (86399.0 / 86400), $
                     step_size=osample_rate, units='seconds')
      otimes=jul2timestamp(otimes)
      ;; Set up hash that will contain output data
-     ohash=hash(oheader)
-     FOREACH value, ohash, fld DO BEGIN
-        CASE fld OF
-           'year': ohash[fld]=strmid(otimes, 0, 4)
-           'month': ohash[fld]=strmid(otimes, 5, 2)
-           'day': ohash[fld]=strmid(otimes, 8, 2)
-           'hour': ohash[fld]=strmid(otimes, 11, 2)
-           'minute': ohash[fld]=strmid(otimes, 14, 2)
-           'second': ohash[fld]=strmid(otimes, 17, 2)
-           ELSE: BEGIN
-              fld_idx=where(itemplate.FIELDNAMES EQ fld)
-              ifield_type=itemplate.FIELDTYPES[fld_idx]
-              val=(ifield_type EQ 4) ? !VALUES.F_NAN : ''
-              ohash[fld]=make_array(n_elements(otimes), type=ifield_type, $
-                                    value=val)
-           END
-        ENDCASE
+     ohash=hash(field_names)
+     ;; Note we use our time_locs variable to locate each time info
+     ohash[tnames[time_locs[0]]]=strmid(otimes, 0, 4)
+     ohash[tnames[time_locs[1]]]=strmid(otimes, 5, 2)
+     ohash[tnames[time_locs[2]]]=strmid(otimes, 8, 2)
+     ohash[tnames[time_locs[3]]]=strmid(otimes, 8, 2)
+     ohash[tnames[time_locs[4]]]=strmid(otimes, 14, 2)
+     ohash[tnames[time_locs[5]]]=strmid(otimes, 17)
+     FOREACH fld, non_time_field_names DO BEGIN
+        fld_idx=where(field_names EQ fld)
+        ifield_type=field_types[fld_idx]
+        val=(ifield_type EQ 4) ? !VALUES.F_NAN : ''
+        ohash[fld]=make_array(n_elements(otimes), type=ifield_type, $
+                              value=val)
      ENDFOREACH
-
-     FOREACH col, avg_cols DO BEGIN
-        col_idata=reform(idata.(where(idata_names EQ header[col])), $
+     ;; Calculate average for non-angular/magnitude fields
+     FOREACH col, noang_cols DO BEGIN
+        col_idata=reform(idata.(where(idata_names EQ field_names[col])), $
                          ncols_osample, nrows_osample)
         ;; This will throw "floating point illegal operand" arithmetic
         ;; error warning when all elements in each row are NaN, which
         ;; should should just be ignored.  In these cases, the result is
         ;; -NaN.
         avgs=mean(col_idata, dimension=1, /nan)
-        ohash[header[col]]=avgs
+        ohash[field_names[col]]=avgs
      ENDFOREACH
-     ;; Means for SOG, COG, and heading
-     cog=idata.(where(idata_names EQ header[bear_field]))
-     brg2d=reform(cog, ncols_osample, nrows_osample)
-     sog=idata.(where(idata_names EQ header[bmag_field]))
-     bmag2d=reform(sog, ncols_osample, nrows_osample)
-     head=idata.(where(idata_names EQ header[head_field]))
-     head2d=reform(head, ncols_osample, nrows_osample)
-     brgmag_mean=bearing_avg(brg2d, bmag2d, dimension=1)
-     ohash[header[bmag_field]]=brgmag_mean[*, 1]
-     ohash[header[bear_field]]=brgmag_mean[*, 0]
-     head_mean=bearing_avg(head2d, 1, dimension=1)
-     ohash[header[head_field]]=head_mean[*, 0]
-     ;; Standard deviations
-     FOR i=0, nrows_osample - 1 DO BEGIN
-        sog_ok=where(finite(bmag2d[*, i]) GT 0, n_sog_ok, complement=sog_bad)
-        cog_ok=where(finite(brg2d[*, i]) GT 0, n_cog_ok, complement=cog_bad)
-        head_ok=where(finite(head2d[*, i]) GT 0, n_head_ok, $
-                      complement=head_bad)
-        IF n_sog_ok GT 10 THEN $
-           ohash[stdev_str[0], i]=stddev(bmag2d[sog_ok, i])
-        IF n_cog_ok GT 10 THEN $
-           ohash[stdev_str[1], i]=stddev_yamartino(brg2d[cog_ok, i])
-        IF n_head_ok GT 10 THEN $
-           ohash[stdev_str[2], i]=stddev_yamartino(head2d[head_ok, i])
-     ENDFOR
+     ;; Calculate averages for angular/magnitude fields
+     FOREACH idx, indgen(n_elements(angle_fields)) DO BEGIN
+        ang_name=field_names[angle_fields[idx]]
+        ang=idata.(where(idata_names EQ ang_name))
+        ang2d=reform(ang, ncols_osample, nrows_osample)
+        ;; Add standard deviation field
+        stdev_name=ang_name + '_stdev'
+        ohash[stdev_name]=make_array(n_elements(otimes), $
+                                     type=4, value=!VALUES.F_NAN)
+        FOR i=0L, nrows_osample - 1 DO BEGIN
+           ang_ok=where(finite(ang2d[*, i]) GT 0, n_ang_ok, $
+                        complement=ang_bad)
+           IF n_ang_ok GT 10 THEN $
+              ohash[stdev_name, i]=stddev(ang2d[ang_ok, i])
+        ENDFOR
+        IF (magnitude_fields[idx] GE 0) THEN BEGIN
+           mag_name=field_names[magnitude_fields[idx]]
+           mag_fld=where(idata_names EQ mag_name)
+           mag=idata.(mag_fld)
+           mag2d=reform(mag, ncols_osample, nrows_osample)
+           avg=bearing_avg(ang2d, mag2d, dimension=1)
+           ohash[ang_name]=avg[*, 0]
+           ohash[mag_name]=avg[*, 1]
+           ;; Add standard deviation field
+           stdev_name=mag_name + '_stdev'
+           ohash[stdev_name]=make_array(n_elements(otimes), $
+                                        type=4, value=!VALUES.F_NAN)
+           FOR i=0L, nrows_osample - 1 DO BEGIN
+              mag_ok=where(finite(mag2d[*, i]) GT 0, n_mag_ok, $
+                           complement=mag_bad)
+              IF n_mag_ok GT 10 THEN $
+              ohash[stdev_name, i]=stddev(mag2d[mag_ok, i])
+        ENDFOR
+        ENDIF ELSE BEGIN
+           avg=bearing_avg(ang2d, 1, dimension=1)
+           ohash[ang_name]=avg[*, 0]
+        ENDELSE
+     ENDFOREACH
      
      file_stamp=file_basename(ifile, '.dat') + '_' + $
                 strtrim(osample_rate, 2) + 's.dat'
