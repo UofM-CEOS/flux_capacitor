@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-09T14:21:50+0000
+;; Last-Updated: 2013-10-09T20:42:11+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -82,10 +82,8 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
      message, 'FILE_TYPE is undefined or is empty string'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
-  IF nidir_files LT 1 THEN BEGIN
-     message, 'No input files found', /informational
-     RETURN
-  ENDIF
+  IF nidir_files LT 1 THEN $
+     message, 'No input files found'
 
   restore, itemplate_sav
   field_names=itemplate.FIELDNAMES
@@ -138,7 +136,6 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
 
      ifile=idir_files[k]
      message, 'Processing ' + ifile, /informational
-
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)
      idata_names=strlowcase(tag_names(idata))
