@@ -1,6 +1,6 @@
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-03T19:23:21+0000
-;; Last-Updated: 2013-10-09T00:25:12+0000
+;; Last-Updated: 2013-10-09T14:41:44+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -49,7 +49,8 @@
 ;; 
 ;; RESTRICTIONS:
 ;; 
-;; 
+;;     Data must be valid numbers, otherwise this may fail or provide
+;;     erroneous output.
 ;; 
 ;; PROCEDURE:
 ;; 
