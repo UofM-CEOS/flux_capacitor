@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-08T18:30:06+0000
+;; Last-Updated: 2013-10-09T16:47:54+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -121,12 +121,11 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   field_groups=itemplate.FIELDGROUPS
   ;; Times
   is_time_field=field_groups EQ time_beg_idx
+  ;; Ignore other groups when reading the data
+  itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
+  itemplate.FIELDGROUPS[where(is_time_field)]=time_beg_idx
   non_time_fields=where(~is_time_field)
   non_time_field_names=strlowcase(field_names[non_time_fields])
-  ;; Ignore other groups when reading the data
-  non_time_groups=indgen(n_elements(field_groups[non_time_fields]), $
-                         start=(field_groups[non_time_fields])[0])
-  itemplate.FIELDGROUPS[non_time_fields]=non_time_groups
   tfields=where(is_time_field, /NULL)
   tnames=strlowcase(field_names[tfields])
   tnamesl=strsplit(tnames, '_', /extract)
