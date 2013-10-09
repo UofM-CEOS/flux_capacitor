@@ -1,18 +1,19 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-08T22:04:33+0000
+;; Last-Updated: 2013-10-09T14:05:10+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;;     STD_2TIMES
+;;     STD2
 ;; 
 ;; PURPOSE:
 ;; 
-;;     Standardize files by parsing times and selecting columns to keep
-;;     from un-processed files.  It also allows conversion of each field to
-;;     keep to a given data type.
+;;     Standardize files with two sets of time stamps (usually UTC and
+;;     server) by parsing times and selecting columns to keep from
+;;     un-processed files.  It also allows conversion of each field to keep
+;;     to a given data type.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
@@ -54,9 +55,9 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO STD_2TIMES, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
-                KEEP_FIELDS, KEEP_TYPES=KEEP_TYPES, FILE_TYPE=FILE_TYPE, $
-                OVERWRITE=OVERWRITE
+PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
+          KEEP_FIELDS, KEEP_TYPES=KEEP_TYPES, FILE_TYPE=FILE_TYPE, $
+          OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 6) THEN $
@@ -148,13 +149,17 @@ PRO STD_2TIMES, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
      idata_times_srv=idata.(srv_time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])
-     ;; Remove quotes and separators
+     ;; Remove quotes and separators, and also set invalid numbers
      IF size(idata_times, /type) EQ 7 THEN BEGIN
         FOREACH fld, indgen((size(idata_times, /dimensions))[0]) DO BEGIN
            ok=strsplit(idata_times[fld, *], '" -/:', /extract)
            ok=(temporary(ok)).toArray()
            ok=strjoin(transpose(temporary(ok)))
            idata_times[fld, *]=ok
+           ;; is_valid=valid_num(idata_times[fld, *])
+           ;; ibad=where(~is_valid, bcount)
+           ;; IF bcount GT 0 THEN $
+           ;;    idata_times[fld, ibad]=!VALUES.F_NAN
         ENDFOREACH
      ENDIF
      IF size(idata_times_srv, /type) EQ 7 THEN BEGIN
@@ -164,6 +169,10 @@ PRO STD_2TIMES, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
            ok=(temporary(ok)).toArray()
            ok=strjoin(transpose(temporary(ok)))
            idata_times_srv[fld, *]=ok
+           ;; is_valid=valid_num(idata_times_srv[fld, *])
+           ;; ibad=where(~is_valid, bcount)
+           ;; IF bcount GT 0 THEN $
+           ;;    idata_times_srv[fld, ibad]=!VALUES.F_NAN
         ENDFOREACH
      ENDIF
      match2, idata_names, strlowcase(field_names[tags2remove]), is_time
@@ -292,4 +301,4 @@ END
 ;; allout-layout: (-2 + : 0)
 ;; End:
 ;;
-;;; std_rmc.pro ends here
+;;; std2.pro ends here
