@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-09T21:07:59+0000
+;; Last-Updated: 2013-10-09T21:41:49+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -276,4 +276,4 @@ END
 ;; allout-layout: (-2 + : 0)
 ;; End:
 ;;
-;;; std_met.pro ends here
+;;; std.pro ends here
