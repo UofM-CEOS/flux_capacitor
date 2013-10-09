@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-09T14:05:10+0000
+;; Last-Updated: 2013-10-09T14:21:50+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -149,17 +149,18 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
      idata_times_srv=idata.(srv_time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])
-     ;; Remove quotes and separators, and also set invalid numbers
+     ;; Remove quotes and separators. Also set invalid numbers to empty
+     ;; string to avoid errors in parse_times()
      IF size(idata_times, /type) EQ 7 THEN BEGIN
         FOREACH fld, indgen((size(idata_times, /dimensions))[0]) DO BEGIN
            ok=strsplit(idata_times[fld, *], '" -/:', /extract)
            ok=(temporary(ok)).toArray()
            ok=strjoin(transpose(temporary(ok)))
            idata_times[fld, *]=ok
-           ;; is_valid=valid_num(idata_times[fld, *])
-           ;; ibad=where(~is_valid, bcount)
-           ;; IF bcount GT 0 THEN $
-           ;;    idata_times[fld, ibad]=!VALUES.F_NAN
+           is_valid=valid_num(idata_times[fld, *])
+           ibad=where(~is_valid, bcount)
+           IF bcount GT 0 THEN $
+              idata_times[fld, ibad]=''
         ENDFOREACH
      ENDIF
      IF size(idata_times_srv, /type) EQ 7 THEN BEGIN
@@ -169,10 +170,10 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
            ok=(temporary(ok)).toArray()
            ok=strjoin(transpose(temporary(ok)))
            idata_times_srv[fld, *]=ok
-           ;; is_valid=valid_num(idata_times_srv[fld, *])
-           ;; ibad=where(~is_valid, bcount)
-           ;; IF bcount GT 0 THEN $
-           ;;    idata_times_srv[fld, ibad]=!VALUES.F_NAN
+           is_valid=valid_num(idata_times_srv[fld, *])
+           ibad=where(~is_valid, bcount)
+           IF bcount GT 0 THEN $
+              idata_times_srv[fld, ibad]=''
         ENDFOREACH
      ENDIF
      match2, idata_names, strlowcase(field_names[tags2remove]), is_time
