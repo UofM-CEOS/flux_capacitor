@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-09T22:28:01+0000
+;; Last-Updated: 2013-10-11T01:38:58+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -194,11 +194,49 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
            jd_badend2011=julday(strmid(cal_badend2011, 4, 2), $
                                 strmid(cal_badend2011, 6, 2), $
                                 2011, 14, 35)
-           jd=julday(odata.(1), odata.(2), odata.(0), $
-                     odata.(3), odata.(4))
+           jd=julday(odata.(1), odata.(2), odata.(0), odata.(3), odata.(4))
            bad2011=where((jd GE jd_badbeg2011) AND (jd LE jd_badend2011), $
                          nbad)
            IF nbad GT 0 THEN odata.(11)[bad2011]=!VALUES.F_NAN
+        END
+        'RAD': BEGIN
+           ;; Silly time stamp
+           badhour=where(odata.(3) EQ '24', nbad)
+           IF nbad GT 0 THEN BEGIN
+              odata.(3)[badhour]='00'
+              jd_new=julday(odata.(1)[badhour], odata.(2)[badhour], $
+                            odata.(0)[badhour], odata.(3)[badhour], $
+                            odata.(4)[badhour], odata.(5)[badhour]) + 1
+              caldat, jd_new, mo, dd
+              odata.(2)[badhour]=string(dd, format='(i02)')
+           ENDIF
+           ;; Original comment: no data for all days before Julian Day 213
+           ;; (Aug 1), UVS-AB-T sensor not installed. [SPL: I am adding a
+           ;; minimum date, as too careless otherwise.  Assuming DOY 91
+           ;; (2011-04-01).  Also, the code used two separate tests: one
+           ;; for all dates prior to "Julian Day" - really DOY - 213 and
+           ;; another for all dates prior to DOY 213 at 15:15, which should
+           ;; really be a single one: i.e. the last one.  The variables
+           ;; modified correspond to: temperature_uv, uv_b, uv_a,
+           ;; temperature_uv_sd, uv_b_sd, and uv_a_sd.
+           cal_badbeg2011=doy2calendar(2011, 91)
+           cal_badend2011=doy2calendar(2011, 213)
+           jd_badbeg2011=julday(strmid(cal_badbeg2011, 4, 2), $
+                                strmid(cal_badbeg2011, 6, 2), $
+                                strmid(cal_badbeg2011, 0, 4))
+           jd_badend2011=julday(strmid(cal_badend2011, 4, 2), $
+                                strmid(cal_badend2011, 6, 2), $
+                                2011, 15, 15)
+           jd=julday(odata.(1), odata.(2), odata.(0), odata.(3), odata.(4))
+           bad2011=where((jd GE jd_badbeg2011) AND (jd LE jd_badend2011), $
+                         nbad)
+           IF nbad GT 0 THEN BEGIN
+              FOREACH fld, [14, 15, 16, 24, 25, 26] DO BEGIN
+                 match_fld=where(tag_names(odata) EQ $
+                                 strupcase(field_names[fld]))
+                 odata.(match_fld)[bad2011]=!VALUES.F_NAN
+              ENDFOREACH
+           ENDIF
         END
         ELSE: message, 'No further processing for ' + $
                        file_type, /informational
@@ -209,67 +247,6 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
   ENDFOR
 
 END
-
-;; Below was moved from std_MET.pro, so should be added to looping through
-;; records section above.
-
-;;     ;Some extra processing for the RAD data
-;;     ;--------------------------------------
-;;     ;converting time of 2400 to time of 0000, and adding 1 to Julian Day
-;;     IF stamp EQ 'RAD' THEN BEGIN
-;;       tfclock = where(long(data.(3)[*]) EQ 2400, tfclock_count)
-;;       IF tfclock_count GT 0 THEN BEGIN
-;;         data.(3)[tfclock] = '0'
-;;         data.(2)[tfclock] = data.(2)[tfclock]+1
-;;      ENDIF
-      
-;;       ;for 2011 substituting 'NaN' when the UVS-AB-T sensor was not installed
-;;       ;no data for all days before Julian Day 213 (Aug 1)
-;;       no_uv_sensor = where((data.(1)[*] EQ 2011) AND (data.(2)[*] LT 213), no_uv_count)
-;;       IF no_uv_count GT 0 THEN BEGIN
-;;         data.(14)[no_uv_sensor] = 'NaN'
-;;         data.(15)[no_uv_sensor] = 'NaN'
-;;         data.(16)[no_uv_sensor] = 'NaN'
-;;         data.(24)[no_uv_sensor] = 'NaN'
-;;         data.(25)[no_uv_sensor] = 'NaN'
-;;         data.(26)[no_uv_sensor] = 'NaN'
-;;      ENDIF 
-      
-;;       ;no data for all times before 1515 UTC on Julian Day 213 (Aug 1)
-;;       no_uv_sensor = where((data.(1)[*] EQ 2011) AND (data.(2)[*] EQ 213) AND (long(data.(3)[*] LT 1515)), no_uv_count)
-;;       IF no_uv_count GT 0 THEN BEGIN
-;;         data.(14)[no_uv_sensor] = 'NaN'
-;;         data.(15)[no_uv_sensor] = 'NaN'
-;;         data.(16)[no_uv_sensor] = 'NaN'
-;;         data.(24)[no_uv_sensor] = 'NaN'
-;;         data.(25)[no_uv_sensor] = 'NaN'
-;;         data.(26)[no_uv_sensor] = 'NaN'
-;;      ENDIF
-;;    ENDIF 
-
-;;     ;decode our date/time information
-;;     input_hour = lonarr(1,n_elements(data.(3)[*]))
-;;     input_min  = input_hour
-;;     input_0    = where(long(data.(3)[*]) LT 60, match0)
-;;     input_1    = where((long(data.(3)[*]) GT 59) AND (long(data.(3)[*] LT 1000)),match1)
-;;     input_2    = where(long(data.(3)[*]) GT 999,match2)
-
-;;     IF match0 GT 0 THEN BEGIN
-;;       input_min(input_0) = long(data.(3)[input_0])
-;;    ENDIF
-
-;;     IF match1 GT 0 THEN BEGIN
-;;       input_hour(input_1) = long(strmid(data.(3)[input_1],0,1))
-;;       input_min(input_1)  = long(strmid(data.(3)[input_1],1,2))
-;;    ENDIF
-
-;;     IF match2 GT 0 THEN BEGIN
-;;       input_hour(input_2) = long(strmid(data.(3)[input_2],0,2))
-;;       input_min(input_2)  = long(strmid(data.(3)[input_2],2,2))
-;;    ENDIF
-
-;;     JD_arr=fltarr(1,n_recs)
-;;     JD_arr(0,*)=current_JD
 
 
 
