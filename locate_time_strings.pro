@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-10-01T02:19:03+0000
-;; Last-Updated: 2013-10-04T15:45:41+0000
+;; Last-Updated: 2013-10-10T21:40:44+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -115,8 +115,6 @@ FUNCTION LOCATE_TIME_STRINGS, NAMES
      message, 'Cannot determine hour with these strings'
   IF minute_count LT 1 THEN $
      message, 'Cannot determine minute with these strings'
-  IF second_count LT 1 THEN $
-     message, 'Cannot determine second with these strings'
 
   year=year_maybe[year_candidates[0]]
   month=month_maybe[month_candidates[0]]
