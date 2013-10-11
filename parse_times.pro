@@ -1,6 +1,6 @@
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-03T19:23:21+0000
-;; Last-Updated: 2013-10-09T14:41:44+0000
+;; Last-Updated: 2013-10-10T21:56:43+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -159,16 +159,20 @@ FUNCTION PARSE_TIMES, TIMES, TIME_NAMES, LOCATIONS
      END
      ELSE: message, 'Do not know how to extract minute from this field'
   ENDCASE
-  CASE time_names[locations[5]] OF
-     'second': ss=string(times[locations[5], *], format='(f06.3)')
-     ;; Becareful with the format here - we need to know how much this
-     ;; varies in input files
-     'hhmmss': BEGIN
-        sstr=string(times[locations[5], *], format='(f010.3)')
-        ss=strmid(sstr, 4)
-     END
-     ELSE: message, 'Do not know how to extract second from this field'
-  ENDCASE
+  IF locations[5] LT 0 THEN BEGIN ; assume 0 seconds if no seconds found
+     ss=string(rebin([0], times_dims[1]), format='(f06.3)')
+  ENDIF ELSE BEGIN
+     CASE time_names[locations[5]] OF
+        'second': ss=string(times[locations[5], *], format='(f06.3)')
+        ;; Becareful with the format here - we need to know how much this
+        ;; varies in input files
+        'hhmmss': BEGIN
+           sstr=string(times[locations[5], *], format='(f010.3)')
+           ss=strmid(sstr, 4)
+        END
+        ELSE: message, 'Do not know how to extract second from this field'
+     ENDCASE
+  ENDELSE
   IF locations[6] GE 0 THEN $   ; concatenate if we have fractional ss
      ss=string(temporary(ss), format='(i02)') + '.' + $
         string(times[locations[6], *], format='(i03)')
