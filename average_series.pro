@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-09T22:07:29+0000
+;; Last-Updated: 2013-10-10T18:45:59+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -82,14 +82,14 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
      message, 'ISAMPLE_RATE must be an integer divisor of OSAMPLE_RATE'
   n_af=n_elements(angle_fields)
   n_mf=n_elements(magnitude_fields)
-  IF (n_af GT 0 AND n_mf EQ 0) || (n_mf GT 0 AND n_af EQ 0) THEN $
+  IF n_af NE n_mf THEN $
      message, 'MAGNITUDE_FIELDS must be supplied along with ANGLE_FIELDS'
-  IF (n_af GT 0 AND n_mf GT 0) THEN BEGIN
+  IF n_af GT 0 THEN BEGIN
      af_size=size(angle_fields)
-     IF (af_size[0] GT 1) || (af_size[2] NE 2) THEN $
+     IF (af_size[0] GT 1) && (af_size[2] NE 2) THEN $
         message, 'ANGLE_FIELDS must be an integer scalar or vector'
      mf_size=size(magnitude_fields)
-     IF (mf_size[0] GT 1) || (mf_size[2] NE 2) THEN $
+     IF (mf_size[0] GT 1) && (mf_size[2] NE 2) THEN $
         message, 'MAGNITUDE_FIELDS must be an integer scalar or vector'
      IF mf_size[1] NE af_size[1] THEN $
         message, 'MAGNITUDE FIELDS and ANGLE_FIELDS must have the same ' + $
@@ -113,17 +113,43 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   non_time_field_names=strlowcase(field_names[non_time_fields])
   ;; Check which magnitude fields we have, since negative indices mean
   ;; magnitude is just scalar 1
-  mag_fields=where(magnitude_fields GE 0, mcount)
-  IF mcount GT 0 THEN mag_fields=magnitude_fields[mag_fields]
-  ;; Locate non-angular fields; check if any via nnoang
-  noang_cols_maybe=n_af GT 0 || n_mf GT 0 ? $
-                   cgSetDifference(non_time_fields, $
-                                   [angle_fields, mag_fields], $
-                                   count=nnoang) : $
-                   non_time_fields
-  ;; Only average those fields that are not strings (BECAREFUL HERE)
-  noang_cols=noang_cols_maybe[where(field_types[noang_cols_maybe] NE 7)]
-  avg_cols=[noang_cols, angle_fields, mag_fields]
+  IF n_mf GT 0 THEN BEGIN       ; got angles/magnitudes?
+     ;; Check if MAGNITUDE_FIELDS has any actual fields (mcount: how many)
+     mag_yes=where(magnitude_fields GE 0, mcount)
+     noang_cols_maybe=(mcount GT 0) ? $
+                      cgSetDifference(non_time_fields, $
+                                      [angle_fields, $
+                                       magnitude_fields[mag_yes]], $
+                                      count=nnoang) : $
+                      cgSetDifference(non_time_fields, $
+                                      angle_fields, count=nnoang)
+     IF nnoang GT 0 THEN BEGIN
+        ;; We got fields that are not angles/magnitudes and also not time
+        ;; fields.  We only average those fields among these that are not
+        ;; strings.  Becareful here.
+        nostr=where(field_types[noang_cols_maybe] NE 7, navg)
+        IF navg GT 0 THEN noang_cols=noang_cols_maybe[nostr]
+        avg_cols=(navg GT 0) ? $
+                 [noang_cols, angle_fields, magnitude_fields[mag_yes]] : $
+                 [angle_fields, magnitude_fields[mag_yes]]
+     ENDIF ELSE BEGIN
+        ;; We now can say the non-time fields are all included in those
+        ;; given as angles/magnitudes (Note cgSetDifference() returns the
+        ;; first argument in this case)
+        avg_cols=noang_cols_maybe
+     ENDELSE
+     ;; Now determine what the differences are
+     noang=cgSetDifference(avg_cols, $
+                           [angle_fields, magnitude_fields[mag_yes]], $
+                           noresult=-1)
+  ENDIF ELSE BEGIN              ; don't have any angles/magnitudes
+     nostr=where(field_types[non_time_fields] NE 7, navg)
+     IF navg GT 0 THEN BEGIN
+        avg_cols=non_time_fields[nostr]
+     ENDIF ELSE BEGIN
+        message, 'Cannot average any non-time fields using' + itemplate_sav
+     ENDELSE
+  ENDELSE
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
   tags2remove=where(field_names EQ field_names[time_beg_idx])
   ;; Times
@@ -219,62 +245,83 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
                               value=val)
      ENDFOREACH
      ;; Calculate average for non-angular/magnitude fields
-     FOREACH col, noang_cols DO BEGIN
-        col_idata=reform(idata.(where(idata_names EQ field_names[col])), $
-                         ncols_osample, nrows_osample)
-        ;; This will throw "floating point illegal operand" arithmetic
-        ;; error warning when all elements in each row are NaN, which
-        ;; should should just be ignored.  In these cases, the result is
-        ;; -NaN.
-        avgs=mean(col_idata, dimension=1, /nan)
-        ohash[field_names[col]]=avgs
-     ENDFOREACH
+     IF (n_mf EQ 0) OR $
+        ((n_elements(noang) GT 0) && noang[0] NE -1) THEN BEGIN
+        flds=(n_elements(noang) EQ 0) ? avg_cols : noang
+        FOREACH col, flds DO BEGIN
+           match_fld=where(idata_names EQ field_names[col])
+           col_idata=reform(idata.(match_fld), $
+                            ncols_osample, nrows_osample)
+           ;; This will throw "floating point illegal operand" arithmetic
+           ;; error warning when all elements in each row are NaN, which
+           ;; should should just be ignored.  In these cases, the result is
+           ;; -NaN.
+           avgs=mean(col_idata, dimension=1, /nan)
+           ohash[field_names[col]]=avgs
+        ENDFOREACH
+     ENDIF
      ;; Calculate averages for angular/magnitude fields
-     FOREACH idx, indgen(n_elements(angle_fields)) DO BEGIN
-        ang_name=field_names[angle_fields[idx]]
-        ang=idata.(where(idata_names EQ ang_name))
-        ang2d=reform(ang, ncols_osample, nrows_osample)
-        ;; Add standard deviation field
-        stdev_name=ang_name + '_stdev'
-        ohash[stdev_name]=make_array(n_elements(otimes), $
-                                     type=4, value=!VALUES.F_NAN)
-        FOR i=0L, nrows_osample - 1 DO BEGIN
-           ang_ok=where(finite(ang2d[*, i]) GT 0, n_ang_ok, $
-                        complement=ang_bad)
-           IF n_ang_ok GT 10 THEN $
-              ohash[stdev_name, i]=stddev(ang2d[ang_ok, i])
-        ENDFOR
-        IF (magnitude_fields[idx] GE 0) THEN BEGIN
-           mag_name=field_names[magnitude_fields[idx]]
-           mag_fld=where(idata_names EQ mag_name)
-           mag=idata.(mag_fld)
-           mag2d=reform(mag, ncols_osample, nrows_osample)
-           avg=bearing_avg(ang2d, mag2d, dimension=1)
-           ohash[ang_name]=avg[*, 0]
-           ohash[mag_name]=avg[*, 1]
+     IF n_mf GT 0 THEN BEGIN
+        FOREACH idx, indgen(n_elements(angle_fields)) DO BEGIN
+           ang_name=field_names[angle_fields[idx]]
+           ang=idata.(where(idata_names EQ ang_name))
+           ang2d=reform(ang, ncols_osample, nrows_osample)
            ;; Add standard deviation field
-           stdev_name=mag_name + '_stdev'
+           stdev_name=ang_name + '_stdev'
            ohash[stdev_name]=make_array(n_elements(otimes), $
                                         type=4, value=!VALUES.F_NAN)
            FOR i=0L, nrows_osample - 1 DO BEGIN
-              mag_ok=where(finite(mag2d[*, i]) GT 0, n_mag_ok, $
-                           complement=mag_bad)
-              IF n_mag_ok GT 10 THEN $
-              ohash[stdev_name, i]=stddev(mag2d[mag_ok, i])
-        ENDFOR
-        ENDIF ELSE BEGIN
-           avg=bearing_avg(ang2d, 1, dimension=1)
-           ohash[ang_name]=avg[*, 0]
-        ENDELSE
-     ENDFOREACH
+              ang_ok=where(finite(ang2d[*, i]) GT 0, n_ang_ok, $
+                           complement=ang_bad)
+              IF n_ang_ok GT 10 THEN $
+                 ohash[stdev_name, i]=stddev(ang2d[ang_ok, i])
+           ENDFOR
+           IF (magnitude_fields[idx] GE 0) THEN BEGIN
+              mag_name=field_names[magnitude_fields[idx]]
+              mag_fld=where(idata_names EQ mag_name)
+              mag=idata.(mag_fld)
+              mag2d=reform(mag, ncols_osample, nrows_osample)
+              avg=bearing_avg(ang2d, mag2d, dimension=1)
+              ohash[ang_name]=avg[*, 0]
+              ohash[mag_name]=avg[*, 1]
+              ;; Add standard deviation field
+              stdev_name=mag_name + '_stdev'
+              ohash[stdev_name]=make_array(n_elements(otimes), $
+                                           type=4, value=!VALUES.F_NAN)
+              FOR i=0L, nrows_osample - 1 DO BEGIN
+                 mag_ok=where(finite(mag2d[*, i]) GT 0, n_mag_ok, $
+                              complement=mag_bad)
+                 IF n_mag_ok GT 10 THEN $
+                    ohash[stdev_name, i]=stddev(mag2d[mag_ok, i])
+              ENDFOR
+           ENDIF ELSE BEGIN
+              avg=bearing_avg(ang2d, 1, dimension=1)
+              ohash[ang_name]=avg[*, 0]
+           ENDELSE
+        ENDFOREACH
+     ENDIF
      
      file_stamp=file_basename(ifile, '.dat') + '_' + $
                 strtrim(osample_rate, 2) + 's.dat'
-     ts=create_struct(oheader[0], ohash[oheader[0]])
-     FOREACH fld, oheader[1:*] DO BEGIN
-        ts=create_struct(ts, oheader[where(oheader EQ fld)], ohash[fld])
+
+     IF n_mf EQ 0 THEN BEGIN    ; no angles/magnitudes
+        okeys=[tnames, field_names[avg_cols]]
+     ENDIF ELSE BEGIN
+        print, noang[0]
+        okeys=(mcount GT 0) ? $ ; any magnitudes
+              [tnames, field_names[avg_cols], $
+               field_names[angle_fields] + '_stdev', $
+               field_names[magnitude_fields[mag_yes]] + '_stdev'] : $
+              [tnames, field_names[avg_cols], $
+               field_names[angle_fields] + '_stdev']
+     ENDELSE
+     ts=create_struct(okeys[0], ohash[okeys[0]])
+     FOREACH fld, okeys[1:*] DO BEGIN
+        ts=create_struct(ts, okeys[where(okeys EQ fld)], ohash[fld])
      ENDFOREACH
-     write_csv, odir + path_sep() + file_stamp, ts, header=oheader
+
+     write_csv, odir + path_sep() + file_stamp, ts, $
+                header=strlowcase(tag_names(ts))
   ENDFOR
         
 END
