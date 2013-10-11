@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-10T18:45:59+0000
+;; Last-Updated: 2013-10-11T18:50:42+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -166,13 +166,6 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   ncols_osample=osample_rate / isample_rate
   nrows_osample=86400 / osample_rate
 
-  ;; ang_cols=[bmag_field, bear_field, head_field]
-  ;; stdev_str=['sog_stdev', 'cog_stdev', 'heading_stdev']
-  ;; avg_cols_maybe=(cgSetDifference(non_time_fields, ang_cols))
-  ;; ;; Only average those fields that are not strings (BECAREFUL HERE)
-  ;; avg_cols=avg_cols_maybe[where(itemplate.FIELDTYPES[avg_cols_maybe] NE 7)]
-  ;; n_avg_cols=size(avg_cols, /n_elements)
-  ;; oheader=[[time_field_names, header[avg_cols], stdev_str]]
   FOR k=0, nidir_files - 1 DO BEGIN
      iname=strsplit(file_basename(idir_files[k]), '.', /extract)
      ;; Get a path for the file, check if it already exists
@@ -234,7 +227,7 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
      ohash[tnames[time_locs[0]]]=strmid(otimes, 0, 4)
      ohash[tnames[time_locs[1]]]=strmid(otimes, 5, 2)
      ohash[tnames[time_locs[2]]]=strmid(otimes, 8, 2)
-     ohash[tnames[time_locs[3]]]=strmid(otimes, 8, 2)
+     ohash[tnames[time_locs[3]]]=strmid(otimes, 11, 2)
      ohash[tnames[time_locs[4]]]=strmid(otimes, 14, 2)
      ohash[tnames[time_locs[5]]]=strmid(otimes, 17)
      FOREACH fld, non_time_field_names DO BEGIN
@@ -307,7 +300,6 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
      IF n_mf EQ 0 THEN BEGIN    ; no angles/magnitudes
         okeys=[tnames, field_names[avg_cols]]
      ENDIF ELSE BEGIN
-        print, noang[0]
         okeys=(mcount GT 0) ? $ ; any magnitudes
               [tnames, field_names[avg_cols], $
                field_names[angle_fields] + '_stdev', $
