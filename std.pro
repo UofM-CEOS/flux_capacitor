@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-11T01:38:58+0000
+;; Last-Updated: 2013-10-11T14:35:35+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -151,7 +151,8 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      
      odata=remove_structure_tags(idata, field_names[tags2remove])
      ;; Find indices to keep
-     match2, strlowcase(tag_names(odata)), keep_fields, toss, keep
+     match2, strlowcase(tag_names(odata)), strlowcase(keep_fields), $
+             toss, keep
      tags2remove_odata=where(toss LT 0, nremove)
      IF nremove GT 0 THEN $
         odata=remove_structure_tags(odata, $
