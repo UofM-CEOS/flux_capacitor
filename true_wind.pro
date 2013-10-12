@@ -1,6 +1,6 @@
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-10-11T22:38:01+0000
-;; Last-Updated: 2013-10-11T22:49:07+0000
+;; Last-Updated: 2013-10-12T01:41:54+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -127,4 +127,4 @@ END
 ;; allout-layout: (-2 + : 0)
 ;; End:
 ;;
-;;; true_wind.pro ends here
+;;; truewind.pro ends here
