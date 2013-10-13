@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-10-08T18:30:29+0000
+;; Last-Updated: 2013-10-13T05:14:46+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -84,8 +84,7 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
      message, 'SAMPLE_RATE must be a a scalar >= zero'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
-  IF nidir_files LT 1 THEN $
-     message, 'No input files found'
+  IF nidir_files LT 1 THEN message, 'No input files found'
 
   restore, itemplate_sav
   field_names=itemplate.FIELDNAMES

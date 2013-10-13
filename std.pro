@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-11T14:35:35+0000
+;; Last-Updated: 2013-10-13T05:15:34+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -74,8 +74,7 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      message, 'FILE_TYPE is undefined or is empty string'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
-  IF nidir_files LT 1 THEN $
-     message, 'No input files found'
+  IF nidir_files LT 1 THEN message, 'No input files found'
 
   restore, itemplate_sav
   field_names=itemplate.FIELDNAMES

@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T18:38:38+0000
-;; Last-Updated: 2013-10-08T18:32:04+0000
+;; Last-Updated: 2013-10-13T05:18:26+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -67,8 +67,7 @@ PRO STD_OMG, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      message, 'KEEP_FIELDS is undefined'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
-  IF nidir_files LT 1 THEN $
-     message, 'No input files found'
+  IF nidir_files LT 1 THEN message, 'No input files found'
 
   restore, itemplate_sav
   field_names=itemplate.FIELDNAMES

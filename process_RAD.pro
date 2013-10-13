@@ -1,20 +1,16 @@
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-11T14:48:45+0000
-;; Last-Updated: 2013-10-11T22:24:11+0000
+;; Last-Updated: 2013-10-13T05:12:06+0000
 ;;           By: Sebastian Luque
 ;; 
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; 
+;;     PROCESS_RAD
 ;; 
 ;; PURPOSE:
 ;; 
-;; 
-;; 
-;; CATEGORY:
-;; 
-;; 
+;;     Process RAD files.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
@@ -71,22 +67,13 @@ PRO PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
 
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
-  IF nidir_files LT 1 THEN BEGIN
-     message, 'No input files found', /informational
-     RETURN
-  ENDIF
+  IF nidir_files LT 1 THEN message, 'No input files found'
   rmc_files=file_search(rmc_dir + path_sep() + '*', count=nrmc_files, $
                         /nosort, /fold_case, /test_regular)
-  IF nrmc_files LT 1 THEN BEGIN
-     message, 'No RMC files found, so ' + $
-              'cannot process RAD files.  Exiting'
-  ENDIF
+  IF nrmc_files LT 1 THEN message, 'No RMC files found.  Exiting'
   met_files=file_search(met_dir + path_sep() + '*', count=nmet_files, $
                         /nosort, /fold_case, /test_regular)
-  IF nmet_files LT 1 THEN BEGIN
-     message, 'No MET files found, so ' + $
-              'cannot process RAD files.  Exiting'
-  ENDIF
+  IF nmet_files LT 1 THEN message, 'No MET files found.  Exiting'
 
   ;; Parse input template
   restore, itemplate_sav

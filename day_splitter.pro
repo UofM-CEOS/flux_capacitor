@@ -2,7 +2,7 @@
 ;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-09T18:52:35+0000
+;; Last-Updated: 2013-10-13T05:14:27+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -94,10 +94,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
 
   idir_files=file_search(idir + path_sep() + '*std*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
-  IF nidir_files LT 1 THEN BEGIN
-     message, 'No input files found', /informational
-     RETURN
-  ENDIF
+  IF nidir_files LT 1 THEN message, 'No input files found'
 
   ;; Extract the year, month, and day from the startdate.
   beg_year=long(strmid(startdate, 0, 4))
