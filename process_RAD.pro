@@ -1,6 +1,6 @@
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-11T14:48:45+0000
-;; Last-Updated: 2013-10-13T05:12:06+0000
+;; Last-Updated: 2013-10-16T02:54:47+0000
 ;;           By: Sebastian Luque
 ;; 
 ;;+ -----------------------------------------------------------------------
@@ -261,7 +261,7 @@ PRO PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
      rad_matches=where(rad_in_rmc GE 0, mcount, /null)
      IF mcount LT 1 THEN BEGIN
         message, 'No matching RMC records found.  Skipping file.', $
-                 /informational
+                 /continue
         CONTINUE
      ENDIF
      rmc_matches=where(rmc_in_rad GE 0)
@@ -312,7 +312,7 @@ PRO PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
      rad_matches=where(rad_in_met GE 0, mcount, /null)
      IF mcount LT 1 THEN BEGIN
         message, 'No matching MET records found.  Skipping file.', $
-                 /informational
+                 /continue
         CONTINUE
      ENDIF
      met_matches=where(met_in_rad GE 0)
