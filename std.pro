@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-13T05:15:34+0000
+;; Last-Updated: 2013-10-16T05:37:47+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -122,6 +122,8 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      time_loc=where(idata_names EQ $
                     strlowcase(field_names[time_beg_idx]))
      idata_times=idata.(time_loc)
+     times_dims=size(idata_times, /dimensions)
+     valid_flag=make_array(times_dims[1], type=2, value=1)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])
      ;; Remove quotes and separators. Also set invalid numbers to empty
@@ -134,8 +136,10 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
            idata_times[fld, *]=ok
            is_valid=valid_num(idata_times[fld, *])
            ibad=where(~is_valid, bcount)
-           IF bcount GT 0 THEN $
+           IF bcount GT 0 THEN BEGIN
               idata_times[fld, ibad]=''
+              valid_flag[ibad]=0 ; bad times -> invalid record
+           ENDIF
         ENDFOREACH
      ENDIF
      match2, idata_names, strlowcase(field_names[tags2remove]), is_time
@@ -145,9 +149,6 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
            idata.(fld)=ok.toArray()
         ENDIF
      ENDFOREACH
-     ;; Obtain full time details array
-     itimes_std=parse_times(idata_times, tnames_last, time_locs)
-     
      odata=remove_structure_tags(idata, field_names[tags2remove])
      ;; Find indices to keep
      match2, strlowcase(tag_names(odata)), strlowcase(keep_fields), $
@@ -157,6 +158,26 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
         odata=remove_structure_tags(odata, $
                                     (tag_names(odata))[tags2remove_odata])
      onames=tag_names(odata)
+     ;; Re-check validity and subset
+     ibad=where(~valid_flag, bcount, complement=ok, ncomplement=nok)
+     IF nok LT 1 THEN BEGIN
+        message, 'All time stamps are invalid.  Skipping this file', $
+                 /continue
+        CONTINUE
+     ENDIF
+     IF bcount GT 0 THEN BEGIN
+        ohash=hash(odata)
+        FOREACH value, ohash, fld DO BEGIN
+           ohash[fld]=ohash[fld, ok]
+        ENDFOREACH
+        odata=create_struct(onames[0], ohash[onames[0]])
+        FOREACH fld, onames[1:*] DO BEGIN
+           odata=create_struct(odata, onames[where(onames EQ fld)], $
+                               ohash[fld])
+        ENDFOREACH
+        idata_times=idata_times[*, ok]
+     ENDIF
+     ;; Type conversion, if requested
      IF n_kt GT 0 THEN BEGIN
         ohash=hash(odata)
         FOREACH value, ohash, fld DO BEGIN
@@ -169,6 +190,9 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
                                ohash[fld])
         ENDFOREACH
      ENDIF
+     ;; Obtain full time details array
+     itimes_std=parse_times(idata_times, tnames_last, time_locs)
+
      odata=create_struct(tnames_id + '_year', reform(itimes_std[0, *]), $
                          tnames_id + '_month', reform(itimes_std[1, *]), $
                          tnames_id + '_day', reform(itimes_std[2, *]), $

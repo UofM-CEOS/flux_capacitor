@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-16T03:03:06+0000
+;; Last-Updated: 2013-10-16T05:36:03+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -183,20 +183,36 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
            idata.(fld)=ok.toArray()
         ENDIF
      ENDFOREACH
-     ;; Obtain full UTC time details
-     itimes_utc_std=parse_times(idata_times, tnames_last, time_locs)
-     ;; Obtain full server time details
-     itimes_srv_std=parse_times(idata_times_srv, tnames_last_srv, $
-                                time_locs_srv)
-     
      odata=remove_structure_tags(idata, field_names[tags2remove])
      ;; Find indices to keep
-     match2, strlowcase(tag_names(odata)), keep_fields, toss, keep
+     match2, strlowcase(tag_names(odata)), strlowcase(keep_fields), $
+             toss, keep
      tags2remove_odata=where(toss LT 0, nremove)
      IF nremove GT 0 THEN $
         odata=remove_structure_tags(odata, $
                                     (tag_names(odata))[tags2remove_odata])
      onames=tag_names(odata)
+     ;; Re-check validity and subset if needed
+     ibad=where(~valid_flag, bcount, complement=ok, ncomplement=nok)
+     IF nok LT 1 THEN BEGIN
+        message, 'All UTC time stamps are invalid.  Skipping this file', $
+                 /continue
+        CONTINUE
+     ENDIF
+     IF bcount GT 0 THEN BEGIN
+        ohash=hash(odata)
+        FOREACH value, ohash, fld DO BEGIN
+           ohash[fld]=ohash[fld, ok]
+        ENDFOREACH
+        odata=create_struct(onames[0], ohash[onames[0]])
+        FOREACH fld, onames[1:*] DO BEGIN
+           odata=create_struct(odata, onames[where(onames EQ fld)], $
+                              ohash[fld])
+        ENDFOREACH
+        idata_times=idata_times[*, ok]
+        idata_times_srv=idata_times_srv[*, ok]
+     ENDIF
+     ;; Type conversion, if requested
      IF n_kt GT 0 THEN BEGIN
         ohash=hash(odata)
         FOREACH value, ohash, fld DO BEGIN
@@ -209,51 +225,36 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
                                ohash[fld])
         ENDFOREACH
      ENDIF
-     ;; Re-check validity and subset
-     ibad=where(~valid_flag, bcount, complement=ok, ncomplement=nok)
-     IF nok LT 1 THEN BEGIN
-        message, 'All UTC time stamps are invalid.  Skipping this file', $
-                 /continue
-        CONTINUE
-     ENDIF
-     IF bcount GT 0 THEN BEGIN
-        onames=tag_names(odata)
-        ohash=hash(odata)
-        otimes_hash=hash(itimes_utc_std)
-        FOREACH value, ohash, fld DO BEGIN
-           ohash[fld]=ohash[fld, ok]
-        ENDFOREACH
-        odata=create_struct(onames[0], ohash[onames[0]])
-        FOREACH fld, onames[1:*] DO BEGIN
-           odata=create_struct(odata, onames[where(onames EQ fld)], $
-                              ohash[fld])
-        ENDFOREACH
-     ENDIF
-     
+     ;; Obtain full UTC time details
+     itimes_utc_std=parse_times(idata_times, tnames_last, time_locs)
+     ;; Obtain full server time details
+     itimes_srv_std=parse_times(idata_times_srv, tnames_last_srv, $
+                                time_locs_srv)
+
      odata=create_struct(tnames_id + '_year', $
-                         reform(itimes_utc_std[0, ok]), $
+                         reform(itimes_utc_std[0, *]), $
                          tnames_id + '_month', $
-                         reform(itimes_utc_std[1, ok]), $
+                         reform(itimes_utc_std[1, *]), $
                          tnames_id + '_day', $
-                         reform(itimes_utc_std[2, ok]), $
+                         reform(itimes_utc_std[2, *]), $
                          tnames_id + '_hour', $
-                         reform(itimes_utc_std[3, ok]), $
+                         reform(itimes_utc_std[3, *]), $
                          tnames_id + '_minute', $
-                         reform(itimes_utc_std[4, ok]), $
+                         reform(itimes_utc_std[4, *]), $
                          tnames_id + '_second', $
-                         reform(itimes_utc_std[5, ok]), $
+                         reform(itimes_utc_std[5, *]), $
                          tnames_id_srv + '_year', $
-                         reform(itimes_srv_std[0, ok]), $
+                         reform(itimes_srv_std[0, *]), $
                          tnames_id_srv + '_month', $
-                         reform(itimes_srv_std[1, ok]), $
+                         reform(itimes_srv_std[1, *]), $
                          tnames_id_srv + '_day', $
-                         reform(itimes_srv_std[2, ok]), $
+                         reform(itimes_srv_std[2, *]), $
                          tnames_id_srv + '_hour', $
-                         reform(itimes_srv_std[3, ok]), $
+                         reform(itimes_srv_std[3, *]), $
                          tnames_id_srv + '_minute', $
-                         reform(itimes_srv_std[4, ok]), $
+                         reform(itimes_srv_std[4, *]), $
                          tnames_id_srv + '_second', $
-                         reform(itimes_srv_std[5, ok]), $
+                         reform(itimes_srv_std[5, *]), $
                          odata)
      delvar, idata
 
