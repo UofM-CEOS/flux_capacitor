@@ -1,65 +1,47 @@
 ;; $Id$
-;;; day_splitter.pro --- split input data into daily files
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-13T05:14:27+0000
+;; Last-Updated: 2013-10-23T18:50:47+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
-;;
+;;     DAY_SPLITTER
 ;;
 ;; PURPOSE:
 ;;
-;;
-;;
-;; CATEGORY:
-;;
-;;
+;;     Generates a regular time series from a given start date through a
+;;     given end date, with data for each time step from input files.  It
+;;     produces one file per day, consisting of the entire day's time
+;;     series.
 ;;
 ;; CALLING SEQUENCE:
 ;;
-;;
+;;     DAY_SPLITTER, StartDate, EndDate, Idir, Odir, Itemplate_Sav, $
+;;     Time_Beg_Idx, Step_Time, Stamp
 ;;
 ;; INPUTS:
 ;;
-;;
-;;
-;; OPTIONAL INPUTS:
-;;
-;;
+;;     StartDate:       String scalar for starting date.
+;;     EndDate:         String scalar for ending date.
+;;     Idir:            Input directory (no trailing separator).
+;;     Odir:            Output directory (no trailing separator).
+;;     Itemplate_Sav:   Ascii template to read input files.
+;;     Time_Beg_Idx:    Index (in template) where time is.
+;;     Step_Time:       Scalar for step time in seconds.
+;;     Stamp:           Scalar for string to preprend to output file name.
 ;;
 ;; KEYWORD PARAMETERS:
 ;;
-;;
-;;
-;; OUTPUTS:
-;;
-;;
-;;
-;; OPTIONAL OUTPUTS:
-;;
-;;
-;;
-;; COMMON BLOCKS:
-;;
-;;
-;;
-;; SIDE EFFECTS:
-;;
-;;
-;;
-;; RESTRICTIONS:
-;;
-;;
-;;
-;; PROCEDURE:
-;;
-;;
+;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;;
 ;; EXAMPLE:
 ;;
-;;
+;;     DAY_SPLITTER, '20110719', '20111022', $
+;;                   expand_path('~/tmp/ArcticNet2011/NAV/STD'), $
+;;                   expand_path('~/tmp/ArcticNet2011/NAV/Daily'), $
+;;                   'nav_std_template.sav', 0, nav_daily_rate, $
+;;                   nav_stamp, /overwrite
 ;;
 ;;- -----------------------------------------------------------------------
 ;;; Code:
@@ -251,11 +233,11 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      mm=string(itimes_std[4, *], format='(i02)')
      ss=string(itimes_std[5, *], format='(f06.3)')
      i_ts=yyyy + '-' + mo + '-' + dd + ' ' + hh + ':' + mm + ':' + ss
-     match2, times, i_ts, times_in_its, i_ts_in_times
+     match2, times, i_ts, times_in_its
      t_matches=where(times_in_its GE 0, mcount, /null)
      IF mcount LT 1 THEN CONTINUE
      is_match[t_matches]=1      ; mark matches
-     its_matches=where(i_ts_in_times GE 0)
+     its_matches=times_in_its[t_matches]
      FOREACH value, ts_all, fld DO BEGIN ; loop non-time hash
         match_fld=where(non_time_field_names EQ strlowcase(fld))
         ;; Note we have to subset the field in the structure, as structure
