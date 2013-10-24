@@ -1,12 +1,12 @@
 ;; $Id$
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-18T20:11:56+0000
-;; Last-Updated: 2013-10-04T15:45:18+0000
+;; Last-Updated: 2013-10-24T14:38:32+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; 
+;;     BEARING_AVG
 ;; 
 ;; PURPOSE:
 ;; 
@@ -20,13 +20,9 @@
 ;;  vectors.  When only calculating a compass heading, the magnitude of the
 ;;  vectors is assigned the value of unity.
 ;; 
-;; CATEGORY:
-;; 
-;; 
-;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     average=bearing_avg(x, vmag)
 ;; 
 ;; INPUTS:
 ;; 
@@ -45,14 +41,6 @@
 ;; 
 ;; 
 ;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
-;; COMMON BLOCKS:
-;; 
-;; 
-;; 
-;; SIDE EFFECTS:
 ;; 
 ;; 
 ;; 

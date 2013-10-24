@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-13T05:13:55+0000
+;; Last-Updated: 2013-10-24T14:45:10+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -14,7 +14,7 @@
 ;;
 ;; CALLING SEQUENCE:
 ;;
-;;     AVERAGE_SERIES, Idir, Odir, Itemplate_Sav, Time_Beg_Idx,
+;;     AVERAGE_SERIES, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, $
 ;;                     Isample_Rate, Osample_Rate
 ;;
 ;; INPUTS:
@@ -50,6 +50,11 @@
 ;;
 ;; EXAMPLE:
 ;;
+;;     AVERAGE_SERIES, expand_path('~/tmp/ArcticNet2011/NAV/Daily'), $
+;;                     expand_path('~/tmp/ArcticNet2011/NAV/1min'), $
+;;                     'nav_std_template.sav', 0, 1, 60, $
+;;                     angle_fields=[16, 17], magnitude_fields=[15, -1], $
+;;                     /overwrite
 ;;
 ;;
 ;;- -----------------------------------------------------------------------

@@ -1,52 +1,41 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-10-13T05:14:46+0000
+;; Last-Updated: 2013-10-24T14:50:19+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; 
+;;     FILTER_SERIES
 ;; 
 ;; PURPOSE:
 ;; 
-;; 
-;; 
-;; CATEGORY:
-;; 
-;; 
+;;     This procedure regularizes a time series, i.e. generates a time
+;;     series with a regular time step from input having irregular time
+;;     steps.  For instance, gyro files are nominally sampling at 1 Hz, but
+;;     not exactly.  If a regular time series is required for further
+;;     calculations, then this procedure can be used to generate such a
+;;     time series.  Interpolation is performed to estimate values of
+;;     angular and non-angular fields in the input files.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     FILTER_SERIES, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, $
+;;     Angle_Fields, Sample_Rate
 ;; 
 ;; INPUTS:
 ;; 
-;; 
-;; 
-;; OPTIONAL INPUTS:
-;; 
-;; 
+;;     Idir:               Input directory (no trailing separator).
+;;     Odir:               Output directory (no trailing separator).
+;;     Itemplate_Sav:      Ascii template to read input files.
+;;     Time_Beg_Idx:       Index (in template) where time is.
+;;     Angle_Fields:       Integer array with the index of angular fields.
+;;     Sample_Rate:        Scalar indicating the frequency (s) that
+;;                         output data should have.
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
-;; 
-;; 
-;; OUTPUTS:
-;; 
-;; 
-;; 
-;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
-;; COMMON BLOCKS:
-;; 
-;; 
-;; 
-;; SIDE EFFECTS:
-;; 
-;; 
+;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;; 
 ;; RESTRICTIONS:
 ;; 
@@ -58,7 +47,9 @@
 ;; 
 ;; EXAMPLE:
 ;; 
-;; 
+;;     FILTER_SERIES, expand_path('~/tmp/ArcticNet2011/GYRO/STD'), $
+;;                    expand_path('~/tmp/ArcticNet2011/GYRO/1s'), $
+;;                    'gyro_std_template.sav', 0, 6, 1L, /overwrite
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:

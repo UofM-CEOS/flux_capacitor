@@ -1,12 +1,12 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-28T17:54:17+0000
-;; Last-Updated: 2013-10-07T18:40:59+0000
+;; Last-Updated: 2013-10-24T14:39:20+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
-;; This is meant to replace the function 'JD_to_calendar'.
+;; This replaces functions 'jd_to_calendar' and 'calendar_to_jd'.
 ;; ------------------------------------------------------------------------
 ;;; Code:
 

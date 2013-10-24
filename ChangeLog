@@ -1,3 +1,64 @@
+2013-10-23  spluque@gmail.com
+
+	* day_splitter.pro:
+	  No need to supply a third argument to match2, and any
+	  manipulations with that output argument.
+
+	* nav_std_template.sav:
+	  Updating field names.
+
+2013-10-16  spluque@gmail.com
+
+	* std2.pro:
+	  Check for valid UTC times and subset *before* parsing times.
+
+	* std.pro:
+	  Check for valid UTC times and subset *before* parsing times.
+
+	* std2.pro:
+	  Check for valid UTC times. Skip if bad.
+
+	* process_RAD.pro:
+	  Use /continue in message if no matching file found.
+
+2013-10-15  spluque@gmail.com
+
+	* nav_raw_template.sav:
+	  Use UTC instead of GPS time name.
+
+	* truewind.pro:
+	  This reproduces results in paper, with arrays as input.
+
+2013-10-11  spluque@gmail.com
+
+	* std.pro:
+	  Lower case names for comparisons.
+
+	* met_std_template.sav, rad_std_template.sav:
+	  Updated template field names.
+
+	* average_series.pro:
+	  Fixed erroneous extraction of minutes in output hash.
+
+	* rad_raw_template.sav, rad_std_template.sav:
+	  Adding new template and fixing RAD raw template.
+
+	* parse_times.pro:
+	  Assume that no seconds means setting them to zero.
+
+	* std.pro:
+	  Correct manipulations for RAD files.
+
+	* omg_hdg_std_template.sav, omg_nav_std_template.sav:
+	  Assume that no seconds means setting them to zero.
+
+	* locate_time_strings.pro:
+	  Relax check for missing seconds. We assume that no seconds means
+	  setting it to zero in parse_times().
+
+	* average_series.pro:
+	  Proper checks for what arguments we got.
+
 2013-10-09  spluque@gmail.com
 
 	* std.pro, std2.pro:

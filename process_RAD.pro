@@ -1,6 +1,7 @@
+;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-11T14:48:45+0000
-;; Last-Updated: 2013-10-16T02:54:47+0000
+;; Last-Updated: 2013-10-24T18:19:37+0000
 ;;           By: Sebastian Luque
 ;; 
 ;;+ -----------------------------------------------------------------------
@@ -10,39 +11,36 @@
 ;; 
 ;; PURPOSE:
 ;; 
-;;     Process RAD files.
+;;     Process RAD data.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     PROCESS_RAD, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, RMC_Dir, $
+;;                  RMC_Itemplate_Sav, RMC_Time_Idx, RMC_LonLat_Idx, $
+;;                  MET_Dir, MET_Itemplate_Sav, MET_Time_Idx, MET_PAR_Idx
 ;; 
 ;; INPUTS:
 ;; 
-;; 
-;; 
-;; OPTIONAL INPUTS:
-;; 
-;; 
+;;     Idir:                Input directory (no trailing separator).
+;;     Odir:                Output directory (no trailing separator).
+;;     Itemplate_Sav:       Ascii template to read input files.
+;;     Time_Beg_Idx:        Index (in template) where time is.
+;;     RMC_Dir:             Directory where RMC files are found (no
+;;                          trailing separator).
+;;     RMC_Itemplate_Sav:   Ascii template to read RMC files.
+;;     RMC_Time_Idx:        Index (in template) where time is in RMC files.
+;;     RMC_LonLat_Idx:      Integer array with indices (in template) where
+;;                          latitude and longitude are located.
+;;     MET_Dir:             Directory where MET files are found (no
+;;                          trailing separator).
+;;     MET_Itemplate_Sav:   Ascii template to read MET files.
+;;     MET_Time_Idx:        Index (in template) where time is in MET files.
+;;     MET_PAR_Idx:         Integer with index (in template) where PAR
+;;                          field is located.
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
-;; 
-;; 
-;; OUTPUTS:
-;; 
-;; 
-;; 
-;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
-;; COMMON BLOCKS:
-;; 
-;; 
-;; 
-;; SIDE EFFECTS:
-;; 
-;; 
+;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;; 
 ;; RESTRICTIONS:
 ;; 
@@ -54,7 +52,13 @@
 ;; 
 ;; EXAMPLE:
 ;; 
-;; 
+;;     PROCESS_RAD, expand_path('~/tmp/ArcticNet2011/RAD/Daily'), $
+;;                  expand_path('~/tmp/ArcticNet2011/RAD/Processed'), $
+;;                  'rad_std_template.sav', 0, $
+;;                  expand_path('~/tmp/ArcticNet2011/RMC/1min'), $
+;;                  'rmc_avg_template.sav', 0, [6, 7], $
+;;                  expand_path('~/tmp/ArcticNet2011/MET/Daily'), $
+;;                  'met_std_template.sav', 0, 16, /overwrite
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:

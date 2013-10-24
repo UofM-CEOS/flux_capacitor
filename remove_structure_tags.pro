@@ -1,30 +1,29 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-24T15:38:09+0000
-;; Last-Updated: 2013-10-03T03:10:19+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-10-24T15:29:45+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;;  remove_structure_tags
+;;     remove_structure_tags
 ;; 
 ;; PURPOSE:
 ;; 
-;;  Remove tag(s) from a structure
+;;     Remove tag(s) from a structure
 ;; 
 ;; CATEGORY:
 ;; 
-;;  Programming and Control
+;;     Programming and Control
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;  Result=REMOVE_STRUCTURE_TAG(Struct, Tag_Name)
+;;     Result=REMOVE_STRUCTURE_TAG(Struct, Tag_Name)
 ;; 
 ;; INPUTS:
 ;; 
-;;  Struct: Structure.
-;;
-;;  Tag_Name: String array or scalar.
+;;     Struct:      Structure.
+;;     Tag_Name:    String array or scalar.
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:

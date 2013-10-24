@@ -1,51 +1,39 @@
+;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-03T19:23:21+0000
-;; Last-Updated: 2013-10-10T21:56:43+0000
+;; Last-Updated: 2013-10-24T18:19:13+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; 
+;;     PARSE_TIMES
 ;; 
 ;; PURPOSE:
 ;; 
-;; 
-;; 
-;; CATEGORY:
-;; 
-;; 
+;;     This function takes a numeric array with columns containing time
+;;     data such as year, month, day, etc., along with a string array
+;;     corresponding to the names of these columns (possible names are the
+;;     same as those used in locate_time_strings()), and an integer array
+;;     with the indices corresponding to the location of the fields from
+;;     which to extract year, month, day, hour, minute, second, and
+;;     possibly sub-second.  It returns a six-column array with these time
+;;     data, but where sub-seconds are included as the fractional part of
+;;     seconds.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     times_std=parse_times(times, time_names, locations)
 ;; 
 ;; INPUTS:
 ;; 
-;; 
-;; 
-;; OPTIONAL INPUTS:
-;; 
-;; 
-;; 
-;; KEYWORD PARAMETERS:
-;; 
-;; 
-;; 
-;; OUTPUTS:
-;; 
-;; 
-;; 
-;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
-;; COMMON BLOCKS:
-;; 
-;; 
-;; 
-;; SIDE EFFECTS:
-;; 
-;; 
+;;     Times:         Numeric array where columns represent time data.
+;;     Time_Names:    String array with the names of the columns in Times
+;;                    (possible names are those used in the function
+;;                    locate_time_strings).
+;;     Locations:     Integer array with indices corresponding to the
+;;                    location of the fields from which to extract year,
+;;                    month, day, hour, minute, second, and possibly
+;;                    sub-second.
 ;; 
 ;; RESTRICTIONS:
 ;; 
@@ -58,7 +46,7 @@
 ;; 
 ;; EXAMPLE:
 ;; 
-;; 
+;;     times_std=parse_times()
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:

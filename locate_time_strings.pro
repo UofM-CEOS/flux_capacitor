@@ -1,52 +1,32 @@
 ;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-10-01T02:19:03+0000
-;; Last-Updated: 2013-10-10T21:40:44+0000
+;; Last-Updated: 2013-10-24T15:07:26+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; 
+;;     LOCATE_TIME_STRINGS
 ;; 
 ;; PURPOSE:
 ;; 
-;; 
-;; 
-;; CATEGORY:
-;; 
-;; 
+;;     Given a string array corresponding to field names such as 'year',
+;;     'month', 'day', etc., this function returns an integer array with
+;;     indices indicating where the year, month, day, hour, minute,
+;;     seconds, and subseconds are available in the input array.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     time_locs=locate_time_strings(names)
 ;; 
 ;; INPUTS:
 ;; 
-;; 
-;; 
-;; OPTIONAL INPUTS:
-;; 
-;; 
-;; 
-;; KEYWORD PARAMETERS:
-;; 
-;; 
-;; 
-;; OUTPUTS:
-;; 
-;; 
-;; 
-;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
-;; COMMON BLOCKS:
-;; 
-;; 
-;; 
-;; SIDE EFFECTS:
-;; 
-;; 
+;;     Names:    A string array with the following possible values (case is
+;;               irrelevant): 'year', 'month', 'day', 'hour', 'minute',
+;;               'second', 'doy', 'yyyymmdd', 'mmddyyyy', 'ddmmyy',
+;;               'hhmmss', 'hhmm'.  For subseconds, any string containing
+;;               the substring 'second' anywhere after the first character
+;;               is elligible.
 ;; 
 ;; RESTRICTIONS:
 ;; 
@@ -58,7 +38,7 @@
 ;; 
 ;; EXAMPLE:
 ;; 
-;; 
+;;     time_locs=locate_time_strings(['year', 'DOY', 'hhmmss'])
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
