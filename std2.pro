@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-16T05:36:03+0000
+;; Last-Updated: 2013-10-24T21:32:47+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -18,7 +18,7 @@
 ;; CALLING SEQUENCE:
 ;; 
 ;;      STD_2TIMES, Idir, Odir, Itemplate_Sav, Utc_Time_Idx, Server_Time_Idx,
-;;                  Keep_Fields
+;;                  Keep_Fields, Keep_Types=Keep_Types, File_Type=File_Type
 ;; 
 ;; INPUTS:
 ;; 
@@ -32,14 +32,22 @@
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
-;;     Keep_Types:            Array of data type codes for each element of
-;;                            Keep_Fields.
-;;     File_Type:             String scalar with file type (NAV, RMC, RAD, etc.)
+;;     KEEP_TYPES:            Integer array with IDL data type codes to
+;;                            convert the Keep_Fields to.
+;;     FILE_TYPE:             String scalar specifying input file type
+;;                            ('NAV', 'RMC', 'RAD', etc.)
 ;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;; 
 ;; SIDE EFFECTS:
 ;; 
 ;;     Writes files in Odir.
+;; 
+;; PROCEDURE:
+;;
+;;     The File_Type argument is used to perform corrections and
+;;     manipulations depending on the file type.  This is performed after
+;;     the standardization process.  Check the last case statement, where
+;;     we may add clauses for different years/subsets.
 ;; 
 ;; EXAMPLE:
 ;; 

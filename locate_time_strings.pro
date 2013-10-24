@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-10-01T02:19:03+0000
-;; Last-Updated: 2013-10-24T15:07:26+0000
+;; Last-Updated: 2013-10-24T21:18:51+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -12,7 +12,7 @@
 ;; 
 ;;     Given a string array corresponding to field names such as 'year',
 ;;     'month', 'day', etc., this function returns an integer array with
-;;     indices indicating where the year, month, day, hour, minute,
+;;     seven indices indicating where the year, month, day, hour, minute,
 ;;     seconds, and subseconds are available in the input array.
 ;; 
 ;; CALLING SEQUENCE:
@@ -34,7 +34,8 @@
 ;; 
 ;; PROCEDURE:
 ;; 
-;; 
+;;     If there are no sub-seconds, then the last element of output array
+;;     is -1.
 ;; 
 ;; EXAMPLE:
 ;; 

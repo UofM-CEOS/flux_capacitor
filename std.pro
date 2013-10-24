@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-16T05:37:47+0000
+;; Last-Updated: 2013-10-24T21:30:33+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -15,7 +15,8 @@
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;     STD_MET, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Keep_Fields
+;;     STD_MET, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Keep_Fields, $
+;;              Keep_types=Keep_Types, File_type=File_Type
 ;; 
 ;; INPUTS:
 ;; 
@@ -28,11 +29,21 @@
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
+;;     KEEP_TYPES:            Integer array with IDL data type codes to
+;;                            convert the Keep_Fields to.
+;;     FILE_TYPE:             String scalar specifying input file type.
 ;;     OVERWRITE:             Whether to overwrite files in Odir.
 ;; 
 ;; SIDE EFFECTS:
 ;; 
 ;; Writes files in Odir.
+;; 
+;; PROCEDURE:
+;;
+;;     The File_Type argument is used to perform corrections and
+;;     manipulations depending on the file type.  This is performed after
+;;     the standardization process.  Check the last case statement, where
+;;     we may add clauses for different years/subsets.
 ;; 
 ;; EXAMPLE:
 ;; 
