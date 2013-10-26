@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-11T14:48:45+0000
-;; Last-Updated: 2013-10-24T18:19:37+0000
+;; Last-Updated: 2013-10-25T19:14:34+0000
 ;;           By: Sebastian Luque
 ;; 
 ;;+ -----------------------------------------------------------------------
@@ -16,7 +16,7 @@
 ;; CALLING SEQUENCE:
 ;; 
 ;;     PROCESS_RAD, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, RMC_Dir, $
-;;                  RMC_Itemplate_Sav, RMC_Time_Idx, RMC_LonLat_Idx, $
+;;                  RMC_Itemplate_Sav, RMC_Time_Idx, RMC_LatLon_Idx, $
 ;;                  MET_Dir, MET_Itemplate_Sav, MET_Time_Idx, MET_PAR_Idx
 ;; 
 ;; INPUTS:
@@ -29,7 +29,7 @@
 ;;                          trailing separator).
 ;;     RMC_Itemplate_Sav:   Ascii template to read RMC files.
 ;;     RMC_Time_Idx:        Index (in template) where time is in RMC files.
-;;     RMC_LonLat_Idx:      Integer array with indices (in template) where
+;;     RMC_LatLon_Idx:      Integer array with indices (in template) where
 ;;                          latitude and longitude are located.
 ;;     MET_Dir:             Directory where MET files are found (no
 ;;                          trailing separator).
@@ -65,10 +65,52 @@
 
 PRO PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
                  RMC_DIR, RMC_ITEMPLATE_SAV, RMC_TIME_IDX, $
-                 RMC_LONLAT_IDX, MET_DIR, MET_ITEMPLATE_SAV, MET_TIME_IDX, $
+                 RMC_LATLON_IDX, MET_DIR, MET_ITEMPLATE_SAV, MET_TIME_IDX, $
                  MET_PAR_IDX, OVERWRITE=OVERWRITE
 
-
+  ;; Check parameters
+  IF (n_params() NE 12) THEN $
+     message, 'Usage: PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, ' + $
+              'TIME_BEG_IDX, RMC_DIR, RMC_ITEMPLATE_SAV, ' + $
+              'RMC_TIME_IDX, RMC_LATLON_IDX, MET_DIR, ' + $
+              'MET_ITEMPLATE_SAV, MET_TIME_IDX, MET_PAR_IDX'
+  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
+     message, 'IDIR is undefined or is empty string'
+  IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
+     message, 'ODIR is undefined or is empty string'
+  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
+     message, 'ITEMPLATE_SAV is undefined or is empty string'
+  IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
+     message, 'TIME_BEG_IDX must be a scalar >= zero'
+  IF ((n_elements(rmc_dir) EQ 0) OR (rmc_dir EQ '')) THEN $
+     message, 'RMC_DIR is undefined or is empty string'
+  IF ((n_elements(rmc_itemplate_sav) EQ 0) OR $
+      (rmc_itemplate_sav EQ '')) THEN $
+     message, 'RMC_ITEMPLATE_SAV is undefined or is empty string'
+  IF ((n_elements(rmc_time_idx) NE 1) OR (rmc_time_idx LT 0)) THEN $
+     message, 'RMC_TIME_IDX must be a scalar >= zero'
+  IF ((n_elements(rmc_latlon_idx) NE 2) OR $
+      (size(rmc_latlon_idx, /type) NE 2)) THEN BEGIN
+     message, 'RMC_LATLON_IDX must be a 2-element integer array'
+  ENDIF ELSE BEGIN
+     ll=where(rmc_latlon_idx LT 0, nllneg)
+     IF nllneg GT 0 THEN $
+        message, 'RMC_LATLON_IDX cannot have negative indices'
+  ENDELSE
+  IF ((n_elements(met_dir) EQ 0) OR (met_dir EQ '')) THEN $
+     message, 'MET_DIR is undefined or is empty string'
+  IF ((n_elements(met_itemplate_sav) EQ 0) OR $
+      (met_itemplate_sav EQ '')) THEN $
+     message, 'MET_ITEMPLATE_SAV is undefined or is empty string'
+  IF ((n_elements(met_time_idx) NE 1) OR (met_time_idx LT 0)) THEN $
+     message, 'MET_TIME_IDX must be a scalar >= zero'
+  IF ((n_elements(met_par_idx) NE 1) OR $
+      (size(met_par_idx, /type) NE 2)) THEN BEGIN
+     message, 'MET_PAR_IDX must be a 1-element integer scalar or array'
+  ENDIF ELSE BEGIN
+     IF met_par_idx[0] LT 0 THEN $
+        message, 'MET_PAR_IDX cannot be negative'
+  ENDELSE
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN message, 'No input files found'
@@ -122,7 +164,7 @@ PRO PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   rmc_tnamesl=strsplit(rmc_tnames, '_', /extract)
   rmc_tnames_last=strarr(n_elements(rmc_tnamesl))
   rmc_tnames_id=strjoin((rmc_tnamesl[0])[0:n_elements(rmc_tnamesl[0]) - 2], '_')
-  FOR i=0L, n_elements(tnames) - 1 DO $
+  FOR i=0L, n_elements(rmc_tnames) - 1 DO $
      rmc_tnames_last[i]=rmc_tnamesl[i, n_elements(rmc_tnamesl[i]) - 1]
   ;; Determine where in these names we're supposed to get each time field
   ;; (year, month, day, hour, minute, second, subsecond)
@@ -224,6 +266,7 @@ PRO PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
 
      ifile_strl=strsplit(ifile, '_.', /extract) ; break string
      ifile_mstr=ifile_strl[n_elements(ifile_strl) - 2]
+
      ;; Read matching RMC file
      rmc_pair=where(rmc_files_mstr EQ ifile_mstr, mcount)
      IF mcount LT 1 THEN BEGIN
@@ -261,15 +304,14 @@ PRO PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
                           float(rmc_times[5, *] + '.' + $
                                 rmc_times[6, *])))
      ;; Find matching times
-     match2, rad_jd, rmc_jd, rad_in_rmc, rmc_in_rad
+     match2, rad_jd, rmc_jd, rad_in_rmc
      rad_matches=where(rad_in_rmc GE 0, mcount, /null)
      IF mcount LT 1 THEN BEGIN
         message, 'No matching RMC records found.  Skipping file.', $
                  /continue
         CONTINUE
      ENDIF
-     rmc_matches=where(rmc_in_rad GE 0)
-     FOREACH fld, rmc_lonlat_idx DO BEGIN
+     FOREACH fld, rmc_latlon_idx DO BEGIN
         match_fld=where(rmc_names EQ rmc_field_names[fld])
         idata=create_struct(idata, rmc_field_names[fld], $
                             rmc.(match_fld)[rad_matches])
