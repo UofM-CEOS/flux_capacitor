@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-24T21:30:33+0000
+;; Last-Updated: 2013-10-26T09:44:29+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -88,12 +88,12 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
   IF nidir_files LT 1 THEN message, 'No input files found'
 
   restore, itemplate_sav
-  field_names=itemplate.FIELDNAMES
+  field_names=strlowcase(itemplate.FIELDNAMES)
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
   tags2remove=where(field_names EQ field_names[time_beg_idx])
   ;; Times
   tfields=where(itemplate.FIELDGROUPS EQ time_beg_idx, /NULL)
-  tnames=strlowcase(field_names[tfields])
+  tnames=field_names[tfields]
   tnamesl=strsplit(tnames, '_', /extract)
   tnames_last=strarr(n_elements(tnamesl))
   tnames_id=strjoin((tnamesl[0])[0:n_elements(tnamesl[0]) - 2], '_')
@@ -130,8 +130,7 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)
      idata_names=strlowcase(tag_names(idata))
-     time_loc=where(idata_names EQ $
-                    strlowcase(field_names[time_beg_idx]))
+     time_loc=where(idata_names EQ field_names[time_beg_idx])
      idata_times=idata.(time_loc)
      times_dims=size(idata_times, /dimensions)
      valid_flag=make_array(times_dims[1], type=2, value=1)
@@ -153,7 +152,7 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
            ENDIF
         ENDFOREACH
      ENDIF
-     match2, idata_names, strlowcase(field_names[tags2remove]), is_time
+     match2, idata_names, field_names[tags2remove], is_time
      FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
         IF size(idata.(fld), /type) EQ 7 THEN BEGIN
            ok=strsplit(idata.(fld), '" ', /extract)

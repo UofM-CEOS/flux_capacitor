@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-23T18:50:47+0000
+;; Last-Updated: 2013-10-26T09:39:28+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -96,7 +96,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   n_recs=86400 / step_time     ; records per day
   restore, itemplate_sav
   n_fields=itemplate.FIELDCOUNT
-  field_names=itemplate.FIELDNAMES
+  field_names=strlowcase(itemplate.FIELDNAMES)
   field_groups=itemplate.FIELDGROUPS
   ;; Times
   is_time_field=field_groups EQ time_beg_idx
@@ -104,9 +104,9 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
   itemplate.FIELDGROUPS[where(is_time_field)]=time_beg_idx
   non_time_fields=where(~is_time_field)
-  non_time_field_names=strlowcase(field_names[non_time_fields])
+  non_time_field_names=field_names[non_time_fields]
   tfields=where(is_time_field, /NULL)
-  tnames=strlowcase(field_names[tfields])
+  tnames=field_names[tfields]
   tnamesl=strsplit(tnames, '_', /extract)
   tnames_last=strarr(n_elements(tnamesl))
   tnames_id=strjoin((tnamesl[0])[0:n_elements(tnamesl[0]) - 2], '_')
@@ -239,7 +239,7 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      is_match[t_matches]=1      ; mark matches
      its_matches=times_in_its[t_matches]
      FOREACH value, ts_all, fld DO BEGIN ; loop non-time hash
-        match_fld=where(non_time_field_names EQ strlowcase(fld))
+        match_fld=where(non_time_field_names EQ fld)
         ;; Note we have to subset the field in the structure, as structure
         ;; elements cannot have their size/type changed.
         ts_all[fld, t_matches]=(idata.(match_fld)[iok])[its_matches]

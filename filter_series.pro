@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-10-24T14:50:19+0000
+;; Last-Updated: 2013-10-26T09:41:10+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -78,11 +78,11 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
   IF nidir_files LT 1 THEN message, 'No input files found'
 
   restore, itemplate_sav
-  field_names=itemplate.FIELDNAMES
+  field_names=strlowcase(itemplate.FIELDNAMES)
   field_types=itemplate.FIELDTYPES
   is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
   non_time_fields=where(~is_time_field)
-  non_time_field_names=strlowcase(field_names[non_time_fields])
+  non_time_field_names=field_names[non_time_fields]
   ;; Locate non-angular fields; check if any via nnoang
   noang_cols_maybe=cgSetDifference(non_time_fields, angle_fields, $
                                    count=nnoang)
@@ -92,7 +92,7 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
   tags2remove=where(field_names EQ field_names[time_beg_idx])
   ;; Times
   tfields=where(is_time_field, /NULL)
-  tnames=strlowcase(field_names[tfields])
+  tnames=field_names[tfields]
   tnamesl=strsplit(tnames, '_', /extract)
   tnames_last=strarr(n_elements(tnamesl))
   tnames_id=strjoin((tnamesl[0])[0:n_elements(tnamesl[0]) - 2], '_')
@@ -130,8 +130,7 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)
      idata_names=strlowcase(tag_names(idata))
-     time_loc=where(idata_names EQ $
-                    strlowcase(field_names[time_beg_idx]))
+     time_loc=where(idata_names EQ field_names[time_beg_idx])
      idata_times=idata.(time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])
@@ -145,7 +144,7 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
            idata_times[fld, *]=ok
         ENDFOREACH
      ENDIF
-     match2, idata_names, strlowcase(field_names[tags2remove]), is_time
+     match2, idata_names, field_names[tags2remove], is_time
      FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
         IF size(idata.(fld), /type) EQ 7 THEN BEGIN
            ok=strsplit(idata.(fld), '" ', /extract)

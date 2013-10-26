@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-24T21:32:47+0000
+;; Last-Updated: 2013-10-26T09:47:08+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -93,12 +93,12 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
   IF nidir_files LT 1 THEN message, 'No input files found'
 
   restore, itemplate_sav
-  field_names=itemplate.FIELDNAMES
+  field_names=strlowcase(itemplate.FIELDNAMES)
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
   tags2remove=where(field_names EQ field_names[utc_time_idx] OR $
                     field_names EQ field_names[server_time_idx])
   tfields=where(itemplate.FIELDGROUPS EQ utc_time_idx, /NULL) ; time fields
-  tnames=strlowcase(field_names[tfields])            ; time names
+  tnames=field_names[tfields]            ; time names
   tnamesl=strsplit(tnames, '_', /extract)                 ; split list
   tnames_last=strarr(n_elements(tnamesl)) ; set up
   tnames_id=strjoin((tnamesl[0])[0:n_elements(tnamesl[0]) - 2], '_')
@@ -109,7 +109,7 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
   time_locs=locate_time_strings(tnames_last)
   ;; Server times
   tfields_srv=where(itemplate.FIELDGROUPS EQ server_time_idx, /NULL)
-  tnames_srv=strlowcase(field_names[tfields_srv])
+  tnames_srv=field_names[tfields_srv]
   tnamesl_srv=strsplit(tnames_srv, '_', /extract)
   tnames_last_srv=strarr(n_elements(tnamesl_srv))
   tnames_id_srv=strjoin((tnamesl_srv[0])[0:n_elements(tnamesl_srv[0]) - 2], '_')
@@ -146,12 +146,10 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)
      idata_names=strlowcase(tag_names(idata))
-     idata_times=idata.(where(idata_names EQ $
-                              strlowcase(field_names[utc_time_idx])))
+     idata_times=idata.(where(idata_names EQ field_names[utc_time_idx]))
      utc_dims=size(idata_times, /dimensions)
      valid_flag=make_array(utc_dims[1], type=2, value=1)
-     srv_time_loc=where(idata_names EQ $
-                        strlowcase(field_names[server_time_idx]))
+     srv_time_loc=where(idata_names EQ field_names[server_time_idx])
      idata_times_srv=idata.(srv_time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])
@@ -184,7 +182,7 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
               idata_times_srv[fld, ibad_srv]=''
         ENDFOREACH
      ENDIF
-     match2, idata_names, strlowcase(field_names[tags2remove]), is_time
+     match2, idata_names, field_names[tags2remove], is_time
      FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
         IF size(idata.(fld), /type) EQ 7 THEN BEGIN
            ok=strsplit(idata.(fld), '" ', /extract)

@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-13T05:17:51+0000
+;; Last-Updated: 2013-10-26T10:02:06+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -96,12 +96,12 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
   restore, itemplate_sav
   ;; We make a copy, since the RMC template is also called itemplate
   gyro_template=itemplate
-  field_names=gyro_template.FIELDNAMES
+  field_names=strlowcase(gyro_template.FIELDNAMES)
   n_ifields=gyro_template.FIELDCOUNT ; N fields in template
   tags2remove=where(field_names EQ field_names[server_time_idx])
   ;; Server times
   tfields_srv=where(gyro_template.FIELDGROUPS EQ server_time_idx, /NULL)
-  tnames_srv=strlowcase(field_names[tfields_srv])
+  tnames_srv=field_names[tfields_srv]
   tnamesl_srv=strsplit(tnames_srv, '_', /extract)
   tnames_last_srv=strarr(n_elements(tnamesl_srv))
   tnames_id_srv=strjoin((tnamesl_srv[0])[0:n_elements(tnamesl_srv[0]) - 2], '_')
@@ -121,7 +121,7 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
   restore, rmc_std_itemplate_sav
   ;; We make a copy, since the RMC template is also called itemplate
   rmc_template=itemplate
-  rmc_template_names=strlowcase(rmc_template.FIELDNAMES)
+  rmc_field_names=strlowcase(rmc_template.FIELDNAMES)
      
   ;; Loop through files in input directory
   FOR k=0, nidir_files - 1 DO BEGIN
@@ -150,8 +150,7 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      ;; Read input file
      idata=read_ascii(ifile, template=gyro_template)
      idata_names=strlowcase(tag_names(idata))
-     srv_time_loc=where(idata_names EQ $
-                        strlowcase(field_names[server_time_idx]))
+     srv_time_loc=where(idata_names EQ field_names[server_time_idx])
      idata_times_srv=idata.(srv_time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times_srv[0, *])
@@ -165,7 +164,7 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
            idata_times_srv[fld, *]=ok
         ENDFOREACH
      ENDIF
-     match2, idata_names, strlowcase(field_names[tags2remove]), is_time
+     match2, idata_names, field_names[tags2remove], is_time
      FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
         IF size(idata.(fld), /type) EQ 7 THEN BEGIN
            ok=strsplit(idata.(fld), '" ', /extract)
@@ -195,7 +194,7 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      rmc_names=strlowcase(tag_names(rmc))
      ;; Obtain server times and convert to Julian
      rmc_srv_time_loc=where(rmc_names EQ $
-                            rmc_template_names[rmc_server_time_idx])
+                            rmc_field_names[rmc_server_time_idx])
      rmc_times_srv=rmc.(rmc_srv_time_loc)
      rmc_times_srv_dims=size(rmc_times_srv, /dimensions)
      ;; Remove quotes
@@ -224,7 +223,7 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
                                     rmc_times_srv[6, *])))
      ;; Obtain UTC times and convert to Julian
      rmc_utc_time_loc=where(rmc_names EQ $
-                            rmc_template_names[rmc_utc_time_idx])
+                            rmc_field_names[rmc_utc_time_idx])
      rmc_times_utc=rmc.(rmc_utc_time_loc)
      rmc_times_utc_dims=size(rmc_times_utc, /dimensions)
      ;; Remove quotes
