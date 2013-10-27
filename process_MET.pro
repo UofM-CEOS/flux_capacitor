@@ -1,7 +1,7 @@
 ;; $Id: $
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-15T15:43:56+0000
-;; Last-Updated: 2013-10-24T21:10:57+0000
+;; Last-Updated: 2013-10-27T23:49:38+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -18,7 +18,7 @@
 ;;                  RMC_Itemplate_Sav, RMC_Time_Idx, RMC_Pull_Idx, $
 ;;                  GYRO_Dir, GYRO_Itemplate_Sav, GYRO_Time_Idx, $
 ;;                  GYRO_Pull_Idx, Log_File, Log_Itemplate_Sav, $
-;;                  Log_TimeBeg_Idx, Log_TimeEnd_Idx
+;;                  Log_Time_Beg_Idx, Log_Time_End_Idx
 ;; 
 ;; INPUTS:
 ;; 
@@ -40,18 +40,28 @@
 ;;                          fields to pull from GYRO files.
 ;;     Log_File:            Path to file with MET log.
 ;;     Log_Itemplate_Sav:   Ascii template to read MET log file.
-;;     Log_TimeBeg_Idx:     Index (in template) where starting time is in
+;;     Log_Time_Beg_Idx:    Index (in template) where starting time is in
 ;;                          log file.
-;;     Log_TimeEnd_Idx:     Index (in template) where ending time is in
+;;     Log_Time_End_Idx:    Index (in template) where ending time is in
+;;                          log file.
+;;     Log_Status_Idx:      Index (in template) where status flag is in
 ;;                          log file.
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
-;;     OVERWRITE:             Whether to overwrite files in Odir.
+;;     WIND_IDX_OFFSET:     2-element numeric array with the index of the
+;;                          wind direction field and offset (due to the
+;;                          position of the tower) in MET data.  Default:
+;;                          [14, 23.0]
+;;     OVERWRITE:           Whether to overwrite files in Odir.
 ;; 
 ;; RESTRICTIONS:
 ;; 
-;; 
+;;     This relies on the existence of the following field names being
+;;     included via RMC_Pull_Idx and GYRO_Pull_Idx in the respective
+;;     templates (case irrelevant): cog, sog, heading, wind_direction,
+;;     wind_speed, true_wind_direction, true_wind_velocity, rh_percent,
+;;     surface_temperature, pressure, pitch.
 ;; 
 ;; PROCEDURE:
 ;; 
@@ -64,12 +74,68 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
-                 RMC_DIR, RMC_ITEMPLATE_SAV, RMC_TIME_IDX, $
+PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, RMC_DIR, $
+                 RMC_ITEMPLATE_SAV, RMC_TIME_IDX, RMC_PULL_IDX, $
                  GYRO_DIR, GYRO_ITEMPLATE_SAV, GYRO_TIME_IDX, $
-                 LOG_FILE, LOG_ITEMPLATE_SAV, LOG_TIME_BEG_IDX, $
-                 LOG_TIME_END_IDX, OVERWRITE=OVERWRITE
+                 GYRO_PULL_IDX, LOG_FILE, LOG_ITEMPLATE_SAV, $
+                 LOG_TIME_BEG_IDX, LOG_TIME_END_IDX, LOG_STATUS_IDX, $
+                 WIND_IDX_OFFSET=WIND_IDX_OFFSET, OVERWRITE=OVERWRITE
 
+  ;; Check parameters
+  IF (n_params() NE 17) THEN $
+     message, 'Usage: PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, ' + $
+              'TIME_BEG_IDX, RMC_DIR, RMC_ITEMPLATE_SAV, ' + $
+              'RMC_TIME_IDX, RMC_PULL_IDX, GYRO_DIR, ' + $
+              'GYRO_ITEMPLATE_SAV, GYRO_TIME_IDX, GYRO_PULL_IDX, ' + $
+              'LOG_FILE, LOG_ITEMPLATE_SAV, LOG_TIME_BEG_IDX, ' + $
+              'LOG_TIME_END_IDX, LOG_STATUS_IDX'
+  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
+     message, 'IDIR is undefined or is empty string'
+  IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
+     message, 'ODIR is undefined or is empty string'
+  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
+     message, 'ITEMPLATE_SAV is undefined or is empty string'
+  IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
+     message, 'TIME_BEG_IDX must be a scalar >= zero'
+  IF ((n_elements(rmc_dir) EQ 0) OR (rmc_dir EQ '')) THEN $
+     message, 'RMC_DIR is undefined or is empty string'
+  IF ((n_elements(rmc_itemplate_sav) EQ 0) OR $
+      (rmc_itemplate_sav EQ '')) THEN $
+     message, 'RMC_ITEMPLATE_SAV is undefined or is empty string'
+  IF ((n_elements(rmc_time_idx) NE 1) OR (rmc_time_idx LT 0)) THEN $
+     message, 'RMC_TIME_IDX must be a scalar >= zero'
+  IF ((n_elements(rmc_pull_idx) LT 1) OR $
+      (size(rmc_pull_idx, /type) NE 2)) THEN BEGIN
+     message, 'RMC_PULL_IDX must be an integer array'
+  ENDIF ELSE BEGIN
+     rpi=where(rmc_pull_idx LT 0, nrpineg)
+     IF nrpineg GT 0 THEN $
+        message, 'RMC_PULL_IDX cannot have negative indices'
+  ENDELSE
+  IF ((n_elements(gyro_dir) EQ 0) OR (gyro_dir EQ '')) THEN $
+     message, 'GYRO_DIR is undefined or is empty string'
+  IF ((n_elements(gyro_itemplate_sav) EQ 0) OR $
+      (gyro_itemplate_sav EQ '')) THEN $
+     message, 'GYRO_ITEMPLATE_SAV is undefined or is empty string'
+  IF ((n_elements(gyro_time_idx) NE 1) OR (gyro_time_idx LT 0)) THEN $
+     message, 'GYRO_TIME_IDX must be a scalar >= zero'
+  IF ((n_elements(gyro_pull_idx) LT 1) OR $
+      (size(gyro_pull_idx, /type) NE 2)) THEN BEGIN
+     message, 'GYRO_PULL_IDX must be an integer array'
+  ENDIF ELSE BEGIN
+     gpi=where(gyro_pull_idx LT 0, ngpineg)
+     IF ngpineg GT 0 THEN $
+        message, 'GYRO_PULL_IDX cannot have negative indices'
+  ENDELSE
+  log_file_info=file_info(log_file)
+  IF log_file_info.regular NE 1 THEN $
+     message, 'Log file is not a regular file.  Exiting'
+  IF ((n_elements(log_time_beg_idx) NE 1) OR (log_time_beg_idx LT 0)) THEN $
+     message, 'LOG_TIME_BEG_IDX must be a scalar >= zero'
+  IF ((n_elements(log_time_end_idx) NE 1) OR (log_time_end_idx LT 0)) THEN $
+     message, 'LOG_TIME_END_IDX must be a scalar >= zero'
+  IF ((n_elements(log_status_idx) NE 1) OR (log_status_idx LT 0)) THEN $
+     message, 'LOG_STATUS_IDX must be a scalar >= zero'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN message, 'No input files found'
@@ -79,9 +145,14 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   gyro_files=file_search(gyro_dir + path_sep() + '*', count=ngyro_files, $
                         /nosort, /fold_case, /test_regular)
   IF ngyro_files LT 1 THEN message, 'No GYRO files found.  Exiting'
-  log_file_info=file_info(log_file)
-  IF log_file_info.regular NE 1 THEN $
-     message, 'Log file is not a regular file.  Exiting'
+  IF keyword_set(wind_idx_offset) THEN BEGIN
+     IF n_elements(wind_idx_offset) NE 2 THEN $
+        message, 'WIND_IDX_OFFSET must be a 2-element array'
+     IF wind_idx_offset[0] LT 0 THEN $
+        message, 'The index in WIND_IDX_OFFSET cannot be negative'
+  ENDIF ELSE BEGIN
+     wind_idx_offset=[14, 23.0] ; default
+  ENDELSE
 
   ;; Parse input template
   restore, itemplate_sav
@@ -108,6 +179,43 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   ;; (year, month, day, hour, minute, second, subsecond)
   time_locs=locate_time_strings(tnames_last)
 
+  ;; Parse log template
+  restore, log_itemplate_sav
+  ;; Make a copy to avoid name collisions with the other templates
+  log_template=itemplate
+  log_field_names=strlowcase(log_template.FIELDNAMES)
+  log_field_types=log_template.FIELDTYPES
+  log_is_begtime_fld=log_template.FIELDGROUPS EQ log_time_beg_idx
+  log_is_endtime_fld=log_template.FIELDGROUPS EQ log_time_end_idx
+  ;; Beginning Times
+  log_tbegfields=where(log_is_begtime_fld, /NULL)
+  log_tbegnames=log_field_names[log_tbegfields]
+  log_tbegnamesl=strsplit(log_tbegnames, '_', /extract)
+  log_tbegnames_last=strarr(n_elements(log_tbegnamesl))
+  log_tbegnames_id=(log_tbegnamesl[0])[0:n_elements(log_tbegnamesl[0]) - 2]
+  log_tbegnames_id=strjoin(log_tbegnames_id, '_')
+  FOR i=0L, n_elements(log_tbegnames) - 1 DO BEGIN
+     lasti=log_tbegnamesl[i, n_elements(log_tbegnamesl[i]) - 1]
+     log_tbegnames_last[i]=lasti
+  ENDFOR
+  ;; Determine where in these names we're supposed to get each time field
+  ;; (year, month, day, hour, minute, second, subsecond)
+  log_tbeg_locs=locate_time_strings(log_tbegnames_last)
+  ;; Ending Times
+  log_tendfields=where(log_is_endtime_fld, /NULL)
+  log_tendnames=log_field_names[log_tendfields]
+  log_tendnamesl=strsplit(log_tendnames, '_', /extract)
+  log_tendnames_last=strarr(n_elements(log_tendnamesl))
+  log_tendnames_id=(log_tendnamesl[0])[0:n_elements(log_tendnamesl[0]) - 2]
+  log_tendnames_id=strjoin(log_tendnames_id, '_')
+  FOR i=0L, n_elements(log_tendnames) - 1 DO BEGIN
+     lasti=log_tendnamesl[i, n_elements(log_tendnamesl[i]) - 1]
+     log_tendnames_last[i]=lasti
+  ENDFOR
+  ;; Determine where in these names we're supposed to get each time field
+  ;; (year, month, day, hour, minute, second, subsecond)
+  log_tend_locs=locate_time_strings(log_tendnames_last)
+
   ;; Parse RMC template
   restore, rmc_itemplate_sav
   ;; Make a copy to avoid name collisions with the other templates
@@ -126,7 +234,7 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   rmc_tnamesl=strsplit(rmc_tnames, '_', /extract)
   rmc_tnames_last=strarr(n_elements(rmc_tnamesl))
   rmc_tnames_id=strjoin((rmc_tnamesl[0])[0:n_elements(rmc_tnamesl[0]) - 2], '_')
-  FOR i=0L, n_elements(tnames) - 1 DO $
+  FOR i=0L, n_elements(rmc_tnames) - 1 DO $
      rmc_tnames_last[i]=rmc_tnamesl[i, n_elements(rmc_tnamesl[i]) - 1]
   ;; Determine where in these names we're supposed to get each time field
   ;; (year, month, day, hour, minute, second, subsecond)
@@ -152,11 +260,11 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   gyro_non_time_field_names=gyro_field_names[gyro_non_time_fields]
   ;; Times
   gyro_tfields=where(gyro_is_time_field, /NULL)
-  gyro_tnames=rmc_field_names[gyro_tfields]
+  gyro_tnames=gyro_field_names[gyro_tfields]
   gyro_tnamesl=strsplit(gyro_tnames, '_', /extract)
   gyro_tnames_last=strarr(n_elements(gyro_tnamesl))
   gyro_tnames_id=strjoin((gyro_tnamesl[0])[0:n_elements(gyro_tnamesl[0]) - 2], '_')
-  FOR i=0L, n_elements(tnames) - 1 DO $
+  FOR i=0L, n_elements(gyro_tnames) - 1 DO $
      gyro_tnames_last[i]=gyro_tnamesl[i, n_elements(gyro_tnamesl[i]) - 1]
   ;; Determine where in these names we're supposed to get each time field
   ;; (year, month, day, hour, minute, second, subsecond)
@@ -167,6 +275,59 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   gyro_files_mstr_dims=size(gyro_files_a, /dimensions)
   ;; We want the 3rd to last piece
   gyro_files_mstr=gyro_files_a[gyro_files_mstr_dims[0] - 3, *]
+
+  ;; Read log file
+  log=read_ascii(log_file, template=log_template)
+  log_names=strlowcase(tag_names(log))
+  log_tbeg_loc=where(log_names EQ log_field_names[log_time_beg_idx])
+  log_tend_loc=where(log_names EQ log_field_names[log_time_end_idx])
+  log_beg_times=log.(log_tbeg_loc)
+  log_end_times=log.(log_tend_loc)
+  ;; Remove quotes and separators
+  IF size(log_beg_times, /type) EQ 7 THEN BEGIN
+     FOREACH fld, indgen((size(log_beg_times, $
+                               /dimensions))[0]) DO BEGIN
+        ok=strsplit(log_beg_times[fld, *], '" -/:', /extract)
+        ok=(temporary(ok)).toArray()
+        ok=strjoin(transpose(temporary(ok)))
+        log_beg_times[fld, *]=ok
+     ENDFOREACH
+  ENDIF
+  IF size(log_end_times, /type) EQ 7 THEN BEGIN
+     FOREACH fld, indgen((size(log_end_times, $
+                               /dimensions))[0]) DO BEGIN
+        ok=strsplit(log_end_times[fld, *], '" -/:', /extract)
+        ok=(temporary(ok)).toArray()
+        ok=strjoin(transpose(temporary(ok)))
+        log_end_times[fld, *]=ok
+     ENDFOREACH
+  ENDIF
+  log_data_flds=where(~ (log_is_begtime_fld OR log_is_endtime_fld))
+  FOREACH fld, (indgen(n_tags(log)))[log_data_flds] DO BEGIN
+     IF size(log.(fld), /type) EQ 7 THEN BEGIN
+        ok=strsplit(log.(fld), '" ', /extract)
+        log.(fld)=ok.toArray()
+     ENDIF
+  ENDFOREACH
+  ;; Obtain full log beginning time details and transform to julian
+  log_beg_times_std=parse_times(log_beg_times, log_tbegnames_last, $
+                                log_tbeg_locs)
+  log_tbeg_jd=reform(julday(long(log_beg_times_std[1, *]), $
+                            long(log_beg_times_std[2, *]), $
+                            long(log_beg_times_std[0, *]), $
+                            long(log_beg_times_std[3, *]), $
+                            long(log_beg_times_std[4, *]), $
+                            float(log_beg_times_std[5, *])))
+  ;; Obtain full log ending time details and transform to julian
+  log_end_times_std=parse_times(log_end_times, log_tendnames_last, $
+                                log_tend_locs)
+  log_tend_jd=reform(julday(long(log_end_times_std[1, *]), $
+                            long(log_end_times_std[2, *]), $
+                            long(log_end_times_std[0, *]), $
+                            long(log_end_times_std[3, *]), $
+                            long(log_end_times_std[4, *]), $
+                            float(log_end_times_std[5, *])))
+  logn=(size(log_beg_times, /dimensions))[1]
 
   ;; Loop through files in input directory
   FOR k=0, nidir_files - 1 DO BEGIN
@@ -216,6 +377,12 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
            idata.(fld)=ok.toArray()
         ENDIF
      ENDFOREACH
+     ;; Adjust wind direction
+     wdfld=where(idata_names EQ field_names[wind_idx_offset[0]], /null)
+     idata.(wdfld)=idata.(wdfld) - wind_idx_offset[1]
+     x_wdir=where(idata.(wdfld) LT 1e-5, nx_wdir)
+     IF nx_wdir GT 0 THEN $
+        idata.(wdfld)[x_wdir]=360.0 + idata.(wdfld)[x_wdir]
 
      ;; Obtain full input time details
      itimes_std=parse_times(idata_times, tnames_last, time_locs)
@@ -228,6 +395,7 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
 
      ifile_strl=strsplit(ifile, '_.', /extract) ; break string
      ifile_mstr=ifile_strl[n_elements(ifile_strl) - 2]
+
      ;; Read matching RMC file
      rmc_pair=where(rmc_files_mstr EQ ifile_mstr, mcount)
      IF mcount LT 1 THEN BEGIN
@@ -265,77 +433,186 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
                           float(rmc_times[5, *] + '.' + $
                                 rmc_times[6, *])))
      ;; Find matching times
-     match2, met_jd, rmc_jd, met_in_rmc, rmc_in_met
+     match2, met_jd, rmc_jd, met_in_rmc
      met_matches=where(met_in_rmc GE 0, mcount, /null)
      IF mcount LT 1 THEN BEGIN
         message, 'No matching RMC records found.  Skipping file.', $
                  /informational
         CONTINUE
      ENDIF
-     rmc_matches=where(rmc_in_met GE 0)
-     FOREACH fld, rmc_lonlat_idx DO BEGIN
+     FOREACH fld, rmc_pull_idx DO BEGIN
         match_fld=where(rmc_names EQ rmc_field_names[fld])
         idata=create_struct(idata, rmc_field_names[fld], $
-                            rmc.(match_fld)[rad_matches])
+                            rmc.(match_fld)[met_matches])
      ENDFOREACH
 
-     ;; Read matching MET file
-     met_pair=where(met_files_mstr EQ ifile_mstr, mcount)
+     ;; Read matching GYRO file
+     gyro_pair=where(gyro_files_mstr EQ ifile_mstr, mcount)
      IF mcount LT 1 THEN BEGIN
-        message, 'No matching MET file found. Skipping.', /CONTINUE
+        message, 'No matching GYRO file found. Skipping.', /CONTINUE
         CONTINUE
      ENDIF
-     met=read_ascii(met_files[met_pair], template=met_template)
-     met_names=strlowcase(tag_names(met))
+     gyro=read_ascii(gyro_files[gyro_pair], template=gyro_template)
+     gyro_names=strlowcase(tag_names(gyro))
      ;; Obtain times and convert to Julian
-     met_time_loc=where(met_names EQ met_field_names[met_time_idx])
-     met_times=met.(met_time_loc)
-     met_times_dims=size(met_times, /dimensions)
+     gyro_time_loc=where(gyro_names EQ gyro_field_names[gyro_time_idx])
+     gyro_times=gyro.(gyro_time_loc)
+     gyro_times_dims=size(gyro_times, /dimensions)
      ;; Remove quotes
-     IF size(met_times, /type) EQ 7 THEN BEGIN
-        FOREACH fld, indgen((size(met_times, $
+     IF size(gyro_times, /type) EQ 7 THEN BEGIN
+        FOREACH fld, indgen((size(gyro_times, $
                                   /dimensions))[0]) DO BEGIN
-           ok=strsplit(met_times[fld, *], '" -/:', /extract)
+           ok=strsplit(gyro_times[fld, *], '" -/:', /extract)
            ok=(temporary(ok)).toArray()
            ok=strjoin(transpose(temporary(ok)))
-           met_times[fld, *]=ok
+           gyro_times[fld, *]=ok
         ENDFOREACH
      ENDIF
-     met_jd=reform((met_times_dims[0] EQ 6) ? $
-                   julday(long(met_times[1, *]), $
-                          long(met_times[2, *]), $
-                          long(met_times[0, *]), $
-                          long(met_times[3, *]), $
-                          long(met_times[4, *]), $
-                          float(met_times[5, *])) : $
-                   julday(long(met_times[1, *]), $
-                          long(met_times[2, *]), $
-                          long(met_times[0, *]), $
-                          long(met_times[3, *]), $
-                          long(met_times[4, *]), $
-                          float(met_times[5, *] + '.' + $
-                                met_times[6, *])))
+     gyro_jd=reform((gyro_times_dims[0] EQ 6) ? $
+                    julday(long(gyro_times[1, *]), $
+                           long(gyro_times[2, *]), $
+                           long(gyro_times[0, *]), $
+                           long(gyro_times[3, *]), $
+                           long(gyro_times[4, *]), $
+                           float(gyro_times[5, *])) : $
+                    julday(long(gyro_times[1, *]), $
+                           long(gyro_times[2, *]), $
+                           long(gyro_times[0, *]), $
+                           long(gyro_times[3, *]), $
+                           long(gyro_times[4, *]), $
+                           float(gyro_times[5, *] + '.' + $
+                                 gyro_times[6, *])))
      ;; Find matching times
-     match2, rad_jd, met_jd, rad_in_met, met_in_rad
-     rad_matches=where(rad_in_met GE 0, mcount, /null)
+     match2, met_jd, gyro_jd, met_in_gyro
+     met_matches=where(met_in_gyro GE 0, mcount, /null) ; overwriting var
      IF mcount LT 1 THEN BEGIN
-        message, 'No matching MET records found.  Skipping file.', $
+        message, 'No matching GYRO records found.  Skipping file.', $
                  /informational
         CONTINUE
      ENDIF
-     met_matches=where(met_in_rad GE 0)
-     ;; Below may not be necessary now, but in the future we may want to
-     ;; pull other data from MET.  This extra PAR field is from another
-     ;; sensor in the deck.  Need explanation about why this is being
-     ;; pulled in.  Also the daily files have a number of blank fields
-     ;; (look like just holders) for standard deviations, which are ignored
-     ;; in the current daily MET files.
-     FOREACH fld, met_par_idx DO BEGIN
-        match_fld=where(met_names EQ met_field_names[fld])
-        idata=create_struct(idata, met_field_names[fld] + '_met', $
-                            met.(match_fld)[rad_matches])
+     FOREACH fld, gyro_pull_idx DO BEGIN
+        match_fld=where(gyro_names EQ gyro_field_names[fld])
+        idata=create_struct(idata, gyro_field_names[fld], $
+                            gyro.(match_fld)[met_matches])
      ENDFOREACH
 
+     ;; Calculate true wind direction and speed
+     cog=idata.cog
+     ;; Convert from nautical miles to m/s
+     sog=idata.sog / 1.9438449
+     ;; This is the bit about "beware of the COG when SOG is 0"
+     cog_flag=finite(cog, /nan, sign=-1)
+     cog0=where(cog_flag, ncog0)
+     IF ncog0 GT 0 THEN $
+        cog[cog0]=0
+     twinds=truewind(0, cog, sog, idata.heading, idata.wind_direction, $
+                     idata.wind_speed)
+     tw_names=['true_wind_direction', 'true_wind_velocity']
+     FOREACH fld, tw_names DO BEGIN
+        idata=create_struct(idata, fld, twinds[*, where(tw_names EQ fld)])
+     ENDFOREACH
+
+     ;; Check the log status flag (initial value=0 -> not used in log, so
+     ;; we use to OK data)
+     status_flag=intarr(lines)
+     log_status=log.(where(log_names EQ log_field_names[log_status_idx]))
+     FOREACH logi, indgen(logn) DO BEGIN
+        flagi=where((met_jd GE log_tbeg_jd[logi]) AND $
+                    (met_jd LT log_tend_jd[logi]), nflagi)
+        IF nflagi GT 0 THEN status_flag[flagi]=log_status[logi]
+     ENDFOREACH
+
+     ;; I don't understand why the flag is used to fiddle with variables
+     ;; below here.  I think the flag should be used directly when
+     ;; selecting appropriate records for calculation when needed.
+     ;; Furthermore, the original code does this also assuming we have
+     ;; standard deviations, which are only available if data correspond
+     ;; from some averaging algorithm.  In 2011, input MET data are sampled
+     ;; at 1-min, so no averaging was done, hence no standard deviations.
+     ;; It seems overly manipulative.  Keeping all of it for now, until we
+     ;; meet to sort all of this out.
+
+     ;; Filter out bad wind direction
+     baddir=where((idata.wind_direction GT 100) AND $
+                  (idata.wind_direction LT 260), nbaddir)
+     IF nbaddir GT 0 THEN BEGIN
+        idata.true_wind_direction[baddir]=!VALUES.F_NAN
+        idata.true_wind_velocity[baddir]=!VALUES.F_NAN
+     ENDIF
+     ;; For "very" bad wind direction, also remove T/RH data. NOTE: what we
+     ;; are really filtering out here is from 170 to 190 deg (due to
+     ;; anemometer offset for this year)
+     vbaddir=where((idata.wind_direction GT 170) AND $
+                   (idata.wind_direction LT 190), nvbaddir)
+     IF nvbaddir GT 0 THEN BEGIN
+        idata.rh_percent[vbaddir]=!VALUES.F_NAN
+        idata.air_temperature[vbaddir]=!VALUES.F_NAN
+        ;; We just don't have standard deviations in 2011, since we're not
+        ;; averaging data and working straight from daily files.
+        ;; idata.rh_percent_sd[vbaddir]=!VALUES.F_NAN
+        ;; idata.surface_temperature_sd[vbaddir]=!VALUES.F_NAN
+     ENDIF
+
+     ;; Filter out ice breaking (where SOG stdev > 2, or COG stdev > 10)
+     badice=where((idata.sog_sd GT 2) OR (idata.cog_sd GT 10), nbadice)
+     IF nbadice GT 0 THEN BEGIN
+        idata.true_wind_direction[badice]=!VALUES.F_NAN
+        idata.true_wind_velocity[badice]=!VALUES.F_NAN
+     ENDIF
+
+     ;; Filter out of range Patm
+     badPatm=where(idata.pressure LT 94, nbadpatm)
+     IF nbadpatm GT 0 THEN BEGIN
+        idata.pressure[badPatm]=!VALUES.F_NAN ;filter out P_avg
+        ;; See note above about standard deviations
+        ;; work_arr(21,badPatm) = 'NaN' ;filter out P_std
+        status_flag[badPatm]=5
+     ENDIF
+
+     ;; Filter out of range pitch/roll; we can use the compass angle data
+     ;; as a "second check" on tower down situations
+     badroll=where(idata.pitch GT 50, nbadroll)
+     IF nbadroll GT 0 THEN BEGIN
+        idata.rh_percent[badroll]=!VALUES.F_NAN
+        idata.air_temperature[badroll]=!VALUES.F_NAN
+        idata.wind_speed[badroll]=!VALUES.F_NAN
+        idata.wind_direction[badroll]=!VALUES.F_NAN
+        ;; Not doing anything to standard deviations, as per note above
+        idata.true_wind_direction[badroll]=!VALUES.F_NAN
+        idata.true_wind_velocity[badroll]=!VALUES.F_NAN
+        status_flag[badroll]=1
+     endif
+
+     flag1=where(status_flag EQ 1, nflag1)
+     IF nflag1 GT 0 THEN BEGIN
+        idata.air_temperature[flag1]=!VALUES.F_NAN
+        idata.rh_percent[flag1]=!VALUES.F_NAN
+        idata.wind_direction[flag1]=!VALUES.F_NAN
+        idata.wind_speed[flag1]=!VALUES.F_NAN
+        idata.true_wind_direction[flag1]=!VALUES.F_NAN
+        idata.true_wind_velocity[flag1]=!VALUES.F_NAN
+     ENDIF
+     flag2=where(status_flag EQ 2, nflag2)
+     IF nflag2 GT 0 THEN BEGIN
+        idata.wind_speed[flag2]=!VALUES.F_NAN
+        idata.true_wind_direction[flag1]=!VALUES.F_NAN
+        idata.true_wind_velocity[flag1]=!VALUES.F_NAN
+     ENDIF
+     flag3=where(status_flag EQ 3, nflag3)
+     IF nflag3 GT 0 THEN BEGIN
+        idata.surface_temperature[flag3]=!VALUES.F_NAN
+     ENDIF
+     flag4=where(status_flag EQ 4, nflag4)
+     IF nflag4 GT 0 THEN BEGIN
+        idata.air_temperature[flag4]=!VALUES.F_NAN
+        idata.rh_percent[flag4]=!VALUES.F_NAN
+     ENDIF
+     flag5=where(status_flag EQ 5, nflag5)
+     IF nflag5 GT 0 THEN BEGIN
+        idata.pressure[flag5]=!VALUES.F_NAN
+     ENDIF
+
+     idata=create_struct(idata, 'diag', status_flag)
      odata=remove_structure_tags(idata, field_names[tags2remove])
      delvar, idata
      ;; OK, how else to just extract the time info into a structure
