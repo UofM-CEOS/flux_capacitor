@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-24T14:45:10+0000
+;; Last-Updated: 2013-10-26T10:47:22+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -10,7 +10,8 @@
 ;;
 ;; PURPOSE:
 ;;
-;;     Calculate temporal averages for input file.
+;;     Calculate temporal averages for input file, taking into account
+;;     angle and corresponding magnitude fields, if present.
 ;;
 ;; CALLING SEQUENCE:
 ;;
@@ -85,6 +86,9 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
      message, 'OSAMPLE_RATE is undefined or is empty string'
   IF ((osample_rate MOD isample_rate) NE 0) THEN $
      message, 'ISAMPLE_RATE must be an integer divisor of OSAMPLE_RATE'
+  ;; IF ((86400.0 MOD (osample_rate / isample_rate)) NE 0) THEN $
+  ;;    message, '(OSAMPLE_RATE / ISAMPLE_RATE must be an integer ' + $
+  ;;             'divisor of 86400.0 s'
   n_af=n_elements(angle_fields)
   n_mf=n_elements(magnitude_fields)
   IF n_af NE n_mf THEN $
@@ -105,14 +109,14 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   IF nidir_files LT 1 THEN message, 'No input files found'
 
   restore, itemplate_sav
-  field_names=itemplate.FIELDNAMES
+  field_names=strlowcase(itemplate.FIELDNAMES)
   field_types=itemplate.FIELDTYPES
   is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
   ;; Ignore other groups when reading the data
   itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
   itemplate.FIELDGROUPS[where(is_time_field)]=time_beg_idx
   non_time_fields=where(~is_time_field)
-  non_time_field_names=strlowcase(field_names[non_time_fields])
+  non_time_field_names=field_names[non_time_fields]
   ;; Check which magnitude fields we have, since negative indices mean
   ;; magnitude is just scalar 1
   IF n_mf GT 0 THEN BEGIN       ; got angles/magnitudes?
@@ -156,7 +160,7 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   tags2remove=where(field_names EQ field_names[time_beg_idx])
   ;; Times
   tfields=where(is_time_field, /NULL)
-  tnames=strlowcase(field_names[tfields])
+  tnames=field_names[tfields]
   tnamesl=strsplit(tnames, '_', /extract)
   tnames_last=strarr(n_elements(tnamesl))
   tnames_id=strjoin((tnamesl[0])[0:n_elements(tnamesl[0]) - 2], '_')
@@ -165,8 +169,8 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   ;; Determine where in these names we're supposed to get each time field
   ;; (year, month, day, hour, minute, second, subsecond)
   time_locs=locate_time_strings(tnames_last)
-  ncols_osample=osample_rate / isample_rate
-  nrows_osample=86400 / osample_rate
+  ncols_osample=long(osample_rate / isample_rate)
+  nrows_osample=86400 / long(isample_rate * ncols_osample)
 
   FOR k=0, nidir_files - 1 DO BEGIN
      iname=strsplit(file_basename(idir_files[k]), '.', /extract)
@@ -195,8 +199,7 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
               ifile, /informational
      idata=read_ascii(ifile, template=itemplate)
      idata_names=strlowcase(tag_names(idata))
-     time_loc=where(idata_names EQ $
-                    strlowcase(field_names[time_beg_idx]))
+     time_loc=where(idata_names EQ field_names[time_beg_idx])
      idata_times=idata.(time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])
@@ -207,7 +210,7 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
            idata_times[fld, *]=ok.toArray()
         ENDFOREACH
      ENDIF
-     match2, idata_names, strlowcase(field_names[tags2remove]), is_time
+     match2, idata_names, field_names[tags2remove], is_time
      FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
         IF size(idata.(fld), /type) EQ 7 THEN BEGIN
            ok=strsplit(idata.(fld), '" ', /extract)
