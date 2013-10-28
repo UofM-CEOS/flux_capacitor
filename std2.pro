@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-26T09:47:08+0000
+;; Last-Updated: 2013-10-28T21:03:57+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -17,8 +17,8 @@
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;      STD_2TIMES, Idir, Odir, Itemplate_Sav, Utc_Time_Idx, Server_Time_Idx,
-;;                  Keep_Fields, Keep_Types=Keep_Types, File_Type=File_Type
+;;      STD2, Idir, Odir, Itemplate_Sav, Utc_Time_Idx, Server_Time_Idx,
+;;            Keep_Fields, Keep_Types=Keep_Types, File_Type=File_Type
 ;; 
 ;; INPUTS:
 ;; 
@@ -55,10 +55,10 @@
 ;;                      'sog', 'cog', 'heading', 'pitch', 'roll', $
 ;;                      'accel_x', 'accel_y', 'accel_z']
 ;; nav_raw_keep_types=[7, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
-;; STD_2TIMES, expand_path('~/tmp/ArcticNet2011/NAV'), $
-;;             expand_path('~/tmp/ArcticNet2011/NAV/STD'), $
-;;             'nav_raw_template.sav', 6, 1, nav_raw_keep_fields, $
-;;             keep_types=nav_raw_keep_types, file_type='NAV', /overwrite
+;; STD2, expand_path('~/tmp/ArcticNet2011/NAV'), $
+;;       expand_path('~/tmp/ArcticNet2011/NAV/STD'), $
+;;       'nav_raw_template.sav', 6, 1, nav_raw_keep_fields, $
+;;       keep_types=nav_raw_keep_types, file_type='NAV', /overwrite
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
@@ -69,7 +69,7 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
 
   ;; Check parameters
   IF (n_params() NE 6) THEN $
-     message, 'Usage: STD_2TIMES, IDIR, ODIR, ITEMPLATE_SAV, ' + $
+     message, 'Usage: STD2, IDIR, ODIR, ITEMPLATE_SAV, ' + $
               'UTC_TIME_IDX, SERVER_TIME_IDX, KEEP_FIELDS'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
@@ -187,6 +187,10 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
         IF size(idata.(fld), /type) EQ 7 THEN BEGIN
            ok=strsplit(idata.(fld), '" ', /extract)
            idata.(fld)=ok.toArray()
+           ;; Replace NANs (bad) with empty string since they are
+           ;; automatically turned into NaN elsewhere
+           badnan=where(idata.(fld) EQ 'NAN', nbadnan)
+           IF nbadnan GT 0 THEN idata.(fld)[badnan]=''
         ENDIF
      ENDFOREACH
      odata=remove_structure_tags(idata, field_names[tags2remove])
