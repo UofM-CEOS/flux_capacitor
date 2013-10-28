@@ -1,7 +1,7 @@
 ;; $Id: $
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-15T15:43:56+0000
-;; Last-Updated: 2013-10-27T23:49:38+0000
+;; Last-Updated: 2013-10-28T22:00:20+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -61,7 +61,7 @@
 ;;     included via RMC_Pull_Idx and GYRO_Pull_Idx in the respective
 ;;     templates (case irrelevant): cog, sog, heading, wind_direction,
 ;;     wind_speed, true_wind_direction, true_wind_velocity, rh_percent,
-;;     surface_temperature, pressure, pitch.
+;;     air_temperature, surface_temperature, pressure, pitch.
 ;; 
 ;; PROCEDURE:
 ;; 
@@ -69,7 +69,15 @@
 ;; 
 ;; EXAMPLE:
 ;; 
-;; 
+;;     process_MET, expand_path('~/tmp/ArcticNet2011/MET/Daily'), $
+;;                  expand_path('~/tmp/ArcticNet2011/MET/Processed'), $
+;;                  'met_std_template.sav', 0, $
+;;                  expand_path('~/tmp/ArcticNet2011/OMG/NVG/1min'), $
+;;                  'omg_nav_std_avg_template.sav', 0, [6, 7, 8, 9, 10, 11], $
+;;                  expand_path('~/tmp/ArcticNet2011/OMG/HDG/1min'), $
+;;                  'omg_hdg_std_avg_template.sav', 0, 6, $
+;;                  expand_path('~/tmp/ArcticNet2011/Logs/met_log.csv'), $
+;;                  'met_log_template.sav', 0, 5, 10
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
