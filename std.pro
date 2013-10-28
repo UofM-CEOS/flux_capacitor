@@ -1,22 +1,21 @@
 ;; $Id$
-;; Author: Brent Else, Bruce Johnson, Sebastian Luque
+;; Author: Sebastian Luque (from original by Brent Else, Bruce Johnson)
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-26T09:44:29+0000
+;; Last-Updated: 2013-10-28T21:52:29+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;;     STD_MET
+;;     STD
 ;; 
 ;; PURPOSE:
 ;; 
-;;     Standardize MET files.  It will likely standardize other files in
-;;     the future.
+;;     Standardize files with a single set of time stamps (e.g. UTC).
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;     STD_MET, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Keep_Fields, $
-;;              Keep_types=Keep_Types, File_type=File_Type
+;;     STD, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Keep_Fields, $
+;;          Keep_types=Keep_Types, File_type=File_Type
 ;; 
 ;; INPUTS:
 ;; 
@@ -66,7 +65,7 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
 
   ;; Check parameters
   IF (n_params() NE 5) THEN $
-     message, 'Usage: STD_MET, IDIR, ODIR, ITEMPLATE_SAV, ' + $
+     message, 'Usage: STD, IDIR, ODIR, ITEMPLATE_SAV, ' + $
               'TIME_BEG_IDX, KEEP_FIELDS'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
@@ -81,7 +80,7 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
   n_kt=n_elements(keep_types)
   IF (n_kt GT 0) AND (n_kt NE n_kf) THEN $
      message, 'KEEP_TYPES and KEEP_FIELDS must have the same number of elements'
-  IF ((n_elements(file_type) EQ 0) OR (odir EQ '')) THEN $
+  IF ((n_elements(file_type) EQ 0) OR (file_type EQ '')) THEN $
      message, 'FILE_TYPE is undefined or is empty string'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
@@ -157,6 +156,10 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
         IF size(idata.(fld), /type) EQ 7 THEN BEGIN
            ok=strsplit(idata.(fld), '" ', /extract)
            idata.(fld)=ok.toArray()
+           ;; Replace NANs (bad) with empty string since they are
+           ;; automatically turned into NaN elsewhere
+           badnan=where(idata.(fld) EQ 'NAN', nbadnan)
+           IF nbadnan GT 0 THEN idata.(fld)[badnan]=''
         ENDIF
      ENDFOREACH
      odata=remove_structure_tags(idata, field_names[tags2remove])
