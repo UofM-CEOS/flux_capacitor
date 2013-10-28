@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-26T10:02:06+0000
+;; Last-Updated: 2013-10-28T20:43:36+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -169,6 +169,10 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
         IF size(idata.(fld), /type) EQ 7 THEN BEGIN
            ok=strsplit(idata.(fld), '" ', /extract)
            idata.(fld)=ok.toArray()
+           ;; Replace NANs (bad) with empty string since they are
+           ;; automatically turned into NaN elsewhere
+           badnan=where(idata.(fld) EQ 'NAN', nbadnan)
+           IF nbadnan GT 0 THEN idata.(fld)[badnan]=''
         ENDIF
      ENDFOREACH
 
