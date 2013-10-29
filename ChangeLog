@@ -1,3 +1,44 @@
+2013-10-29  spluque@gmail.com
+
+	* ec_43_template.sav, ec_41_42_template.sav:
+	  Fix field types.
+
+	* std_ec.pro:
+	  New procedure for standardizing flux files.
+
+2013-10-28  spluque@gmail.com
+
+	* std_gyro.pro:
+	  Remove 'NAN' string from string types.
+
+	* std2.pro:
+	  Fix documentation header and remove 'NAN' string from string
+	  types.
+
+	* std.pro:
+	  Fix documentation header, parameter checking, and remove 'NAN'
+	  string from string types.
+
+2013-10-27  spluque@gmail.com
+
+	* average_series.pro:
+	  Lowercase field names in template to simplify comparisons
+	  throughout. Use correct calculation of number of rows for
+	  reforming data, so that it takes into account any input sample
+	  rate, provided it is sensible.
+
+2013-10-26  spluque@gmail.com
+
+	* day_splitter.pro, filter_series.pro, std.pro, std2.pro,
+	  std_gyro.pro:
+	  Lowercase field names in template to simplify comparisons
+	  throughout. Renamed variable rmc_template_names to
+	  rmc_field_names in std_gyro.pro.
+
+	* process_RAD.pro:
+	  Parameter checking and use adequate arguments for parsing times
+	  from each input file.
+
 2013-10-23  spluque@gmail.com
 
 	* day_splitter.pro:
