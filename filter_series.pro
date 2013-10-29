@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-10-26T09:41:10+0000
+;; Last-Updated: 2013-10-29T15:18:19+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -72,7 +72,7 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
   IF (n_elements(angle_fields) EQ 0) THEN $
      message, 'ANGLE_FIELDS is undefined'
   IF ((n_elements(sample_rate) NE 1) OR (sample_rate LT 0)) THEN $
-     message, 'SAMPLE_RATE must be a a scalar >= zero'
+     message, 'SAMPLE_RATE must be a scalar >= zero'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN message, 'No input files found'
