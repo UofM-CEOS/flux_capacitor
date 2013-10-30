@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-26T09:39:28+0000
+;; Last-Updated: 2013-10-30T21:30:31+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -120,7 +120,9 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   days=timegen(start=beg_jd, final=end_jd + 1, step_size=1, units='days')
   days=jul2timestamp(temporary(days))
   ;; Add up to 23:59:59 of the last requested day
-  times=timegen(start=beg_jd, final=end_jd + (86399.0 / 86400), $
+  step_d=float(step_time) / 86400
+  times=timegen(start=beg_jd, $
+                final=end_jd + 1 - (step_d / 2), $
                 step_size=step_time, units='seconds')
   times=jul2timestamp(temporary(times))
   ;; ;; Index times in days vector.  Note that value_locate() does work with
