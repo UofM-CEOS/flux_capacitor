@@ -1,7 +1,7 @@
-;; $Id: $
+;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-29T14:29:43+0000
-;; Last-Updated: 2013-11-01T22:17:39+0000
+;; Last-Updated: 2013-11-01T22:33:29+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -11,41 +11,43 @@
 ;; PURPOSE:
 ;; 
 ;;     This procedure is used to check whether processed MET data within a
-;;     particular time period (20 min) meets the conditions required for
-;;     eddy covariance calculations.  It generates a file with requested
-;;     fields from the processed MET file, consisting of the mean values
-;;     within the requested period, starting from a requested start time to
-;;     and end time.
+;;     particular time period (e.g. 20 min) meets the conditions required
+;;     for eddy covariance calculations.  It generates a file with
+;;     requested fields from the processed MET file, consisting of the mean
+;;     values within the requested period, starting from a requested start
+;;     time to and end time.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     FILTER_MET, Full_Dir, Avg_Dir, Full_Itemplate_Sav, Full_Time_Idx, $
+;;                 Avg_Itemplate_Sav, Avg_Time_Idx, Avg_Period,
+;;                 Filter_Idx, Filter_Thr
 ;; 
 ;; INPUTS:
 ;; 
+;;     Full_Dir:              Directory (no trailing separator) containing
+;;                            the processed MET files; typically 1-min
+;;                            daily files.
+;;     Avg_Dir:               Directory (no trailing separator) containing
+;;                            the files from Full_Dir averaged over
+;;                            Avg_Period's.
+;;     Full_Itemplate_Sav:    Ascii template to read files in Full_Dir.
+;;     Full_Time_Idx:         Index (in template) where time is in files in
+;;                            Full_Dir.
+;;     Avg_Itemplate_Sav:     Ascii template to read files in Avg_Dir.
+;;     Avg_Time_Idx:          Index (in template) where time is in files in
+;;                            Avg_Dir.
 ;; 
-;; 
-;; OPTIONAL INPUTS:
-;; 
-;; 
+;;     Avg_Period:            Duration (s) of each period in files under
+;;                            Avg_Dir.
+;;     Filter_Idx:            Indices (in template) of the following fields
+;;                            in Avg_Dir (order is relevant): wind
+;;                            direction (raw), SOG, and heading.
+;;     Filter_Thr:            Indices (in template) of the following fields
+;;                            in Avg_Dir (order is relevant): wind
+;;                            direction (raw), SOG, and heading.
 ;; 
 ;; KEYWORD PARAMETERS:
-;; 
-;; 
-;; 
-;; OUTPUTS:
-;; 
-;; 
-;; 
-;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
-;; COMMON BLOCKS:
-;; 
-;; 
-;; 
-;; SIDE EFFECTS:
 ;; 
 ;; 
 ;; 
