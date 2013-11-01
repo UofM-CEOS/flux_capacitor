@@ -1,6 +1,6 @@
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-31T20:49:18+0000
-;; Last-Updated: 2013-11-01T01:23:50+0000
+;; Last-Updated: 2013-11-01T18:51:22+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -56,7 +56,7 @@ PRO REMOVE_FIELDS_ASCII, IDIR, ITEMPLATE_SAV, REMOVE_FIELD_NAMES
   ;; Ignore groups
   itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
   field_types=itemplate.FIELDTYPES
-  is_str_fld=where(field_types EQ 7, n_is_str_fld)
+  str_flds=where(field_types EQ 7, nstr_flds)
 
   FOR k=0, nidir_files - 1 DO BEGIN
      ifile=idir_files[k]
@@ -64,9 +64,8 @@ PRO REMOVE_FIELDS_ASCII, IDIR, ITEMPLATE_SAV, REMOVE_FIELD_NAMES
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)
      ;; Remove quotes and separators from string fields
-     IF n_is_str_fld GT 0 THEN BEGIN
-        str_idx=(indgen(itemplate.FIELDCOUNT))[is_str_fld]
-        FOREACH fld, str_idx DO BEGIN
+     IF nstr_flds GT 0 THEN BEGIN
+        FOREACH fld, str_flds DO BEGIN
            ok=strsplit(idata.(fld), '" -/:', /extract)
            ok=(temporary(ok)).toArray()
            ok=strjoin(transpose(temporary(ok)))
