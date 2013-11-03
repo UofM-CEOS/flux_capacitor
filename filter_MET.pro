@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-29T14:29:43+0000
-;; Last-Updated: 2013-11-02T00:54:13+0000
+;; Last-Updated: 2013-11-03T17:39:38+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -52,9 +52,11 @@
 ;;     Filter_Idx:            Integer array with indices (in template) of
 ;;                            the following fields of files in Avg_Dir
 ;;                            (order is relevant): mean wind direction
-;;                            (raw), mean SOG, and mean heading.
-;;     Filter_Thr:            Array with thresholds for the fields in
-;;                            Filter_Idx.
+;;                            (raw), mean SOG, mean heading, and mean true
+;;                            wind speed.
+;;     Filter_Thr:            Array with values to determine thresholds for
+;;                            the fields in Filter_Idx.  Threshold is
+;;                            computed as average +- value.
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
@@ -106,7 +108,7 @@ PRO FILTER_MET, AVG_DIR, FULL_DIR, AVG_ITEMPLATE_SAV, AVG_TIME_IDX, $
          message, 'FULL_SAMPLE_RATE must be a scalar >= zero'
   n_fi=n_elements(filter_idx)
   n_ft=n_elements(filter_thr)
-  IF n_fi NE 3 THEN message, 'FILTER_IDX must be a 3-element integer array'
+  IF n_fi NE 4 THEN message, 'FILTER_IDX must be a 4-element integer array'
   IF n_fi NE n_ft THEN $
      message, 'FILTER_THR must be supplied along with FILTER_IDX'
   IF n_ft GT 0 THEN BEGIN
@@ -180,6 +182,9 @@ PRO FILTER_MET, AVG_DIR, FULL_DIR, AVG_ITEMPLATE_SAV, AVG_TIME_IDX, $
   full_files_mstr=full_files_a[full_files_mstr_dims[0] - 3, *]
 
   tags2remove=where(avg_field_names EQ avg_field_names[avg_time_idx])
+  ;; Shape of matrix to analyse full time series (as in average_series)
+  ncols_avgs=long(avg_period / full_sample_rate)
+  nrows_avgs=86400 / long(full_sample_rate * ncols_avgs)
 
   ;; Loop through files in input directory
   FOR k=0, navg_files - 1 DO BEGIN
@@ -256,32 +261,131 @@ PRO FILTER_MET, AVG_DIR, FULL_DIR, AVG_ITEMPLATE_SAV, AVG_TIME_IDX, $
 
      ;; Checks
      
-     wind_direction_loc=where(idata_names EQ avg_field_names[filter_idx[0]])
-     sog_loc=where(idata_names EQ avg_field_names[filter_idx[1]])
-     heading_loc=where(idata_names EQ avg_field_names[filter_idx[2]])
-
+     avg_wd_loc=where(idata_names EQ avg_field_names[filter_idx[0]])
+     avg_sog_loc=where(idata_names EQ avg_field_names[filter_idx[1]])
+     avg_head_loc=where(idata_names EQ avg_field_names[filter_idx[2]])
+     avg_ws_loc=where(idata_names EQ avg_field_names[filter_idx[3]])
+     full_wd_loc=where(full_names EQ avg_field_names[filter_idx[0]])
+     full_sog_loc=where(full_names EQ avg_field_names[filter_idx[1]])
+     full_head_loc=where(full_names EQ avg_field_names[filter_idx[2]])
+     full_ws_loc=where(full_names EQ avg_field_names[filter_idx[3]])
+     ;; Subset check fields
+     wd_avg=idata.(avg_wd_loc)
+     sog_avg=idata.(avg_sog_loc)
+     head_avg=idata.(avg_head_loc)
+     ws_avg=idata.(avg_ws_loc)
+     wd_full=full.(full_wd_loc)
+     sog_full=full.(full_sog_loc)
+     head_full=full.(full_head_loc)
+     ws_full=full.(full_ws_loc)
      ;; Set the flag; 0s are OK, and the rest integers indicate which check
      ;; caused the period to fail
      fluxable=intarr(lines)
 
-     ;; 1st flag periods outside of right quadrant
-     badquadrant=where((idata.(wind_direction_loc) LT 270) AND $
-                       (idata.(wind_direction_loc) GT 90), nbadquadrant)
-     IF nbadquadrant GT 0 THEN $
-        fluxable[badquadrant]=1
+     ;; 1: Flag periods where raw wind direction is outside of right
+     ;; quadrant
+     badquadrant=where((wd_avg LT 270) AND (wd_avg GT 90), nbadquadrant)
+     IF nbadquadrant GT 0 THEN fluxable[badquadrant]=1
 
-;;      if ((avg_wind_dir lt 270) and (avg_wind_dir gt 90)) then begin
-;;   printf, 4, 'Flux Run   ' + strcompress(fix(filt_arr(0,x))) + strcompress(fix(filt_arr(1,x))) + strcompress(fix(filt_arr(2,x))) + $
-;;               strcompress(fix(filt_arr(3,x))) + strcompress(fix(filt_arr(4,x))) + ' - ' + strcompress(fix(filt_arr(0,x+period-1))) + $
-;;               strcompress(fix(filt_arr(1,x+period-1))) + strcompress(fix(filt_arr(2,x+period-1))) + strcompress(fix(filt_arr(3,x+period-1))) + $
-;;               strcompress(fix(filt_arr(4,x+period-1))) + '   failed due to mean wind outside of quadrant'
-;;   print, 'Flux Run   ' + strcompress(fix(filt_arr(0,x))) + strcompress(fix(filt_arr(1,x))) + strcompress(fix(filt_arr(2,x))) + $
-;;               strcompress(fix(filt_arr(3,x))) + strcompress(fix(filt_arr(4,x))) + ' - ' + strcompress(fix(filt_arr(0,x+period-1))) + $
-;;               strcompress(fix(filt_arr(1,x+period-1))) + strcompress(fix(filt_arr(2,x+period-1))) + strcompress(fix(filt_arr(3,x+period-1))) + $
-;;               strcompress(fix(filt_arr(4,x+period-1))) + '   failed due to mean wind outside of quadrant'              
-;;   goto, fail
-;; endif
+     ;; 2: Flag periods where raw wind direction was too far from the mean
+     ;; for the period, even for a single record
+     full_wd2d=reform(wd_full, ncols_avgs, nrows_avgs)
+     wd_lo=wd_avg - filter_thr[0] ; lower threshold
+     ;; Check if we went below 360 for threshold and correct it
+     wd_lo_neg=where(wd_lo LT 0, nwd_lo_neg)
+     IF nwd_lo_neg GT 0 THEN $
+        wd_lo[wd_lo_neg]=360 + wd_lo[wd_lo_neg]
+     wd_hi=wd_avg + filter_thr[0] ; upper threshold
+     ;; Check if we went above 360 for threshold and correct it
+     wd_hi_over=where(wd_hi GT 360, nwd_hi_over)
+     IF nwd_hi_over GT 0 THEN $
+        wd_hi[wd_hi_over]=(wd_hi[wd_hi_over] * !DTOR) MOD (2 * !PI) / !DTOR
+     ;; So for each series of angles, we check whether the lower bound is
+     ;; larger than the upper bound.  In these cases, we reject periods
+     ;; where any angle < lower bound *and* > upper bound.  In other cases,
+     ;; i.e. when we are not crossing the 360 border, we proceed normally
+     ;; by rejecting periods where any angle < lower bound *or* > upper
+     ;; bound.
+     FOR i=0L, nrows_avgs - 1 DO BEGIN
+        wd_ok=where(finite(full_wd2d[*, i]) GT 0, nwd_ok, $
+                    complement=wd_bad)
+        IF nwd_ok EQ ncols_avgs THEN BEGIN ; period with complete data
+           IF wd_hi[i] GE wd_lo[i] THEN BEGIN ; not crossing
+              badwd=where((full_wd2d[*, i] LT wd_lo[i]) OR $
+                          (full_wd2d[*, i] GT wd_hi[i]), nbadwd)
+           ENDIF ELSE BEGIN     ; crossing 360
+              badwd=where((full_wd2d[*, i] LT wd_lo[i]) AND $
+                          (full_wd2d[*, i] GT wd_hi[i]), nbadwd)
+           ENDELSE
+           IF nbadwd GT 0 THEN fluxable[i]=2 ; got some outlier angles
+        ENDIF ELSE fluxable[i]=5 ; same as flag 5
+     ENDFOR
 
+     ;; 3: Flag periods where ship speed (SOG) was too far from the mean
+     ;; for the period
+     full_sog2d=reform(sog_full, ncols_avgs, nrows_avgs)
+     sog_lo=sog_avg - filter_thr[1] ; lower threshold
+     sog_hi=sog_avg + filter_thr[1]   ; upper threshold
+     FOR i=0L, nrows_avgs - 1 DO BEGIN
+        badsog=where((full_sog2d[*, i] LT sog_lo[i]) OR $
+                     (full_sog2d[*, i] GT sog_hi[i]), nbadsog)
+        IF nbadsog GT 0 THEN fluxable[i]=3
+     ENDFOR
+
+     ;; 4: Flag periods where ship heading was too far from the mean for
+     ;; the period, even for a single record
+     full_head2d=reform(head_full, ncols_avgs, nrows_avgs)
+     head_lo=head_avg - filter_thr[2] ; lower threshold
+     ;; Check if we went below 360 for threshold and correct it
+     head_lo_neg=where(head_lo LT 0, nhead_lo_neg)
+     IF nhead_lo_neg GT 0 THEN $
+        head_lo[head_lo_neg]=360 + head_lo[head_lo_neg]
+     head_hi=head_avg + filter_thr[2] ; upper threshold
+     ;; Check if we went above 360 for threshold and correct it
+     head_hi_over=where(head_hi GT 360, nhead_hi_over)
+     IF nhead_hi_over GT 0 THEN $
+        head_hi[head_hi_over]=(head_hi[head_hi_over] * !DTOR) MOD $
+                              (2 * !PI) / !DTOR
+     ;; So for each series of angles, we check whether the lower bound is
+     ;; larger than the upper bound.  In these cases, we reject periods
+     ;; where any angle < lower bound *and* > upper bound.  In other cases,
+     ;; i.e. when we are not crossing the 360 border, we proceed normally
+     ;; by rejecting periods where any angle < lower bound *or* > upper
+     ;; bound.
+     FOR i=0L, nrows_avgs - 1 DO BEGIN
+        head_ok=where(finite(full_head2d[*, i]) GT 0, nhead_ok, $
+                      complement=head_bad)
+        IF nhead_ok EQ ncols_avgs THEN BEGIN ; period with complete data
+           IF head_hi[i] GE head_lo[i] THEN BEGIN ; not crossing
+              badhead=where((full_head2d[*, i] LT head_lo[i]) OR $
+                            (full_head2d[*, i] GT head_hi[i]), nbadhead)
+           ENDIF ELSE BEGIN     ; crossing 360
+              badhead=where((full_head2d[*, i] LT head_lo[i]) AND $
+                            (full_head2d[*, i] GT head_hi[i]), nbadhead)
+           ENDELSE
+           IF nbadhead GT 0 THEN fluxable[i]=4 ; got some outlier angles
+        ENDIF ELSE fluxable[i]=5               ; same as flag 5
+     ENDFOR
+
+     ;; 5: flag periods where any of the true wind speeds is unavailable
+     full_ws2d=reform(full.(full_ws_loc), ncols_avgs, nrows_avgs)
+     FOR i=0L, nrows_avgs - 1 DO BEGIN
+        ws_bad=where(~ finite(full_ws2d[*, i]), nws_bad, complement=ws_ok)
+        IF nws_bad GT 0 THEN fluxable[i]=5
+     ENDFOR
+
+     idata=create_struct(idata, 'diag_flux', fluxable)
+     odata=remove_structure_tags(idata, avg_field_names[tags2remove])
+     delvar, idata
+     ;; OK, how else to just extract the time info into a structure
+     revtidx=reverse(indgen((size(idata_times_avg, /dimensions))[0]))
+     FOREACH fld, revtidx DO BEGIN
+        fld_name=tnames_avg[fld]
+        odata=create_struct(fld_name, $
+                            reform(idata_times_avg[fld, *]), odata)
+     ENDFOREACH
+
+     write_csv, ifile, odata, header=strlowcase(tag_names(odata))
 
   ENDFOR
 
