@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-29T14:29:43+0000
-;; Last-Updated: 2013-11-03T17:39:38+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-04T04:05:36+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -50,7 +50,7 @@
 ;;     Full_Sample_Rate:      Scalar with sample rate (s) of files under
 ;;                            Full_Dir.
 ;;     Filter_Idx:            Integer array with indices (in template) of
-;;                            the following fields of files in Avg_Dir
+;;                            the following fields for files in Avg_Dir
 ;;                            (order is relevant): mean wind direction
 ;;                            (raw), mean SOG, mean heading, and mean true
 ;;                            wind speed.
@@ -300,7 +300,7 @@ PRO FILTER_MET, AVG_DIR, FULL_DIR, AVG_ITEMPLATE_SAV, AVG_TIME_IDX, $
      wd_hi_over=where(wd_hi GT 360, nwd_hi_over)
      IF nwd_hi_over GT 0 THEN $
         wd_hi[wd_hi_over]=(wd_hi[wd_hi_over] * !DTOR) MOD (2 * !PI) / !DTOR
-     ;; So for each series of angles, we check whether the lower bound is
+     ;; For each series of angles we check whether the lower bound is
      ;; larger than the upper bound.  In these cases, we reject periods
      ;; where any angle < lower bound *and* > upper bound.  In other cases,
      ;; i.e. when we are not crossing the 360 border, we proceed normally
@@ -333,25 +333,18 @@ PRO FILTER_MET, AVG_DIR, FULL_DIR, AVG_ITEMPLATE_SAV, AVG_TIME_IDX, $
      ENDFOR
 
      ;; 4: Flag periods where ship heading was too far from the mean for
-     ;; the period, even for a single record
+     ;; the period, even for a single record.  Proceed as for wind
+     ;; direction.
      full_head2d=reform(head_full, ncols_avgs, nrows_avgs)
      head_lo=head_avg - filter_thr[2] ; lower threshold
-     ;; Check if we went below 360 for threshold and correct it
      head_lo_neg=where(head_lo LT 0, nhead_lo_neg)
      IF nhead_lo_neg GT 0 THEN $
         head_lo[head_lo_neg]=360 + head_lo[head_lo_neg]
      head_hi=head_avg + filter_thr[2] ; upper threshold
-     ;; Check if we went above 360 for threshold and correct it
      head_hi_over=where(head_hi GT 360, nhead_hi_over)
      IF nhead_hi_over GT 0 THEN $
         head_hi[head_hi_over]=(head_hi[head_hi_over] * !DTOR) MOD $
                               (2 * !PI) / !DTOR
-     ;; So for each series of angles, we check whether the lower bound is
-     ;; larger than the upper bound.  In these cases, we reject periods
-     ;; where any angle < lower bound *and* > upper bound.  In other cases,
-     ;; i.e. when we are not crossing the 360 border, we proceed normally
-     ;; by rejecting periods where any angle < lower bound *or* > upper
-     ;; bound.
      FOR i=0L, nrows_avgs - 1 DO BEGIN
         head_ok=where(finite(full_head2d[*, i]) GT 0, nhead_ok, $
                       complement=head_bad)
