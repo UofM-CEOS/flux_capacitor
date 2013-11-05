@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-10-29T15:18:19+0000
+;; Last-Updated: 2013-11-04T17:39:53+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -106,8 +106,10 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
   FOR k=0, nidir_files - 1 DO BEGIN
      iname=strsplit(file_basename(idir_files[k]), '.', /extract)
      ;; Get a path for the file, check if it already exists
+     srn=((sample_rate MOD 1) EQ 0) ? sample_rate : $ ; integer rates
+         string(sample_rate, format='(f0.2)')         ; non-integer rates
      ofile_name=strcompress(odir + path_sep() + iname[0] + '_' + $
-                            strtrim(sample_rate, 2) + 's.' + iname[1], $
+                            strtrim(srn, 2) + 's.' + iname[1], $
                             /remove_all)
      ofile_stamp=file_basename(ofile_name)
      out_list=file_search(odir + path_sep() + '*.' + iname[1], $
@@ -160,18 +162,27 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
                              itimes_std[3, *], $
                              itimes_std[4, *], $
                              itimes_std[5, *]))
+     ;; Round off starting seconds to the nearest 0.1 s
+     begs=itimes_std[5, 0]
+     begs=fix(begs) + $
+          (round((float(begs) - fix(begs)) * 10) / 10.0)
      beg_jd=julday(itimes_std[1, 0], itimes_std[2, 0], itimes_std[0, 0], $
-                   itimes_std[3, 0], itimes_std[4, 0], $
-                   floor(fix(itimes_std[5, 0])))
+                   itimes_std[3, 0], itimes_std[4, 0], begs)
+     ;; Round off ending seconds to the nearest 0.1 s
+     ends=itimes_std[5, lines - 1]
+     ends=fix(ends) + $
+          (round((float(ends) - fix(ends)) * 10) / 10.0)
      end_jd=julday(itimes_std[1, lines - 1], $
                    itimes_std[2, lines - 1], $
                    itimes_std[0, lines - 1], $
                    itimes_std[3, lines - 1], $
                    itimes_std[4, lines - 1], $
-                   floor(fix(itimes_std[5, lines - 1])))
+                   ends)
      otimes_jd=timegen(start=beg_jd, final=end_jd, $
                        step_size=sample_rate, units='seconds')
      caldat, otimes_jd, mo, dd, yyyy, hh, mm, ss
+     ;; Once again, round off the seconds from timegen to nearest 0.1 s
+     ss=fix(ss) + (round((float(ss) - fix(ss)) * 10) / 10.0)
 
      ;; Set up output hash
      ohash=hash(field_names)
