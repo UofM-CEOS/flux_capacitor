@@ -5,6 +5,402 @@
 
 * TODO Implement temporary() where appropriate
 
+* Database design
+
+** Preliminary list of fields
+
+*** time
+
+This will be a timestamp field, common to all files.
+
+*** program_version
+
+I assume this is the program version of the datalogger that recorded the
+data for each set of files.  This field is reported in MET and EC files.
+
+*** battery_voltage
+
+Units: v.
+
+This field is reported in MET and RAD files.  Is the value of this field
+the same in both sets of files?  I don't think so, as they are different
+data loggers.
+
+*** battery_voltage_sd
+
+This field is reported in RAD files only.
+
+*** logger_temperature
+
+Units: C
+
+Referred to as "panel_temperature" in the files/code.  This field is
+reported in MET and RAD files.  Is the value of this field the same in both
+sets of files?
+
+*** panel_temperature_sd
+
+This field is reported in RAD files only.
+
+*** atmospheric_pressure
+
+Units: kPa
+
+I assume this is what is reported in MET and EC (as "P_tower") files.
+Sampling frequency aside, are these duplicate data?
+
+*** air_temperature
+
+Units: C
+
+This field is reported in MET files.  It is also reported in EC flux files,
+where it is recorded by a sonic anemometer, both as serial and analogue
+form.
+
+*** relative_humidity
+
+Units: %
+
+This is referred to as "rh_percent" in the files/code I've seen.  This
+field is reported in MET files only.
+
+*** surface_temperature
+
+Units: C
+
+Not sure what this temperature represents.  This field is reported in MET
+files only, and comes from an IR transducer.
+
+*** wind_speed
+
+Units: m/s
+
+This field is reported in MET files only.  Uncorrected for ship motion.
+
+*** wind_direction
+
+Units: degrees (0 - 360; 360 is wind coming into the ship's bow).
+
+This field is reported in MET files only.  Uncorrected for ship motion.
+
+*** wind_direction_sd
+
+I assume this is the standard deviation of wind direction during each
+sampling interval.  This field is reported in MET files only.
+
+*** par
+
+Units: umol/m2/s
+
+Incoming photosynthetic radiation .  This field is reported in MET and RAD
+files.  Are these duplicate data?
+
+*** par_sd
+
+Standard deviation.  This field is reported in RAD files only.
+
+*** pitch
+
+Units: degrees
+
+This field is reported in MET files only.  Pitch angle of the tower,
+relative to sea surface.  Range of values/interpretation?
+
+*** roll
+
+Units: degrees
+
+This field is reported in MET files only.  Roll angle of the tower,
+relative to sea surface.  Range of values/intepretation?
+
+*** longitude
+
+Units: decimal degrees.
+
+This field is reported in RMC files only.
+
+*** latitude
+
+Units: decimal degrees.
+
+This field is reported in RMC files only.
+
+*** sog
+
+Units: kts
+
+Ship's speed over ground.  This field is reported in RMC files only.
+
+*** cog
+
+Units: degrees
+
+Ship's course over ground.  This field is reported in RMC files only.
+
+*** heading
+
+Units: degrees
+
+This field is reported in Gyro files only.
+
+*** k_down
+
+Units: W/m2
+
+Incoming shortwave radiation.  This field is reported in RAD files only.
+
+*** k_down_sd
+
+Standard deviation.  This field is reported in RAD files only.
+
+*** thermopile
+
+Units: C?
+
+What does this field represent?  This field is reported in RAD files only.
+
+*** thermopile_sd
+
+Standard deviation.  This field is reported in RAD files only.
+
+*** tcase
+
+Units: C?
+
+What does this field represent?  This field is reported in RAD files only.
+
+*** tcase_sd
+
+Standard deviation.  This field is reported in RAD files only.
+
+*** tdome
+
+Units: C?
+
+What does this field represent?  This field is reported in RAD files only.
+
+*** tdome_sd
+
+Standard deviation.  This field is reported in RAD files only.
+
+*** lw_in
+
+Units: W/m2
+
+Incoming longwave radiation.  This field is reported in RAD files only.
+
+*** lw_in_sd
+
+Standard deviation.  This field is reported in RAD files only.
+
+*** uv_sensor_temperature
+
+Units: C
+
+Temperature of UV sensor, presumably.  Is this right?  This field is
+reported in RAD files only.
+
+*** uv_sensor_temperature_sd
+
+Standard deviation.  Is this right?  This field is reported in RAD files
+only.
+
+*** uv_b
+
+Units: W/m2
+
+Incoming UV-B radiation.  This field is reported in RAD files only.
+
+*** uv_b_sd
+
+Standard deviation.  This field is reported in RAD files only.
+
+*** uv_a
+
+Units: W/m2
+
+Incoming UV-A radiation.  This field is reported in RAD files only.
+
+*** uv_a_sd
+
+Standard deviation.  This field is reported in RAD files only.
+
+*** uv_broad
+
+Units: W/m2
+
+Incoming UV-broad radiation.  This field is reported in RAD files only.
+
+*** uv_broad_sd
+
+Standard deviation.  This field is reported in RAD files only.
+
+*** acceleration_x
+
+Units: ?
+
+Is this from motion pack?  This field is reported in EC files only.
+
+*** acceleration_y
+
+Units: ?
+
+Is this from motion pack? This field is reported in EC files only.
+
+*** acceleration_z
+
+Units: ?
+
+Is this from motion pack? This field is reported in EC files only.
+
+*** rate_x
+
+Units: ?
+
+What does this field represent? This field is reported in EC files only.
+
+*** rate_y
+
+Units: ?
+
+What does this field represent? This field is reported in EC files only.
+
+*** rate_z
+
+Units: ?
+
+This field is reported in EC files only.
+
+*** wind_speed_u
+
+Units: ?
+
+This field is reported in EC files only, in serial and/or analogue form.
+
+*** wind_speed_v
+
+Units: ?
+
+This field is reported in EC files only, in serial and/or analogue form.
+
+*** wind_speed_w
+
+Units: ?
+
+This field is reported in EC files only, in serial and/or analogue form.
+
+*** co2
+
+Units: ?
+
+What does tis field rperesent?  This field is reported in EC files only,
+for open path (OP), closed path (CL), shrouded open path (OPSH), dry (what
+is this?), and LI7200 (is this open or closed?)  systems.
+
+*** h2o
+
+Units: ?
+
+What does this field represent?  This field is reported in EC files only,
+for open path (OP), closed path (CL), shrouded open path (OPSH), dry (what
+is this?), and LI7200 (is this open or closed?) systems.
+
+*** pressure
+
+Units: kPa ?
+
+What does this field represent?  This field is reported in EC files only,
+for open path (OP), closed path (CL), shrouded open path (OPSH), and LI7200
+(is this open or closed?)  systems.
+
+*** temperature
+
+Units: C
+
+What does this field represent?  This field is reported in EC files only,
+for open path (OP), closed path (CL), shrouded open path (OPSH), and LI7200
+(is this open or closed?)  systems.
+
+*** diag
+
+Diagnostic flag.  This field is reported in EC files only.
+
+*** sound_speed
+
+Units: m/s ?
+
+Speed of sound, in digital form.  This field is reported in EC files only.
+
+*** gill_anemometer_status
+
+Not sure what this represents, but it seems to be a diagnostic value from
+the Gill sonic anemometer, reported in digital form.  This field is
+reported in EC files only.
+
+*** LI7000_status
+
+What does this field represent?  It seems to be some status mode indicator.
+This field is reported in EC files only, as "LI7000_mode".
+
+*** agc_diag
+
+A diagnostic value from the LI-7200 analyzer, indicating how dirty the lens
+is.  This field is only reported in EC files only.
+
+*** temperature_in
+
+Units: C
+
+What temperature is this?  This field is reported in EC files only.
+
+*** temperature_out
+
+Units: C
+
+What temperature is this?  This field is reported in EC files only.
+
+*** temperature_avg
+
+Units: C
+
+Average of what?  This field is reported in EC files only.
+
+*** temperature_base
+
+Units: C
+
+Temperature at some location of the LI-7500.  This field is reported in EC
+files only.
+
+*** temperature_spar
+
+Units: C
+
+Temperature at some location of the LI-7500.  This field is reported in EC
+files only.
+
+*** temperature_bulb
+
+Units: C
+
+Temperature at some location of the LI-7500.  This field is reported in EC
+files only.
+
+
+
+
+** Preliminary list of subjects
+
+*** Meteorology
+
+*** RMC
+
+*** Gyro
+
+*** Radiation
+
+
+
 
 * Emacs local variables
 
