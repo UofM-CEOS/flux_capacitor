@@ -10,3 +10,4 @@
 .compile 'match2.pro'
 .compile 'locate_time_strings.pro'
 .compile 'parse_times.pro'
+.compile 'subset_flux.pro'
