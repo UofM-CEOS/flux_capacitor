@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-03T18:49:19+0000
-;; Last-Updated: 2013-11-12T16:18:18+0000
+;; Last-Updated: 2013-11-12T21:03:06+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -76,62 +76,24 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION SUBSET_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, TIME_BOUNDS
+FUNCTION SUBSET_STD_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, TIME_BOUNDS
 
-  ;; Parse input flux template
-  field_names=strlowcase(itemplate.FIELDNAMES)
-  field_types=itemplate.FIELDTYPES
+  ;; Parse input template
   is_time_field=itemplate.FIELDGROUPS EQ time_idx
-  ;; Ignore other groups when reading the data
-  itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
-  itemplate.FIELDGROUPS[where(is_time_field)]=time_idx
-  non_time_fields=where(~is_time_field)
-  non_time_field_names=field_names[non_time_fields]
-  tags2remove=where(field_names EQ field_names[time_idx])
-  ;; Times
-  tfields=where(is_time_field, /NULL)
-  tnames=field_names[tfields]
-  tnamesl=strsplit(tnames, '_', /extract)
-  tnames_last=strarr(n_elements(tnamesl))
-  ntbits=n_elements(tnamesl[0])
-  tnames_id=strjoin((tnamesl[0])[0:ntbits - 2], '_')
-  FOR i=0L, n_elements(tnames) - 1 DO $
-     tnames_last[i]=tnamesl[i, n_elements(tnamesl[i]) - 1]
-  ;; Determine where in these names we're supposed to get each time field
-  ;; (year, month, day, hour, minute, second, subsecond)
-  time_locs=locate_time_strings(tnames_last)
+  ;; Offset fraction of the day
   offset_dfrac=double(offset) / double(86400)
   
-  idata=read_ascii(ifile, template=itemplate)
+  idata=read_std_file(ifile, itemplate, time_idx)
   idata_names=strlowcase(tag_names(idata))
-  ;; Obtain times and convert to Julian
-  idata_time_loc=where(idata_names EQ field_names[time_idx])
-  times=idata.(idata_time_loc)
-  times_dims=size(times, /dimensions)
-  ;; Remove quotes
-  IF size(times, /type) EQ 7 THEN BEGIN
-     FOREACH fld, indgen(times_dims[0]) DO BEGIN
-        ok=strsplit(times[fld, *], '" -/:', /extract)
-        ok=(temporary(ok)).toArray()
-        ok=strjoin(transpose(temporary(ok)))
-        times[fld, *]=ok
-     ENDFOREACH
-  ENDIF
-  match2, idata_names, idata_field_names[tags2remove], is_time
-  FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
-     IF size(idata.(fld), /type) EQ 7 THEN BEGIN
-        ok=strsplit(idata.(fld), '" ', /extract)
-        idata.(fld)=ok.toArray()
-     ENDIF
-  ENDFOREACH
-  times_s=times[5, *]
+  idata_dims=size(idata, /dimensions)
+  times_s=idata[5, *]
   times_s=fix(times_s) + $
           (round((double(times_s) - fix(times_s)) * 10) / 10.0)
-  times_jd=reform(julday(long(times[1, *]), $
-                         long(times[2, *]), $
-                         long(times[0, *]), $
-                         long(times[3, *]), $
-                         long(times[4, *]), $
+  times_jd=reform(julday(long(idata[1, *]), $
+                         long(idata[2, *]), $
+                         long(idata[0, *]), $
+                         long(idata[3, *]), $
+                         long(idata[4, *]), $
                          double(times_s)))
   ;; We have to subtract 0.5 the input sample rate to protect against
   ;; numerical representation issues in IDL...
@@ -144,14 +106,9 @@ FUNCTION SUBSET_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, TIME_BOUNDS
               /informational
      CONTINUE
   ENDIF
-  odata=create_struct(tnames[0], reform(times[0, matches]))
-  ;; Subset the rest of the time data
-  FOREACH fld, (indgen(times_dims[0]))[1:*]  DO BEGIN
-     odata=create_struct(odata, tnames[fld], $
-                         reform(times[fld, matches]))
-  ENDFOREACH
-  ;; Add and subset the rest of the data
-  FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
+  odata=create_struct(idata_names[0], reform(idata[0, matches]))
+  ;; Subset the rest of the data
+  FOREACH fld, (indgen(idata_dims[0]))[1:*]  DO BEGIN
      odata=create_struct(odata, idata_names[fld], $
                          idata.(fld)[matches])
   ENDFOREACH
@@ -388,7 +345,7 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
               CONTINUE
            ENDELSE
         ENDIF
-        rmc_period=subset_file(rmc_files[rmc_pair], rmc_template, $
+        rmc_period=subset_std_file(rmc_files[rmc_pair], rmc_template, $
                                rmc_time_idx, isample_rate, bounds)
         write_csv, ofile_name, rmc_period, $
                    header=strlowcase(tag_names(rmc_period))
@@ -421,7 +378,7 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
            CONTINUE
         ENDELSE
         ENDIF
-        gyro_period=subset_file(gyro_files[gyro_pair], gyro_template, $
+        gyro_period=subset_std_file(gyro_files[gyro_pair], gyro_template, $
                                 gyro_time_idx, isample_rate, bounds)
         write_csv, ofile_name, gyro_period, $
                    header=strlowcase(tag_names(gyro_period))
@@ -454,7 +411,7 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
            CONTINUE
         ENDELSE
         ENDIF
-        rad_period=subset_file(rad_files[rad_pair], rad_template, $
+        rad_period=subset_std_file(rad_files[rad_pair], rad_template, $
                                rad_time_idx, isample_rate, bounds)
         write_csv, ofile_name, rad_period, $
                    header=strlowcase(tag_names(gyro_period))
@@ -487,7 +444,7 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
               CONTINUE
            ENDELSE
         ENDIF
-        flux_period=subset_file(flux_files[flux_pair], itemplate, $
+        flux_period=subset_std_file(flux_files[flux_pair], itemplate, $
                                 time_beg_idx, isample_rate, bounds)
         write_csv, ofile_name, flux_period, $
                    header=strlowcase(tag_names(flux_period))
