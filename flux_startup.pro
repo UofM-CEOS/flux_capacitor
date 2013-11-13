@@ -11,3 +11,4 @@
 .compile 'locate_time_strings.pro'
 .compile 'parse_times.pro'
 .compile 'subset_flux.pro'
+.compile 'read_std_file.pro'
