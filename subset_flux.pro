@@ -1,66 +1,44 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-03T18:49:19+0000
-;; Last-Updated: 2013-11-13T15:24:54+0000
+;; Last-Updated: 2013-11-13T15:55:36+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;;     SUBSET_FLUX
+;;     SUBSET_STD_FILE
 ;; 
 ;; PURPOSE:
 ;; 
-;;     This procedure subsets the (standardized) daily EC flux files,
-;;     extracting the periods with suitable data, based on the diagnostic
-;;     flag from MET data.  It also subsets the corresponding RMC and GYRO
-;;     data for these periods.
+;;     This function subsets any standardized file, extracting data within
+;;     the given time bounds (bounds[0] <= data < bounds[1]).
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;     SUBSET_FLUX, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Isample_Rate, $
-;;                  DIAG_DIR, Diag_Itemplate_Save, Diag_Time_Idx, Diag_Idx, $
-;;                  Flux_Period
+;;     subdata=subset_std_file(Ifile, Itemplate, Time_Idx, Offset, $
+;;                             Time_Bounds, STATUS=STATUS)
 ;; 
 ;; INPUTS:
 ;; 
-;;     Idir:                  Input directory (no trailing separator) for
-;;                            (standardized) daily EC flux files.
-;;     Odir:                  Output directory (no trailing separator).
-;;     Itemplate_Sav:         Ascii template to read input files.
-;;     Time_Beg_Idx:          Index (in template) where time is.
-;;     Isample_Rate:          Scalar indicating the frequency (s) with
-;;                            which input data were sampled.
-;;     Diag_Dir:              Directory (no trailing separator) containing
-;;                            processed MET files, averaged across flux
-;;                            periods, and with a diagnostic field
-;;                            indicating whether the period is suitable for
-;;                            flux analyses (flag=0).
-;;     Diag_Itemplate_Sav:    Ascii template to read Diag_Dir files.
-;;     Diag_Time_Idx:         Index (in template) where time is in files in
-;;                            Diag_Dir.
-;;     Diag_Idx:              Index (in template) where the diagnostic
-;;                            field is in files in Diag_Dir.
-;;     Flux_Period:           Scalar indicating the duration (s) of flux
-;;                            study periods.
-;;     Rmc_Dir:               Directory (no trailing separator) containing
-;;                            standardized daily RMC files.
-;;     Rmc_Itemplate_Sav:     Ascii template to read Rmc_Dir files.
-;;     Rmc_Time_Idx:          Index (in template) where time is in files in
-;;                            Rmc_Dir.
-;;     Gyro_Dir:              Directory (no trailing separator) containing
-;;                            standardized daily GYRO files.
-;;     Gyro_Itemplate_Sav:    Ascii template to read Gyro_Dir files.
-;;     Gyro_Time_Idx:         Index (in template) where time is in files in
-;;                            Gyro_Dir.
+;;     Ifile:         Path of the CSV file to read.
+;;     Itemplate:     ASCII template, as returned by ASCII_TEMPLATE.
+;;     Time_Idx:      Index (in template) where time matrix is located.
+;;     Offset:        A scalar value, usually corresponding to the sample
+;;                    rate.  It is used to avoid numerical representation
+;;                    issues when comparing against the time bounds.
+;;     Time_Bounds:   A 2-element array with the time bounds.
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
+;;     STATUS:        A variable that, on output, will indicate whether the
+;;                    subset operation was successful (0), or no records
+;;                    where found within the time bounds.
 ;; 
-;; 
-;; SIDE EFFECTS:
-;; 
-;;     Files are written in Odir.
-;; 
+;; OUTPUTS:
+;;
+;;     A structure like the ones returned by READ_ASCII, with the requested
+;;     subset.
+;;
 ;; RESTRICTIONS:
 ;; 
 ;; 
@@ -116,6 +94,85 @@ FUNCTION SUBSET_STD_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, $
   RETURN, odata
 END
 
+
+;;+ -----------------------------------------------------------------------
+;; NAME:
+;; 
+;;     SUBSET_FLUX
+;; 
+;; PURPOSE:
+;; 
+;;     This procedure subsets the (standardized) daily EC flux files,
+;;     extracting the periods with suitable data, based on the diagnostic
+;;     flag from MET data.  It also subsets the corresponding RMC and GYRO
+;;     data for these periods.
+;; 
+;; CALLING SEQUENCE:
+;; 
+;;     SUBSET_FLUX, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Isample_Rate, $
+;;                  Diag_Dir, Diag_Itemplate_Sav, Diag_Time_Idx, Diag_Idx, $
+;;                  Ec_Period, RMC_Dir, RMC_Itemplate_Sav, RMC_Time_Idx,
+;;                  Gyro_Dir, Gyro_Itemplate_Sav, Gyro_Time_Idx, RAD_Dir,
+;;                  RAD_Itemplate_Sav, RAD_Time_Idx
+;; 
+;; INPUTS:
+;; 
+;;     Idir:                  Input directory (no trailing separator) for
+;;                            (standardized) daily EC flux files.
+;;     Odir:                  Output directory (no trailing separator).
+;;     Itemplate_Sav:         Ascii template to read input files.
+;;     Time_Beg_Idx:          Index (in template) where time is.
+;;     Isample_Rate:          Scalar indicating the frequency (s) with
+;;                            which input data were sampled.
+;;     Diag_Dir:              Directory (no trailing separator) containing
+;;                            processed MET files, averaged across flux
+;;                            periods, and with a diagnostic field
+;;                            indicating whether the period is suitable for
+;;                            flux analyses (flag=0).
+;;     Diag_Itemplate_Sav:    Ascii template to read Diag_Dir files.
+;;     Diag_Time_Idx:         Index (in template) where time is in files in
+;;                            Diag_Dir.
+;;     Diag_Idx:              Index (in template) where the diagnostic
+;;                            field is in files in Diag_Dir.
+;;     Flux_Period:           Scalar indicating the duration (s) of flux
+;;                            study periods.
+;;     Rmc_Dir:               Directory (no trailing separator) containing
+;;                            standardized daily RMC files.
+;;     Rmc_Itemplate_Sav:     Ascii template to read Rmc_Dir files.
+;;     Rmc_Time_Idx:          Index (in template) where time is in files in
+;;                            Rmc_Dir.
+;;     Gyro_Dir:              Directory (no trailing separator) containing
+;;                            standardized daily GYRO files.
+;;     Gyro_Itemplate_Sav:    Ascii template to read Gyro_Dir files.
+;;     Gyro_Time_Idx:         Index (in template) where time is in files in
+;;                            Gyro_Dir.
+;;     RAD_Dir:               Directory (no trailing separator) containing
+;;                            standardized daily processed RAD files.
+;;     RAD_Itemplate_Sav:     Ascii template to read RAD_Dir files.
+;;     RAD_Time_Idx:          Index (in template) where time is in files in
+;;                            RAD_Dir.
+;; 
+;; KEYWORD PARAMETERS:
+;; 
+;;     OVERWRITE:             Whether to overwrite files in Odir.
+;; 
+;; SIDE EFFECTS:
+;; 
+;;     Files are written in Odir.
+;; 
+;; RESTRICTIONS:
+;; 
+;; 
+;; 
+;; PROCEDURE:
+;; 
+;; 
+;; 
+;; EXAMPLE:
+;; 
+;; 
+;; 
+;;- -----------------------------------------------------------------------
 
 PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
                  DIAG_DIR, DIAG_ITEMPLATE_SAV, DIAG_TIME_IDX, DIAG_IDX, $
