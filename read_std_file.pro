@@ -1,51 +1,32 @@
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T19:18:12+0000
-;; Last-Updated: 2013-11-12T23:27:39+0000
+;; Last-Updated: 2013-11-13T15:39:43+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; 
+;;     READ_STD_FILE
 ;; 
 ;; PURPOSE:
 ;; 
-;; 
-;; 
-;; CATEGORY:
-;; 
-;; 
+;;     Reads a standardized file having a group of fields with time data,
+;;     using an ASCII template structure.  It returns a structure like the
+;;     ones returned by READ_ASCII, but does cleaning of quotes,
+;;     separators, and spaces, so the structure is simpler to use later.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     idata=read_std_file(Ifile, Itemplate, Time_Idx)
 ;; 
 ;; INPUTS:
 ;; 
-;; 
-;; 
-;; OPTIONAL INPUTS:
-;; 
-;; 
-;; 
-;; KEYWORD PARAMETERS:
-;; 
-;; 
+;;     Ifile:         Path of the CSV file to read.
+;;     Itemplate:     ASCII template, as returned by ASCII_TEMPLATE.
+;;     Time_Idx:      Index (in template) where time matrix is located.
 ;; 
 ;; OUTPUTS:
 ;; 
-;; 
-;; 
-;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
-;; COMMON BLOCKS:
-;; 
-;; 
-;; 
-;; SIDE EFFECTS:
-;; 
-;; 
+;;     It returns a structure like the ones returned by READ_ASCII.
 ;; 
 ;; RESTRICTIONS:
 ;; 
@@ -102,6 +83,8 @@ FUNCTION READ_STD_FILE, IFILE, ITEMPLATE, TIME_IDX
         times[fld, *]=ok
      ENDFOREACH
   ENDIF
+  ;; Obtain full time info
+  times_std=parse_times(times, tnames_last, time_locs)
   match2, idata_names, field_names[tags2remove], is_time
   FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
      IF size(idata.(fld), /type) EQ 7 THEN BEGIN
@@ -110,12 +93,7 @@ FUNCTION READ_STD_FILE, IFILE, ITEMPLATE, TIME_IDX
      ENDIF
   ENDFOREACH
 
-  ostruct=create_struct(tnames[0], reform(times[0, *]))
-  ;; Add the rest of the time data
-  FOREACH fld, (indgen(times_dims[0]))[1:*]  DO BEGIN
-     ostruct=create_struct(ostruct, tnames[fld], $
-                           reform(times[fld, *]))
-  ENDFOREACH
+  ostruct=create_struct(tnames[0], times_std)
   ;; Add the rest of the data
   FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
      ostruct=create_struct(ostruct, idata_names[fld], idata.(fld))
@@ -125,6 +103,47 @@ FUNCTION READ_STD_FILE, IFILE, ITEMPLATE, TIME_IDX
 
 END
 
+
+;;+ -----------------------------------------------------------------------
+;; NAME:
+;; 
+;;     READ_STD2_FILE
+;; 
+;; PURPOSE:
+;; 
+;;     This works as READ_STD_FILE, but takes files with matrices of time
+;;     data.
+;; 
+;; CALLING SEQUENCE:
+;; 
+;;     idata=read_std2_file(Ifile, Itemplate, Time1_Idx, Time2_Idx)
+;; 
+;; INPUTS:
+;; 
+;;     Ifile:         Path of the CSV file to read.
+;;     Itemplate:     ASCII template, as returned by ASCII_TEMPLATE.
+;;     Time1_Idx:     Index (in template) where the first time matrix is
+;;                    located.
+;;     Time2_Idx:     Index (in template) where the second time matrix is
+;;                    located.
+;; 
+;; OUTPUTS:
+;; 
+;;     It returns a structure like the ones returned by READ_ASCII.
+;; 
+;; RESTRICTIONS:
+;; 
+;; 
+;; 
+;; PROCEDURE:
+;; 
+;; 
+;; 
+;; EXAMPLE:
+;; 
+;; 
+;; 
+;;- -----------------------------------------------------------------------
 
 FUNCTION READ_STD2_FILE, IFILE, ITEMPLATE, TIME1_IDX, TIME2_IDX
 
@@ -177,6 +196,8 @@ FUNCTION READ_STD2_FILE, IFILE, ITEMPLATE, TIME1_IDX, TIME2_IDX
         times1[fld, *]=ok
      ENDFOREACH
   ENDIF
+  ;; Obtain full time info
+  times1_std=parse_times(times1, tnames1_last, time1_locs)
   ;; Obtain times2
   idata_time2_loc=where(idata_names EQ field_names[time2_idx])
   times2=idata.(idata_time2_loc)
@@ -190,6 +211,7 @@ FUNCTION READ_STD2_FILE, IFILE, ITEMPLATE, TIME1_IDX, TIME2_IDX
         times2[fld, *]=ok
      ENDFOREACH
   ENDIF
+  times2_std=parse_times(times2, tnames2_last, time2_locs)
   match2, idata_names, field_names[tags2remove], is_time
   FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
      IF size(idata.(fld), /type) EQ 7 THEN BEGIN
@@ -198,16 +220,8 @@ FUNCTION READ_STD2_FILE, IFILE, ITEMPLATE, TIME1_IDX, TIME2_IDX
      ENDIF
   ENDFOREACH
 
-  ostruct=create_struct(tnames1[0], reform(times1[0, *]))
-  ;; Add the rest of the time data
-  FOREACH fld, (indgen(times1_dims[0]))[1:*]  DO BEGIN
-     ostruct=create_struct(ostruct, tnames1[fld], $
-                           reform(times1[fld, *]))
-  ENDFOREACH
-  FOREACH fld, (indgen(times2_dims[0])) DO BEGIN
-     ostruct=create_struct(ostruct, tnames2[fld], $
-                           reform(times2[fld, *]))
-  ENDFOREACH
+  ostruct=create_struct(tnames1[0], times1_std)
+  ostruct=create_struct(ostruct, tnames2[0], times2_std)
   ;; Add the rest of the data
   FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
      ostruct=create_struct(ostruct, idata_names[fld], idata.(fld))
