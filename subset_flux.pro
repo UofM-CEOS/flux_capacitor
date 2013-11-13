@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-03T18:49:19+0000
-;; Last-Updated: 2013-11-12T21:03:06+0000
+;; Last-Updated: 2013-11-13T15:24:54+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -76,7 +76,8 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION SUBSET_STD_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, TIME_BOUNDS
+FUNCTION SUBSET_STD_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, $
+                          TIME_BOUNDS, STATUS=STATUS
 
   ;; Parse input template
   is_time_field=itemplate.FIELDGROUPS EQ time_idx
@@ -101,11 +102,9 @@ FUNCTION SUBSET_STD_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, TIME_BOUNDS
                 times_jd LT (time_bounds[1] - $
                              (offset_dfrac / 2)), $
                 mcount)
-  IF mcount LT 1 THEN BEGIN
-     message, 'No matching records found.  Skipping file.', $
-              /informational
-     CONTINUE
-  ENDIF
+  ;; Set the status error check
+  status=1                      ; failed
+  IF mcount LT 1 THEN RETURN, !VALUES.D_NAN
   odata=create_struct(idata_names[0], reform(idata[0, matches]))
   ;; Subset the rest of the data
   FOREACH fld, (indgen(idata_dims[0]))[1:*]  DO BEGIN
@@ -113,6 +112,7 @@ FUNCTION SUBSET_STD_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, TIME_BOUNDS
                          idata.(fld)[matches])
   ENDFOREACH
   
+  status=0                      ; success
   RETURN, odata
 END
 
@@ -137,7 +137,7 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
      message, 'ODIR is undefined or is empty string'
   IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
-         message, 'ITEMPLATE_SAV is undefined or is empty string'
+     message, 'ITEMPLATE_SAV is undefined or is empty string'
   IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
      message, 'TIME_BEG_IDX must be a scalar >= zero'
   IF ((n_elements(isample_rate) NE 1) OR (isample_rate LT 0)) THEN $
@@ -346,7 +346,13 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
            ENDELSE
         ENDIF
         rmc_period=subset_std_file(rmc_files[rmc_pair], rmc_template, $
-                               rmc_time_idx, isample_rate, bounds)
+                                   rmc_time_idx, isample_rate, bounds, $
+                                   status=status)
+        IF status NE 0 THEN BEGIN
+           message, 'No records found within bounds. Skipping file.', $
+                    /informational
+           CONTINUE
+        ENDIF
         write_csv, ofile_name, rmc_period, $
                    header=strlowcase(tag_names(rmc_period))
         delvar, rmc_period
@@ -373,13 +379,19 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
               message, 'Flux period file ' + ofile_stamp + $
                        ' already exists.  Overwriting', /informational
            ENDIF ELSE BEGIN
-           message, 'Flux period file ' + ofile_stamp + $
-                    ' already exists.  Not overwriting', /informational
-           CONTINUE
-        ENDELSE
+              message, 'Flux period file ' + ofile_stamp + $
+                       ' already exists.  Not overwriting', /informational
+              CONTINUE
+           ENDELSE
         ENDIF
         gyro_period=subset_std_file(gyro_files[gyro_pair], gyro_template, $
-                                gyro_time_idx, isample_rate, bounds)
+                                    gyro_time_idx, isample_rate, bounds, $
+                                    status=status)
+        IF status NE 0 THEN BEGIN
+           message, 'No records found within bounds. Skipping file.', $
+                    /informational
+           CONTINUE
+        ENDIF
         write_csv, ofile_name, gyro_period, $
                    header=strlowcase(tag_names(gyro_period))
         delvar, gyro_period
@@ -406,13 +418,19 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
               message, 'Flux period file ' + ofile_stamp + $
                        ' already exists.  Overwriting', /informational
            ENDIF ELSE BEGIN
-           message, 'Flux period file ' + ofile_stamp + $
-                    ' already exists.  Not overwriting', /informational
-           CONTINUE
-        ENDELSE
+              message, 'Flux period file ' + ofile_stamp + $
+                       ' already exists.  Not overwriting', /informational
+              CONTINUE
+           ENDELSE
         ENDIF
         rad_period=subset_std_file(rad_files[rad_pair], rad_template, $
-                               rad_time_idx, isample_rate, bounds)
+                                   rad_time_idx, isample_rate, bounds, $
+                                   status=status)
+        IF status NE 0 THEN BEGIN
+           message, 'No records found within bounds. Skipping file.', $
+                    /informational
+           CONTINUE
+        ENDIF
         write_csv, ofile_name, rad_period, $
                    header=strlowcase(tag_names(gyro_period))
         delvar, rad_period
@@ -445,7 +463,13 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
            ENDELSE
         ENDIF
         flux_period=subset_std_file(flux_files[flux_pair], itemplate, $
-                                time_beg_idx, isample_rate, bounds)
+                                    time_beg_idx, isample_rate, bounds, $
+                                    status=status)
+        IF status NE 0 THEN BEGIN
+           message, 'No records found within bounds. Skipping file.', $
+                    /informational
+           CONTINUE
+        ENDIF
         write_csv, ofile_name, flux_period, $
                    header=strlowcase(tag_names(flux_period))
         delvar, flux_period
@@ -453,7 +477,6 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
      ENDFOREACH
 
   ENDFOR
-
 
 END
 
