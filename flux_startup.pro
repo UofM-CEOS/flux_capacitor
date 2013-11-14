@@ -12,3 +12,4 @@
 .compile 'parse_times.pro'
 .compile 'subset_flux.pro'
 .compile 'read_std_file.pro'
+.compile 'decompose.pro'

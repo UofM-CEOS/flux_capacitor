@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-11-04T17:39:53+0000
+;; Last-Updated: 2013-11-14T03:14:22+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -21,7 +21,7 @@
 ;; CALLING SEQUENCE:
 ;; 
 ;;     FILTER_SERIES, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, $
-;;     Angle_Fields, Sample_Rate
+;;                    Angle_Fields, Sample_Rate
 ;; 
 ;; INPUTS:
 ;; 

@@ -1,6 +1,6 @@
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-14T00:02:21+0000
+;; Last-Updated: 2013-11-14T23:48:20+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -241,11 +241,19 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         accel_x=flux.accel_z * 9.81  ; accel_z on the tower
         accel_y=-flux.accel_x * 9.81 ; accel_x on the tower
         accel_z=-flux.accel_y * 9.81 ; accel_y on the tower
+        ;; Put acceleration components in 3-column array and make copy to
+        ;; keep uncorrected data
+        accel=transpose([[accel_x], [accel_y], [accel_z]])
+        accel_raw=accel
         ;; Original comment: read in angular rates in RH coordinate system,
         ;; convert to rad/s
         rate_phi=flux.rate_z * !DTOR    ; rate_z on the tower
         rate_theta=-flux.rate_x * !DTOR ; rate_x on the tower
         rate_shi=-flux.rate_y * !DTOR   ; rate_y on the tower
+        ;; Put rate components in 3-column array and make copy to keep
+        ;; uncorrected data
+        rate=transpose([[rate_phi], [rate_theta], [rate_shi]])
+        rate_raw=rate
         ;; Extract the wind components based on whether we want serial or
         ;; analogue data
         wind_u=keyword_set(serial) ? $
@@ -257,6 +265,10 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         wind_w=keyword_set(serial) ? $
                flux.w_wind_serial : $
                flux.w_wind_analogue
+        ;; Put wind components together in 3-column array, and make a copy
+        ;; to keep uncorrected data
+        wind=transpose([[wind_u], [wind_v], [wind_w]])
+        wind_raw=wind
         sonic_temperature=keyword_set(serial) ? $
                           flux.sonic_temperature_serial : $
                           flux.sonic_temperature_analogue
@@ -523,6 +535,165 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         heading=make_array(flux_times_dims[1], type=4, $
                            value=!VALUES.F_NAN)
         heading[flux_matches]=gyro.heading[flux_matches]
+
+        ;; [Original comment: now fill in the gaps by applying a moving
+        ;; average... In this case, we use a 100 sample window (10 sec)
+        ;; moving average... may need to tweak this value].  [SPL: I THINK
+        ;; THIS STEP SHOULD HAVE BEEN DONE EARLY DURING RMC PROCESSING.
+        ;; Also, perhaps a simple linear interpolation is better; I don't
+        ;; know why this moving average is used, where a window must be
+        ;; specified and seems to be introducing bias.]
+        cog_xy=decompose(cog, sog)
+        cog_x=smooth(cog_xy[0, *], 100, /nan, /edge_truncate)
+        cog_y=smooth(cog_xy[1, *], 100, /nan, /edge_truncate)
+        cog_sm=recompose(cog_x, cog_y)
+        cog=reform(cog_sm[0, *])
+        sog=reform(cog_sm[1, *])
+        ;; Dummy heading magnitude for decomposition purposes only
+        vheading=rebin([1], flux_times_dims[1], /sample)
+        ;; Guard if missing heading
+        noheading=where(~finite(heading), nnoheading)
+        IF nnoheading GT 0 THEN vheading[noheading]=!VALUES.D_NAN
+        heading_xy=decompose(heading, vheading)
+        heading_x=smooth(heading_xy[0, *], 100, /nan, /edge_truncate)
+        heading_y=smooth(heading_xy[1, *], 100, /nan, /edge_truncate)
+        heading_sm=recompose(heading_x, heading_y)
+        heading=reform(heading_sm[0, *])
+
+        ;; [Original comment: Check to make sure that no 'NaNs' dropped
+        ;; through... if they did, we'll have to skip this one]
+        no_cog=where(~finite(cog), nno_cog)
+        no_sog=where(~finite(sog), nno_sog)
+        no_heading=where(~finite(heading), nno_heading)
+        IF (nno_cog GT 0) OR (nno_sog GT 0) OR (nno_heading GT 0) THEN $
+           motion_flag=1
+
+        ;; Level sonic anemometer
+
+        ;; [Original comment: here we level the sonic anemometer, as long
+        ;; as we know the MEAN roll/pitch angles from an inclinometer, and
+        ;; as long as those are in a L.H.S.] [SPL: WATCH LEVEL_SONIC
+        ;; FUNCTION]
+        IF finite(diag.roll[fperiod]) AND $
+           finite(diag.pitch[fperiod]) THEN $
+              wind=level_sonic(wind, diag.roll[fperiod] * !DTOR, $
+                               -diag.pitch[fperiod] * !DTOR)
+
+        ;; [Original comment: now let's calculate the raw mean w
+        ;; value... this is going to be important for sort of tracking flow
+        ;; distortion... We could do something more in depth, but we'll
+        ;; keep it like this for now]
+        wind_v_mean=mean(wind[2, *], /nan)
+
+        ;; High frequency motion correction
+
+        IF diag.sog[fperiod] GT sog_thr THEN BEGIN
+           ;; [Original comment: shot filter the motion channels... this
+           ;; helps with a problem where unreasonably high accelerations
+           ;; cause a 'NaN' calculation
+           accel[0, *]=shot_filter(accel[0, *])
+           accel[1, *]=shot_filter(accel[1, *])
+           accel[2, *]=shot_filter(accel[2, *])
+           rate[0, *]=shot_filter(rate[0, *])
+           rate[1, *]=shot_filter(rate[1, *])
+           rate[2, *]=shot_filter(rate[2, *])
+
+           ;; [Original comment: synthetically level the Motion Pak] [SPL:
+           ;; WATCH LEVEL_MOTIONPAK FUNCTION]
+           level=level_motionpak(accel, rate, 4, 4)
+           IF ~finite(level[0]) THEN BEGIN
+              motion_flag=1
+              message, 'Motion-flagged', /informational
+           ENDIF
+           accel[0, *]=level[0, *]
+           accel[1, *]=level[1, *]
+           accel[2, *]=level[2, *]
+           rate[0, *]=level[3, *]
+           rate[1, *]=level[4, *]
+           rate[2, *]=level[5, *]
+
+           ;; [Original comment: demean the rates by extracting the
+           ;; fluctuating component and setting the mean to 0]
+           rate[0, *]=(rate[0, *] - mean(rate[0, *], /NAN, /DOUBLE)) + 0
+           rate[1, *]=(rate[1, *] - mean(rate[1, *], /NAN, /DOUBLE)) + 0
+           rate[2, *]=(rate[2, *] - mean(rate[2, *], /NAN, /DOUBLE)) + 0
+  
+           ;; Gravity (what was the purpose of the g variables at the
+           ;; beginning of the procedure?)
+           g=(mean(accel[2, *], /NAN, /DOUBLE))
+
+           ;; Check to make sure the x/y accelerations are not greater than
+           ;; g... this is indicative of a problem w/ the Motion Pak, and
+           ;; the run needs to be skipped
+           bad_mp=where((accel[0, *] GT g) OR $
+                        (accel[1, *] GT g), nbad_mp)
+           IF nbad_mp GT 0 THEN BEGIN
+              motion_flag=1
+              message, 'Invalid Motion Pak accelerations', /continue
+              CONTINUE
+           ENDIF
+
+           ;; Integrate angular rates to give angles.  This also performs a
+           ;; high pass filter, cutting off all frequencies below the
+           ;; cutoff period (in this case, the cutoff period is set to 20s
+           ;; (or 0.05Hz)). [SPL: WATCH INT1BYF FUNCTION]
+           hf_pitch=int1byf(rate[0, *], 10, xover_freq_thr)
+           hf_roll=int1byf(rate[1, *], 10, xover_freq_thr)
+           hf_yaw=int1byf(rate[2, *], 10, xover_freq_thr)
+
+           ;; Use the accelerometer data to calculate low frequency angle
+           ;; information, then add that to the high frequency angles Low
+           ;; pass filter cuts off frequencies abve the cutoff period (in
+           ;; this case 20s or 0.05Hz).
+           lf_pitch=lowpass_filter(asin(accel[0, *] / g), 10, $
+                                   xover_freq_thr)
+           lf_roll=lowpass_filter(asin(accel[1, *] / g), 10, $
+                                  xover_freq_thr)
+           pitch=detrend(hf_pitch) - lf_pitch
+           roll=detrend(hf_roll) + lf_roll
+
+           ;; Here, we are getting the low frequency part of the compass
+           ;; heading out.  Convert compass heading of ship gyro to radians
+           ;; and redefine coordinate system as: north=0, east=PI/2,
+           ;; south=PI, west=-PI/2
+           heading_rad=atan(sin(heading * !DTOR), cos(heading * !DTOR))
+    
+           ;; Demean low pass filter that
+           gyro_sf=flux_times_dims[1] / double(ec_period) ; sampling freq
+           head_dmean=heading_rad - mean(heading_rad, /NAN)
+           flux_lf_yaw=lowpass_filter([head_dmean], gyro_sf, $
+                                      xover_freq_thr)
+  
+           ;; Add the lowfreq and highfreq components --> BUT multiply
+           ;; lf_yaw by -1 to convert to L.H. system
+           yaw=reform(-flux_lf_yaw + hf_yaw)
+           angle=transpose([[pitch], [roll], [yaw]])
+  
+           ;; Call motion correction routine
+           u_true=motcorr(wind, accel, angle, motpak_offset, $
+                          double(isample_rate) / 10, lfreq_thr, $
+                          hfreq_thr, g)
+           wind=u_true
+
+        ENDIF
+
+        ;; Low frequency motion correction
+
+        ;; [SPL: WATCH LOW_FREQ_CORR FUNCTION, which redundantly uses
+        ;; truewind.pro code, and also works with a loop that is no longer
+        ;; needed, since the new TRUEWIND can process the entire array.]
+        IF diag.sog[fperiod] GT 0.25 THEN BEGIN
+           U_TRUE_2=low_freq_corr(wind[0, *], wind[1, *], cog, $
+                                  sog / 1.9438449, heading, 337.0)
+           wind[0, *]=U_TRUE_2[0, *]
+           wind[1, *]=U_TRUE_2[1, *]
+           true_son=bearing_avg(U_TRUE_2[3, *], U_TRUE_2[2, *])
+           true_sonic_vel=true_son[0, 1]
+           true_sonic_dir=true_son[0, 0]
+           raw_son=bearing_avg(U_TRUE_2[5, *], U_TRUE_2[4, *])
+           raw_sonic_vel=raw_son[0, 1]
+           raw_sonic_dir=raw_son[0, 0]
+        ENDIF
 
      ENDFOREACH
 
