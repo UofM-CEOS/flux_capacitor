@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-03T18:49:19+0000
-;; Last-Updated: 2013-11-13T15:55:36+0000
+;; Last-Updated: 2013-11-13T17:30:54+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -275,15 +275,6 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
   ;; (year, month, day, hour, minute, second, subsecond)
   diag_time_locs=locate_time_strings(diag_tnames_last)
 
-  ;; Parse input flux files
-  restore, itemplate_sav
-  ;; Break file names and extract the piece to match
-  flux_filesl=strsplit(idir_files, '_.', /extract)
-  flux_files_a=flux_filesl.toArray(/transpose) ; array with pieces in cols
-  flux_files_mstr_dims=size(flux_files_a, /dimensions)
-  ;; We want the 2nd to last piece
-  flux_files_mstr=flux_files_a[flux_files_mstr_dims[0] - 2, *]
-
   ;; Parse RMC files
   restore, rmc_itemplate_sav
   ;; Make a copy to avoid name collisions with the other templates
@@ -316,6 +307,15 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
   rad_files_mstr_dims=size(rad_files_a, /dimensions)
   ;; We want the 3rd to last piece
   rad_files_mstr=rad_files_a[rad_files_mstr_dims[0] - 3, *]
+
+  ;; Parse input flux files (last because we don't make a copy of template)
+  restore, itemplate_sav
+  ;; Break file names and extract the piece to match
+  flux_filesl=strsplit(idir_files, '_.', /extract)
+  flux_files_a=flux_filesl.toArray(/transpose) ; array with pieces in cols
+  flux_files_mstr_dims=size(flux_files_a, /dimensions)
+  ;; We want the 2nd to last piece
+  flux_files_mstr=flux_files_a[flux_files_mstr_dims[0] - 2, *]
 
   ;; Loop through files in DIAG MET directory
   FOR k=0, ndiag_files - 1 DO BEGIN
