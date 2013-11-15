@@ -1,7 +1,7 @@
 ;; $Id: $
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-14T22:43:46+0000
-;; Last-Updated: 2013-11-14T23:43:24+0000
+;; Last-Updated: 2013-11-15T03:40:27+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -66,7 +66,7 @@
 FUNCTION LOW_FREQ_CORR, U, V, COG, SOG, HEADING, ZREF
 
   lines=n_elements(heading)
-  corr_wind=fltarr(6,lines)
+  corr_wind=fltarr(6, lines)
   ;; [SPL: I think the looping here is just to allow the original TRUEWIND
   ;; routine to process a single record at a time.  This may no longer be
   ;; needed, and we can just process in proper array form.]
@@ -79,27 +79,18 @@ FUNCTION LOW_FREQ_CORR, U, V, COG, SOG, HEADING, ZREF
      y=u[q]
      ;; CALCULATE THE WDIR/VEL AS A COMPASS DIRECTION MEASURED BY THE SONIC
      ;; Code was all borrowed from truewind.pro
-     T=(x ^ 2 + y ^ 2) ^ (0.5)          ;vector magnitude
+     T=(x ^ 2 + y ^ 2) ^ (0.5)  ; vector magnitude
      ;; [SPL: Check all this... I think we should just use the atan2 form
      ;; of arguments here.]
-     vec=atan(x / y)
-     deg=vec / !DTOR
-     IF ((y GE 0) AND (x LE 0)) THEN BEGIN
-        compass=180.0 - deg
-     ENDIF
-     IF ((y LE 0) AND (x LE 0)) THEN BEGIN
-        compass=360.0 - deg
-     ENDIF
-     IF ((y LE 0) AND (x GE 0)) THEN BEGIN
-        compass=0.0 - deg
-     ENDIF
-     IF ((y GE 0) AND (x GE 0)) THEN BEGIN
-        compass=180.0 - deg
-     ENDIF
-     ;; Call TRUEWIND to calculate true wind. Note: I realize this is a bit
+     deg=atan(x / y) / !DTOR
+     IF ((y GE 0) AND (x LE 0)) THEN compass=180.0 - deg
+     IF ((y LE 0) AND (x LE 0)) THEN compass=360.0 - deg
+     IF ((y LE 0) AND (x GE 0)) THEN compass=0.0 - deg
+     IF ((y GE 0) AND (x GE 0)) THEN compass=180.0 - deg
+     ;; Call TRUEWIND to calculate truewind. Note: I realize this is a bit
      ;; redundant... We could just modify the true wind program... But this
      ;; way I'll be sure it's right
-     Utrue=truewind(zref, cog(q), sog(q), heading(q), compass, T)
+     Utrue=truewind(zref, cog[q], sog[q], heading[q], compass, T)
      ;; calculate proper x/y (u/v) variables
      wspd=Utrue[1]
      Apo=270 - Utrue[0]
