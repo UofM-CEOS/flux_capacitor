@@ -13,3 +13,4 @@
 .compile 'subset_flux.pro'
 .compile 'read_std_file.pro'
 .compile 'decompose.pro'
+.compile 'ec_momentum.pro'
