@@ -1,6 +1,6 @@
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-14T23:48:20+0000
+;; Last-Updated: 2013-11-15T20:51:46+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -69,7 +69,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
           RAD_DIR, RAD_ITEMPLATE_SAV, RAD_TIME_IDX, $
           MOTPAK_OFFSET, SOG_THR, LFREQ_THR, HFREQ_THR, XOVER_FREQ_THR, $
           LOG_FILE, LOG_ITEMPLATE_SAV, LOG_TIME_BEG_IDX, $
-          LOG_TIME_END_IDX, LOG_STATUS_IDX, OFILE, $
+          LOG_TIME_END_IDX, LOG_STATUS_IDX, MOT_CORR_ODIR, OFILE, $
           SERIAL=SERIAL, OVERWRITE=OVERWRITE
 
   log_file_info=file_info(log_file)
@@ -160,6 +160,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   ;; Parse input flux files (last because we don't make copy of template)
   restore, itemplate_sav
   field_names=strlowcase(itemplate.FIELDNAMES)
+  time_flds=where(itemplate.FIELDGROUPS EQ time_idx)
   ;; Break file names and extract the piece to match
   flux_filesl=strsplit(idir_files, '_.', /extract)
   flux_files_a=flux_filesl.toArray(/transpose) ; array with pieces in cols
@@ -195,6 +196,9 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                             fix(log_end_times[5, *])))
   log_status=log.(where(log_names EQ log_field_names[log_status_idx]))
   logn=(size(log_beg_times, /dimensions))[1]
+
+  ;; Perhaps set up hashes to hold output data from all valid flux runs at
+  ;; this point, before starting outermost loop.
 
   FOR k=0, ndiag_files - 1 DO BEGIN
      dfile=diag_files[k]
@@ -232,6 +236,10 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                               long(flux_times[3, *]), $
                               long(flux_times[4, *]), $
                               double(ftimes_s)))
+        ;; Get a file name prefix to be shared by the output files from
+        ;; this period
+        iname=strsplit(file_basename(idir_files[flux_pair]), '.', /extract)
+        iname_prefix=iname[0]
 
         ;; [Original comment: no need recalibrate motion sensor for this
         ;; experiment.  Read in accelerations in RH coordinate system,
@@ -542,7 +550,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; THIS STEP SHOULD HAVE BEEN DONE EARLY DURING RMC PROCESSING.
         ;; Also, perhaps a simple linear interpolation is better; I don't
         ;; know why this moving average is used, where a window must be
-        ;; specified and seems to be introducing bias.]
+        ;; specified and seems to be introducing bias.  Why aren't latitude
+        ;; and longitude not similarly interpolated?]
         cog_xy=decompose(cog, sog)
         cog_x=smooth(cog_xy[0, *], 100, /nan, /edge_truncate)
         cog_y=smooth(cog_xy[1, *], 100, /nan, /edge_truncate)
@@ -694,6 +703,113 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            raw_sonic_vel=raw_son[0, 1]
            raw_sonic_dir=raw_son[0, 0]
         ENDIF
+
+        ;; Output motion corrected data
+        omot_corr=create_struct(field_names[time_flds[0]], $
+                                reform(flux_times[0, *]))
+        FOREACH tfld, time_flds[1:*] DO BEGIN ; include all time data
+           omot_corr=create_struct(omot_corr, field_names[tfld], $
+                                   reform(flux_times[tfld, *]))
+        ENDFOREACH
+        omot_corr=create_struct(omot_corr, $
+                                'wind_speed_u', $
+                                reform(wind_raw[0, *]), $
+                                'wind_speed_v', $
+                                reform(wind_raw[1, *]), $
+                                'wind_speed_w', $
+                                reform(wind_raw[2, *]), $
+                                'wind_speed_u_corr', $
+                                reform(wind[0, *]), $
+                                'wind_speed_v_corr', $
+                                reform(wind[1, *]), $
+                                'wind_speed_w_corr', $
+                                reform(wind[2, *]), $
+                                'sonic_temperature', $
+                                sonic_temperature, $
+                                'co2_op', $
+                                flux.co2_op, $
+                                'h2o_op', $
+                                flux.h2o_op, $
+                                'pressure_op', $
+                                flux.pressure_op, $
+                                'diag_op', $
+                                flux.diag_op, $
+                                'accel_x', $
+                                reform(accel_raw[0, *]), $
+                                'accel_y', $
+                                reform(accel_raw[1, *]), $
+                                'accel_z', $
+                                reform(accel_raw[2, *]), $
+                                'accel_x_corr', $
+                                reform(accel[0, *]), $
+                                'accel_y_corr', $
+                                reform(accel[1, *]), $
+                                'accel_z_corr', $
+                                reform(accel[2, *]), $
+                                'rate_phi', $
+                                reform(rate_raw[0, *]), $
+                                'rate_theta', $
+                                reform(rate_raw[1, *]), $
+                                'rate_shi', $
+                                reform(rate_raw[2, *]), $
+                                'rate_phi_corr', $
+                                reform(rate[0, *]), $
+                                'rate_theta_corr', $
+                                reform(rate[1, *]), $
+                                'rate_shi_corr', $
+                                reform(rate[2, *]), $
+                                'co2_cl', $
+                                flux.co2_cl, $
+                                'h2o_cl', $
+                                flux.h2o_cl, $
+                                'pressure_cl', $
+                                flux.pressure_cl, $
+                                'temperature_cl', $
+                                flux.temperature_cl, $
+                                'latitude', $
+                                latitude, $
+                                'longitude', $
+                                longitude, $
+                                'sog', $
+                                sog, $
+                                'cog', $
+                                cog, $
+                                'heading', $
+                                heading)
+
+        mc_ofile_name=strcompress(mot_corr_odir + path_sep() + $
+                                  iname_prefix + '_' + 'mc.' + $
+                                  iname[1], /remove_all)
+        mc_ofile_stamp=file_basename(mc_ofile_name)
+        mc_out_list=file_search(mot_corr_odir + path_sep() + '*.' + $
+                                iname[1], /nosort, /fold_case, /test_regular)
+        matchfiles=where(mc_ofile_stamp EQ file_basename(mc_out_list), $
+                         matchfilecount)
+        IF matchfilecount GT 0 THEN BEGIN
+           msg1='Motion corrected file '
+           IF keyword_set(overwrite) THEN BEGIN
+              message, msg1 + mc_ofile_stamp + $
+                       ' already exists.  Overwriting', /informational
+              write_csv, mc_ofile_name, omot_corr, $
+                         header=strlowcase(tag_names(omot_corr))
+           ENDIF ELSE BEGIN
+              message, msg1 + mc_ofile_stamp + $
+                       ' already exists.  Not overwriting', /informational
+           ENDELSE
+        ENDIF ELSE BEGIN
+           write_csv, mc_ofile_name, omot_corr, $
+                      header=strlowcase(tag_names(omot_corr))
+        ENDELSE
+        delvar, omot_corr
+
+        ;; Eddy covariance calculations
+        sf_hz=float(isample_rate) * 10 ; sampling freq (Hz)
+        mom=ec_momentum(wind, sonic_temperature, $
+                        diag.air_temperature[fperiod], $
+                        diag.rh_percent[fperiod], $
+                        diag.pressure[fperiod], $
+                        float(ec_period) / 60, $ ; in minutes
+                        sf_hz, CORR_MASSMAN=[isample_rate, 0.145])
 
      ENDFOREACH
 
