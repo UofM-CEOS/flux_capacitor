@@ -1,7 +1,7 @@
 ;; $Id: $
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T22:51:27+0000
-;; Last-Updated: 2013-11-14T20:31:37+0000
+;; Last-Updated: 2013-11-15T16:50:33+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -63,12 +63,10 @@ FUNCTION LOWPASS_FILTER, SIGNAL, FS, HF
 
   ;; Frequency range estimation.
   lsi=float(n_elements(signal))
-  IF (lsi MOD 2) EQ 1 THEN BEGIN
-     signal=[signal, signal(lsi - 1)]
-  ENDIF
+  IF (lsi MOD 2) EQ 1 THEN signal=[signal, signal(lsi - 1)]
   corrsi=signal - detrend(signal)
   clsi=ceil(lsi / double(2), /L64)
-  f=FINDGEN(1, clsi * 2)
+  f=findgen(1, clsi * 2)
   iter=n_elements(signal)
 
   ;; Estimating frequency range to perform FFT operation
@@ -84,13 +82,12 @@ FUNCTION LOWPASS_FILTER, SIGNAL, FS, HF
   SIshift=shift(SI, clsi)
 
   SI[0:clsi-1]=SIshift[0:clsi - 1]
-  SI[(clsi)]=0
+  SI[clsi]=0 ; Sets first element to zero to perform double integrations
   SI[clsi + 1:lsi - 1]=SIshift[(clsi + 1):lsi - 1]
 
   ;; Perform the filter
-  FOR i=0, (iter - 1) DO BEGIN
-     IF (f(i) LT -hf OR f(i) GT hf) THEN SI[i]=0
-  ENDFOR
+  FOR i=0, (iter - 1) DO $
+     IF (f[i] LT -hf OR f[i] GT hf) THEN SI[i]=0
 
   ;; Return to the signal domain
   SI=shift(SI, clsi)
@@ -105,6 +102,7 @@ FUNCTION LOWPASS_FILTER, SIGNAL, FS, HF
   ENDIF
 
   RETURN, sireal
+
 END
 
 
