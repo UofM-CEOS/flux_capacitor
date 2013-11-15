@@ -1,3 +1,161 @@
+2013-11-14  spluque@gmail.com
+
+	* filter_series.pro, flux.pro, flux_startup.pro:
+	  Fixing documentation header. Main procedure is ready up to the
+	  final part calling the EC routines.
+
+	* decompose.pro, detrend.pro, diff1byf.pro, int1byf.pro,
+	  level_motionpak.pro, level_sonic.pro, low_freq_corr.pro,
+	  lowpass_filter.pro, motcorr.pro:
+	  Adding new routines for the final, main, procedure.
+
+	* flux.pro:
+	  Reading all variables and performing checks.
+
+	* shot_filter.pro:
+	  Fixed bug on return variable.
+
+	* subset_flux.pro:
+	  Parse input flux files last, as we don't make copy of template.
+
+2013-11-13  spluque@gmail.com
+
+	* read_std_file.pro:
+	  Parse the time matrix, even if we're using standardized files. We
+	  may not have all the fields in those cases.
+
+	* subset_flux.pro:
+	  Implementing error status check for SUBSET_STD_FILE.
+
+	* Templates, Templates/closed_path_log_template.sav,
+	  Templates/ec_41_42_template.sav, Templates/ec_43_template.sav,
+	  Templates/ec_44_45_template.sav, Templates/ec_46_47_template.sav,
+	  Templates/ec_std_template.sav, Templates/gyro_raw_template.sav,
+	  Templates/gyro_std_template.sav, Templates/met_log_template.sav,
+	  Templates/met_processed_avg_diag_template.sav,
+	  Templates/met_processed_avg_pre_template.sav,
+	  Templates/met_processed_avg_template.sav,
+	  Templates/met_processed_template.sav,
+	  Templates/met_raw_template.sav, Templates/met_std_template.sav,
+	  Templates/nav_raw_template.sav, Templates/nav_std_template.sav,
+	  Templates/omg_hdg_raw_template.sav,
+	  Templates/omg_hdg_std_avg_template.sav,
+	  Templates/omg_hdg_std_template.sav,
+	  Templates/omg_nav_raw_template.sav,
+	  Templates/omg_nav_std_avg_template.sav,
+	  Templates/omg_nav_std_template.sav,
+	  Templates/rad_processed_template.csv,
+	  Templates/rad_raw_template.sav, Templates/rad_std_template.sav,
+	  Templates/rmc_avg_template.sav, Templates/rmc_raw_template.sav,
+	  Templates/rmc_std_template.sav, closed_path_log_template.sav,
+	  ec_41_42_template.sav, ec_43_template.sav, ec_44_45_template.sav,
+	  ec_46_47_template.sav, ec_std_template.sav,
+	  gyro_raw_template.sav, gyro_std_template.sav,
+	  met_log_template.sav, met_processed_avg_diag_template.sav,
+	  met_processed_avg_pre_template.sav,
+	  met_processed_avg_template.sav, met_processed_template.sav,
+	  met_raw_template.sav, met_std_template.sav, nav_raw_template.sav,
+	  nav_std_template.sav, omg_hdg_raw_template.sav,
+	  omg_hdg_std_avg_template.sav, omg_hdg_std_template.sav,
+	  omg_nav_raw_template.sav, omg_nav_std_avg_template.sav,
+	  omg_nav_std_template.sav, rad_processed_template.csv,
+	  rad_raw_template.sav, rad_std_template.sav, rmc_avg_template.sav,
+	  rmc_raw_template.sav, rmc_std_template.sav:
+	  Moving files to Templates/ sub-directory.
+
+	* subset_flux.pro:
+	  Factoring out reading of standardized file.
+
+	* closed_path_log_template.sav, flux.pro, read_std_file.pro:
+	  Adding template for close path analyzer log, main processing
+	  script, and new utilities for reading standardized files (1 or 2
+	  time blocks).
+
+2013-11-12  spluque@gmail.com
+
+	* subset_flux.pro:
+	  Refactoring subsetting of files to a separate function.
+
+	* rad_processed_template.csv, subset_flux.pro:
+	  Adding template. Working version of SUBSET_FLUX, but needs
+	  extensive refactoring.
+
+2013-11-09  spluque@gmail.com
+
+	* TODO, ec_std_template.sav:
+	  Fixed template field types.
+
+2013-11-06  spluque@gmail.com
+
+	* TODO:
+	  Added preliminary list of fields.
+
+2013-11-05  spluque@gmail.com
+
+	* filter_series.pro:
+	  Allow for fractional seconds in sample rate, and adjust file
+	  naming accordingly.
+
+2013-11-04  spluque@gmail.com
+
+	* filter_MET.pro, subset_flux.pro:
+	  Adding procedure for subsetting necessary files for flux
+	  processing. Documentation header edit for filter_MET.
+
+2013-11-03  spluque@gmail.com
+
+	* met_processed_avg_diag_template.sav:
+	  Adding template for processed and flux-period-averaged MET files,
+	  which now include the diagnostic flag.
+
+	* filter_MET.pro:
+	  Completed implementation.
+
+2013-11-02  spluque@gmail.com
+
+	* filter_MET.pro:
+	  Now beginning work on the individual checks.
+
+2013-11-01  spluque@gmail.com
+
+	* filter_MET.pro:
+	  Adding procedure to filter MET for checking suitable flux
+	  periods.
+
+	* met_processed_avg_template.sav:
+	  Adding template for average files, after they were purged of
+	  meaningless standard deviation fields.
+
+	* met_processed_20min_pre_template.sav,
+	  met_processed_avg_pre_template.sav:
+	  Rename template file name.
+
+	* remove_fields_ascii.pro:
+	  Simplify processing of string fields.
+
+	* met_processed_20min_pre_template.sav:
+	  Adding new template for reading intermediate average file; we
+	  need to remove some fields from these files with
+	  remove_fields_ascii.pro.
+
+	* remove_fields_ascii.pro:
+	  Adding new procedure for removing fields from ASCII CSV files.
+
+2013-10-31  spluque@gmail.com
+
+	* met_processed_template.sav:
+	  Adding template for processed MET files.
+
+2013-10-30  spluque@gmail.com
+
+	* doy2calendar.pro:
+	  Print up to 3 decimal places for seconds, but the last digit is
+	  really ignored, and we just place a 0. We don't envision using
+	  such fine resolution.
+
+	* day_splitter.pro:
+	  Get a better grip on how to compute the full times array.
+
 2013-10-29  spluque@gmail.com
 
 	* ec_43_template.sav, ec_41_42_template.sav:
