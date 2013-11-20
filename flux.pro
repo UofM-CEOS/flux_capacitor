@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-20T15:30:22+0000
+;; Last-Updated: 2013-11-20T17:04:26+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -71,7 +71,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
           MOTPAK_OFFSET, SOG_THR, LFREQ_THR, HFREQ_THR, XOVER_FREQ_THR, $
           LOG_FILE, LOG_ITEMPLATE_SAV, LOG_TIME_BEG_IDX, $
           LOG_TIME_END_IDX, LOG_STATUS_IDX, MOT_CORR_ODIR, OFILE, $
-          FOOTPRINT_DIR, SERIAL=SERIAL, OVERWRITE=OVERWRITE
+          FOOTPRINT_ODIR, SERIAL=SERIAL, OVERWRITE=OVERWRITE
 
   log_file_info=file_info(log_file)
   IF log_file_info.regular NE 1 THEN $
@@ -1024,7 +1024,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                        /remove_all)
            IF finite(z0) EQ 1 THEN BEGIN
               foot=hkt_footprint(MO_L, z0, zm, 1.0, 100.0, 0.99, $
-                                 PLOT_FILE=footplot)
+                                 plot_file=foot_ofile_name)
            ENDIF
            peakF=foot[0]
            dist90=foot[1]
