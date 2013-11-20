@@ -1,7 +1,7 @@
-;; $Id: $
+;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-15T19:12:08+0000
-;; Last-Updated: 2013-11-15T19:19:45+0000
+;; Last-Updated: 2013-11-18T16:02:18+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -66,9 +66,9 @@
 FUNCTION YAWPITCH, U1, V1, W1, N
 
   ;; first rotation for yaw correction (cross wind to zero)
-  U=mean(u1)
-  V=mean(v1)
-  W=mean(w1)
+  U=mean(u1, /nan)
+  V=mean(v1, /nan)
+  W=mean(w1, /nan)
 
   ce=U / sqrt(U ^ 2 + V ^ 2)
   se=V / sqrt(U ^ 2 + V ^ 2)
@@ -90,8 +90,8 @@ FUNCTION YAWPITCH, U1, V1, W1, N
   u2[0:n - 1]=txyz[0, 0:n - 1]
   w2[0:n - 1]=txyz[2, 0:n - 1]
 
-  U=mean(u2)
-  W=mean(w2)
+  U=mean(u2, /nan)
+  W=mean(w2, /nan)
 
   ;; Second rotation for pitch corection (average w to zero)
   ct=U / sqrt(U ^ 2 + W ^ 2)
@@ -104,15 +104,16 @@ FUNCTION YAWPITCH, U1, V1, W1, N
   txyz1=transpose(xyz1)
 
   ;; Third rotation for roll correction (cov_vw to zero)
-  V=mean(txyz1[1, 0:n - 1], /double)
-  W=mean(txyz1[2, 0:n - 1], /double)
+  V=mean(txyz1[1, 0:n - 1], /double, /nan)
+  W=mean(txyz1[2, 0:n - 1], /double, /nan)
   vprime=findgen(n)
   wprime=findgen(n)
   vprime=(txyz[1, 0:n - 1] - V)
   wprime=(txyz[2, 0:n - 1] - W)
-  cov_vw=correlate(vprime, wprime, /COVARIANCE, /double)
-  var_v=variance(vprime, /double)
-  var_w=variance(wprime, /double)
+  cov_vw=correlate(vprime[where(finite(vprime))], $
+                   wprime[where(finite(wprime))], /covariance, /double)
+  var_v=variance(vprime, /double, /nan)
+  var_w=variance(wprime, /double, /nan)
   bb=(2 * cov_vw) / (var_v - var_w)
   bbeta=0.5 * atan(bb)
   roll=[[1, 0, 0], $

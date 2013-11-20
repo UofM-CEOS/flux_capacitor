@@ -1,7 +1,7 @@
-;; $Id: $
+;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T18:01:54+0000
-;; Last-Updated: 2013-11-15T21:23:25+0000
+;; Last-Updated: 2013-11-19T20:06:30+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -39,25 +39,20 @@
 ;;                 using a RH coordinate system with its origin equal to
 ;;                 the axis of the sonic [REQUIRED FOR SCALAR CORRECTION,
 ;;                 but can be set to [0,0]].
-
 ;;     MOMENTUM:   Set keyword if calculating spectral correction for
 ;;                 momentum flux.
-
 ;;     SCALARLINE  Set keyword as a scalar to define the path length of the
 ;;                 scalar sensor being corrected.
-
 ;;     SCALARVOL:  Set keyword as a 2-element vector [diameter,length] to
 ;;                 describe the diameter and length of a right circular
 ;;                 cylinder of the scalar sensor being used to calculate
 ;;                 volume averaging effects.
-
 ;;     TUBEATT:    Set keyword to do theoretical tube attenuation.  Set a
 ;;                 5-element vector [tube flow,tube diam,tube L,irga P,air
 ;;                 T] that describes the average tube flow (in LPM), the
 ;;                 tube diameter (in m), the tube length (in m), irga
 ;;                 pressure (kPa) and air temperature (deg C) during the
 ;;                 eddy covariance period.
-
 ;;     GAS:        Set keyword as a string, either 'H2O' or 'CO2' to define
 ;;                 if spectral correction is for H2O or CO2 [REQUIRED IF
 ;;                 TUBE ATT SET].
@@ -92,7 +87,7 @@ FUNCTION SPEC_MASSMAN, VERTWIND, SCALAR, HORWIND, RATE, SONICLINE, $
                        SCALARVOL=SCALARVOL, TUBEATT=TUBEATT, GAS=GAS
 
   ;; Mean wind velocity from sonic anemometer
-  meanu=sqrt(horwind(0)^2+horwind(1)^2)
+  meanu=sqrt(horwind[0] ^ 2 + horwind[1] ^ 2)
   ;; Frequency range we're dealing with. Check if number of samples is even
   ;; or odd (if n is even, ev_odd=0, otherwise ev_odd=1)
   N=float(n_elements(vertwind))
@@ -102,7 +97,7 @@ FUNCTION SPEC_MASSMAN, VERTWIND, SCALAR, HORWIND, RATE, SONICLINE, $
   ;; Calculate the nyquist frequency (not to sure how to designate nyquist
   ;; frequency when N is odd... I think this is ok).
   nf=N / double(2)
-  IF ev_odd GT 0 THEN nf=(N+1.)/2.
+  IF ev_odd GT 0 THEN nf=(N + double(1)) / double(2)
 
   ;; Calculate frequency range
   P=(N + double(1)) * rate      ; units=s
@@ -121,8 +116,10 @@ FUNCTION SPEC_MASSMAN, VERTWIND, SCALAR, HORWIND, RATE, SONICLINE, $
      ;; For horizontal wind... we will consider this the scalar
      t_u=sonicline / (2.8 * meanu)
      t_overall=t_overall + t_u ^ 2 + t_w ^ 2
-  ENDIF ELSE BEGIN              ; not doing momentum flux, proceed with scalar transfer function calculations.
-     ;; Calculate lateral and longitudinal separation distances
+  ENDIF ELSE BEGIN
+     ;; Not doing momentum flux, proceed with scalar transfer function
+     ;; calculations.  Calculate lateral and longitudinal separation
+     ;; distances
      scalar_x=geom[0] & scalar_y=geom[1]
      IF (scalar_x EQ 0.0) AND (scalar_y EQ 0.0) THEN BEGIN
         lat=0.0 & lon=0.0
@@ -208,7 +205,7 @@ FUNCTION SPEC_MASSMAN, VERTWIND, SCALAR, HORWIND, RATE, SONICLINE, $
   ;; Calculate cospectra while applying transfer functions
 
   ;; Calculate the FFTS for both variables
-  fft_vert=fft(vertwind) & fft_scal=fft(scalar)
+  fft_vert=fft([vertwind]) & fft_scal=fft([scalar])
   real_vert=real_part(fft_vert) & imag_vert=imaginary(fft_vert)
   real_scal=real_part(fft_scal) & imag_scal=imaginary(fft_scal)
   ;; Calculate the uncorrected cospectra, and sum it up to get the
@@ -320,7 +317,7 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
 
   ;; Calculate the mean horizontal wind velocities (unrotated)... this is
   ;; required in the spectral correction
-  horwind=[mean(WIND[0, *]), mean(WIND[1, *])]
+  horwind=[mean(WIND[0, *], /nan), mean(WIND[1, *], /nan)]
   ;; do the wind rotations
   WINDrot=transpose(yawpitch(WIND[0, *], WIND[1, *], $
                              WIND[2, *], n_elements(WIND[0, *])))
@@ -339,7 +336,9 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
   ;; geometry, specifications are currently hardcoded for the 2007/08
   ;; Amundsen cruises
   IF keyword_set(cmass) THEN BEGIN
-     cf_wu=spec_massman(wrot, urot, horwind, cmass[0], cmass[1], /MOMENTUM)
+     cf_wu=spec_massman(wrot[where(finite(wrot))], $
+                        urot[where(finite(urot))], horwind, $
+                        cmass[0], cmass[1], /MOMENTUM)
      cov_w_u=cov_w_u * cf_wu      ;calculate the corrected covariance
   ENDIF
 
@@ -376,7 +375,9 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
   ;; Run the spectral correction to calculate the correction factor for
   ;; this covariance
   IF keyword_set(cmass) THEN BEGIN
-     cf_wT=Spec_massman(wrot, Ts_Pot, horwind, cmass[0], cmass[1], $
+     cf_wT=spec_massman(wrot[where(finite(wrot))], $
+                        Ts_Pot[where(finite(wrot))], horwind, $
+                        cmass[0], cmass[1], $
                         GEOM=[double(0), double(0)], SCALARLINE=cmass[1])
      cov_w_Ts_Pot=cov_w_Ts_Pot * cf_wT
   ENDIF
@@ -391,7 +392,9 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
   ;; output here just as an additional parameter
   cov_w_Ts=c_covariance(wrot, Ts_K, 0)
   IF keyword_set(cmass) THEN BEGIN
-     cf_wTs=Spec_massman(wrot, Ts_K, horwind, cmass[0], cmass[1], $
+     cf_wTs=spec_massman(wrot[where(finite(wrot))], $
+                         Ts_K[where(finite(wrot))], horwind, $
+                         cmass[0], cmass[1], $
                          GEOM=[double(0), double(0)], SCALARLINE=cmass[1])
      cov_w_Ts=cov_w_Ts * cf_wTs
   ENDIF
@@ -406,7 +409,9 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
   psTair=psTair + 273.15        ; Air temperature into K 
   cov_w_psTair=c_covariance(wrot, psTair, 0)
   IF keyword_set(cmass) THEN BEGIN
-     cf_psTair=Spec_massman(wrot, psTair, horwind, cmass[0], cmass[1], $
+     cf_psTair=spec_massman(wrot[where(finite(wrot))], $
+                            psTair[where(finite(wrot))], horwind, $
+                            cmass[0], cmass[1], $
                             GEOM=[double(0), double(0)], $
                             SCALARLINE=cmass[1])
      cov_w_psTair=cov_w_psTair * cf_psTair

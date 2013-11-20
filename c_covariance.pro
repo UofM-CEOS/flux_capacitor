@@ -1,7 +1,7 @@
-;; $Id: $
-;; Author: Sebastian Luque
+;; $Id$
+;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T20:04:23+0000
-;; Last-Updated: 2013-11-15T20:55:17+0000
+;; Last-Updated: 2013-11-18T16:30:31+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -71,7 +71,8 @@ FUNCTION C_COVARIANCE, X, Y, L
         Y_shift=Y[0 + lag:nrecs - 1]
      ENDELSE
      ;; Calculate covariance 
-     out[z]=mean(((Y_shift) - mean(Y_shift)) * ((X_shift) - mean(X_shift)))
+     out[z]=mean((Y_shift - mean(Y_shift, /nan)) * $
+                 (X_shift - mean(X_shift, /nan)), /nan)
   ENDFOR
 
   RETURN, out
