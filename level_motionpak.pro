@@ -1,7 +1,7 @@
-;; $Id: $
+;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T20:41:26+0000
-;; Last-Updated: 2013-11-14T19:13:09+0000
+;; Last-Updated: 2013-11-20T00:24:53+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -56,7 +56,7 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE
+FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE, STATUS=STATUS
 
   acc_dims=size(acc, /dimensions)
   rate_dims=size(rate, /dimensions)
@@ -84,9 +84,10 @@ FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE
   min_mean_r=min(abs(min_roll))
   min_mean_r_index=where(abs(min_roll) EQ min_mean_r)
   min_roll_angle=roll[min_mean_r_index]
+  ;; Set the status error check
+  status=1                      ; failed
   IF min_mean_r_index EQ (r_range * 100 - 1) THEN BEGIN
      corrpak=make_array(6, type=4, value=!VALUES.F_NAN)
-     message, 'Levelling failed'
      RETURN, corrpak
   ENDIF
 
@@ -107,9 +108,10 @@ FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE
   min_mean_p=min(abs(min_pitch))
   min_mean_p_index=where(abs(min_pitch) EQ min_mean_p)
   min_pitch_angle=pitch[min_mean_p_index]
+  ;; Reset status error check
+  status=1                      ; failed
   IF min_mean_p_index EQ (p_range * 100 - 1) THEN BEGIN
      corrpak=make_array(6, type=4, value=!VALUES.F_NAN)
-     message, 'Levelling failed'
      RETURN, corrpak
   ENDIF
 
@@ -150,6 +152,7 @@ FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE
   corr_pak=[[ACC_x_ship], [ACC_y_ship], [ACC_z_ship], $
             [RATE_phi_ship], [RATE_theta_ship], [RATE_shi_ship]]
 
+  status=0                      ; success
   RETURN, transpose(corr_pak)
 
 END
