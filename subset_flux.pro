@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-03T18:49:19+0000
-;; Last-Updated: 2013-11-13T17:30:54+0000
+;; Last-Updated: 2013-11-19T23:28:18+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -26,7 +26,7 @@
 ;;     Offset:        A scalar value, usually corresponding to the sample
 ;;                    rate.  It is used to avoid numerical representation
 ;;                    issues when comparing against the time bounds.
-;;     Time_Bounds:   A 2-element array with the time bounds.
+;;     Time_Bounds:   A 2-element array with the time (julian) bounds.
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
@@ -58,21 +58,29 @@ FUNCTION SUBSET_STD_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, $
                           TIME_BOUNDS, STATUS=STATUS
 
   ;; Parse input template
+  field_names=itemplate.FIELDNAMES
   is_time_field=itemplate.FIELDGROUPS EQ time_idx
+  ;; Ignore other groups when reading the data
+  itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
+  itemplate.FIELDGROUPS[where(is_time_field)]=time_idx
+  tags2remove=where(field_names EQ field_names[time_idx])
+  time_field_names=field_names[where(is_time_field)]
   ;; Offset fraction of the day
   offset_dfrac=double(offset) / double(86400)
   
   idata=read_std_file(ifile, itemplate, time_idx)
   idata_names=strlowcase(tag_names(idata))
-  idata_dims=size(idata, /dimensions)
-  times_s=idata[5, *]
+  times=idata.(where(idata_names EQ field_names[time_idx]))
+  idata=remove_structure_tags(idata, field_names[tags2remove])
+  idata_names=strlowcase(tag_names(idata)) ; redoing after removing times
+  times_s=times[5, *]
   times_s=fix(times_s) + $
           (round((double(times_s) - fix(times_s)) * 10) / 10.0)
-  times_jd=reform(julday(long(idata[1, *]), $
-                         long(idata[2, *]), $
-                         long(idata[0, *]), $
-                         long(idata[3, *]), $
-                         long(idata[4, *]), $
+  times_jd=reform(julday(long(times[1, *]), $
+                         long(times[2, *]), $
+                         long(times[0, *]), $
+                         long(times[3, *]), $
+                         long(times[4, *]), $
                          double(times_s)))
   ;; We have to subtract 0.5 the input sample rate to protect against
   ;; numerical representation issues in IDL...
@@ -83,15 +91,20 @@ FUNCTION SUBSET_STD_FILE, IFILE, ITEMPLATE, TIME_IDX, OFFSET, $
   ;; Set the status error check
   status=1                      ; failed
   IF mcount LT 1 THEN RETURN, !VALUES.D_NAN
-  odata=create_struct(idata_names[0], reform(idata[0, matches]))
+  odata=create_struct(time_field_names[0], reform(times[0, matches]))
   ;; Subset the rest of the data
-  FOREACH fld, (indgen(idata_dims[0]))[1:*]  DO BEGIN
+  FOREACH tfld, (indgen(n_elements(time_field_names)))[1:*] DO BEGIN
+     odata=create_struct(odata, time_field_names[tfld], $
+                         reform(times[tfld, matches]))
+  ENDFOREACH
+  FOREACH fld, indgen(n_elements(idata_names)) DO BEGIN
      odata=create_struct(odata, idata_names[fld], $
                          idata.(fld)[matches])
   ENDFOREACH
-  
+
   status=0                      ; success
   RETURN, odata
+
 END
 
 
@@ -489,7 +502,7 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
            CONTINUE
         ENDIF
         write_csv, ofile_name, rad_period, $
-                   header=strlowcase(tag_names(gyro_period))
+                   header=strlowcase(tag_names(rad_period))
         delvar, rad_period
 
         ;; Read matching flux EC file
@@ -519,7 +532,7 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
               CONTINUE
            ENDELSE
         ENDIF
-        flux_period=subset_std_file(flux_files[flux_pair], itemplate, $
+        flux_period=subset_std_file(idir_files[flux_pair], itemplate, $
                                     time_beg_idx, isample_rate, bounds, $
                                     status=status)
         IF status NE 0 THEN BEGIN
