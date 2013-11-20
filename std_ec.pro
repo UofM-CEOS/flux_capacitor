@@ -1,4 +1,4 @@
-;; $Id: std.pro 175 2013-10-26 10:04:45Z spluque@gmail.com $
+;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
 ;; Last-Updated: 2013-10-29T12:36:32+0000
