@@ -1,6 +1,7 @@
+;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-15T20:51:46+0000
+;; Last-Updated: 2013-11-20T15:30:22+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -70,7 +71,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
           MOTPAK_OFFSET, SOG_THR, LFREQ_THR, HFREQ_THR, XOVER_FREQ_THR, $
           LOG_FILE, LOG_ITEMPLATE_SAV, LOG_TIME_BEG_IDX, $
           LOG_TIME_END_IDX, LOG_STATUS_IDX, MOT_CORR_ODIR, OFILE, $
-          SERIAL=SERIAL, OVERWRITE=OVERWRITE
+          FOOTPRINT_DIR, SERIAL=SERIAL, OVERWRITE=OVERWRITE
 
   log_file_info=file_info(log_file)
   IF log_file_info.regular NE 1 THEN $
@@ -197,8 +198,30 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   log_status=log.(where(log_names EQ log_field_names[log_status_idx]))
   logn=(size(log_beg_times, /dimensions))[1]
 
-  ;; Perhaps set up hashes to hold output data from all valid flux runs at
-  ;; this point, before starting outermost loop.
+  ;; Set up a hash (or structure) to hold output data from all valid flux
+  ;; runs at this point, before starting outermost loop
+  diag_time_names=diag_field_names[where(diag_template.FIELDGROUPS EQ $
+                                         diag_time_idx)]
+  okeys=[diag_time_names, 'latitude', 'longitude', 'SOG', 'wind_speed', $
+         'wind_direction', 'true_wind_speed', 'true_wind_direction', $
+         'air_temperature', 'relative_humidity', 'surface_temperature', $
+         'atmospheric_pressure', 'CO2_op', 'H2O_op', 'CO2_cl', 'H2O_cl', $
+         'cov_w_airT', 'cf_wAirT', 'cov_w_psAirT', 'psH', 'H', $
+         'cov_w_u', 'cf_wu', 'Ustar', 'Tau', 'MO_L', 'cov_w_CO2_op', $
+         'cf_CO2_op', 'FCO2_op', 'diag_op', 'WPLcont', 'CO2Burba_mt', $
+         'CO2Burba_ln', 'H2OBurba_mt', 'H2OBurba_ln', 'cov_w_H2O_op', $
+         'cf_wH2O_op', 'E_op', 'Qe_op', 'lag_op', 'cov_w_XCO2_cl', $
+         'cf_wXCO2_cl', 'FCO2_cl', 'lag_CO2_cl', 'cov_w_XH2O_cl', $
+         'cf_wXH2O_cl', 'E_cl', 'Qe_cl', 'lag_H2O_cl', $
+         'sonic_speed', 'sonic_direction', 'true_sonic_speed', $
+         'true_sonic_direction', 'vertical', 'open_flag', 'closed_flag', $
+         'sonic_flag', 'motion_flag', 'sonic_NAN_pct', 'IRGA_NAN_pct', $
+         'SW', 'Um', 'U10', 'CDm', 'CD10', 'z0', 'CHm', 'CH10', 'zT', $
+         'CEm', 'CE10', 'zQ', 'peakF', 'dist90', 'psim', 'psih', 'U10N', $
+         'U10Nocean', 'pkt_FCO2_op', 'pkt_loop', 'cflux_det', $
+         'dRH_by_dq', 'dc_by_dRH_initial', 'dc_by_dRH_final', $
+         'dc_by_dq_initial', 'dc_by_dq_final']
+  fluxes=hash(okeys)            ; just empty keys; we'll be appending data
 
   FOR k=0, ndiag_files - 1 DO BEGIN
      dfile=diag_files[k]
@@ -219,9 +242,10 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; Read matching flux file
         flux_pair=where(flux_files_mstr EQ (dfile_mstr + tstamp), mcount)
         IF mcount LT 1 THEN BEGIN
-           message, 'No matching flux file found. Skipping.', /CONTINUE
+           message, 'Flux file missing.  Skipping.', /CONTINUE
            CONTINUE
         ENDIF
+        message, 'Processing ' + idir_files[flux_pair], /informational
         flux=read_std_file(idir_files[flux_pair], itemplate, time_idx)
         flux_names=strlowcase(tag_names(flux))
         flux_time_loc=where(flux_names EQ field_names[time_idx])
@@ -293,7 +317,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         bad_status=where(status_flag NE 0, nbad_status)
         IF nbad_status GT 0 THEN BEGIN
            flux.co2_cl[bad_status]=!VALUES.D_NAN
-           flux.h20_cl[bad_status]=!VALUES.D_NAN
+           flux.h2o_cl[bad_status]=!VALUES.D_NAN
            flux.pressure_cl[bad_status]=!VALUES.D_NAN
            flux.temperature_cl[bad_status]=!VALUES.D_NAN
         ENDIF
@@ -405,11 +429,11 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         IF (float(nbad_diags) / flux_times_dims[1] * 100.0 GT 2) THEN $
            open_flag=1
 
-        ;; [Original comment: check for bad wind data: bad wind data can usually be diagnosed
-        ;; by unusually high wind velocities.  this is most obvious in the
-        ;; vertical wind where we wouldn't expect high values bad sonic
-        ;; data can also turn up in the Tsonic before the wind, check the
-        ;; deviation between Tsonic and mean air T]
+        ;; [Original comment: check for bad wind data: bad wind data can
+        ;; usually be diagnosed by unusually high wind speeds.  this is
+        ;; most obvious in the vertical wind where we wouldn't expect high
+        ;; values bad sonic data can also turn up in the Tsonic before the
+        ;; wind, check the deviation between Tsonic and mean air T]
         bad_vert_wind=where(abs(wind_w) GT 7, nbad_vert_wind)
         t_avg=diag.air_temperature[fperiod]
         bad_sonic_temperature=where(abs(sonic_temperature - t_avg) GT 7, $
@@ -428,7 +452,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
         ;; if sonic data are bad, skip this period
         IF sonic_flag GT 0 THEN BEGIN
-           message, 'Bad sonic anemometer data.  Skipping period', $
+           message, 'Bad sonic anemometer data. Skipping.', $
                     /CONTINUE
            CONTINUE
         ENDIF
@@ -436,8 +460,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; [Original comment: check critical low f variabiles]
         IF (~finite(diag.rh_percent[fperiod])) OR $
            (~finite(t_avg)) THEN BEGIN
-           message, 'RH or mean air temperature data unavailable.  ' + $
-                    'Skipping period', /CONTINUE
+           message, 'RH or mean air temperature data unavailable. ' + $
+                    'Skipping.', /CONTINUE
            CONTINUE
         ENDIF
 
@@ -482,7 +506,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         match2, flux_jd, rmc_jd, flux_in_rmc
         flux_matches=where(flux_in_rmc GE 0, mcount, /null)
         IF mcount LT 1 THEN BEGIN
-           message, 'No matching RMC records found.  Skipping file.', $
+           message, 'No matching RMC records found. Skipping.', $
                     /informational
            ;; [Original comment: if we can't find the rmc file, we'll set
            ;; the motion flag to 1 and skip loading the GPS].  [SPL:
@@ -531,7 +555,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         match2, flux_jd, gyro_jd, flux_in_gyro
         flux_matches=where(flux_in_gyro GE 0, mcount, /null)
         IF mcount LT 1 THEN BEGIN
-           message, 'No matching Gyro records found.  Skipping file.', $
+           message, 'No matching Gyro records found. Skipping.', $
                     /informational
            ;; [Original comment: if we can't find the rmc file, we'll set
            ;; the motion flag to 1 and skip loading the GPS].  [SPL:
@@ -571,11 +595,20 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
         ;; [Original comment: Check to make sure that no 'NaNs' dropped
         ;; through... if they did, we'll have to skip this one]
-        no_cog=where(~finite(cog), nno_cog)
-        no_sog=where(~finite(sog), nno_sog)
-        no_heading=where(~finite(heading), nno_heading)
+        no_cog=where(~finite(cog), nno_cog, ncomplement=nok_cog)
+        no_sog=where(~finite(sog), nno_sog, ncomplement=nok_sog)
+        no_heading=where(~finite(heading), nno_heading, $
+                         ncomplement=nok_heading)
         IF (nno_cog GT 0) OR (nno_sog GT 0) OR (nno_heading GT 0) THEN $
            motion_flag=1
+        ;; If we have no good COG, SOG, or heading, then we should skip
+        ;; processing entirely
+        IF (nok_cog LT 1) OR (nok_sog LT 1) OR $
+           (nok_heading LT 1) THEN BEGIN
+           message, 'Unusable COG, SOG, or heading records. Skipping.', $
+                    /informational
+           CONTINUE
+        ENDIF
 
         ;; Level sonic anemometer
 
@@ -609,7 +642,11 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
            ;; [Original comment: synthetically level the Motion Pak] [SPL:
            ;; WATCH LEVEL_MOTIONPAK FUNCTION]
-           level=level_motionpak(accel, rate, 4, 4)
+           level=level_motionpak(accel, rate, 4, 4, status=status)
+           IF status NE 0 THEN BEGIN
+              message, 'Levelling failed. Skipping.', /continue
+              CONTINUE
+           ENDIF
            IF ~finite(level[0]) THEN BEGIN
               motion_flag=1
               message, 'Motion-flagged', /informational
@@ -697,10 +734,10 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            wind[0, *]=U_TRUE_2[0, *]
            wind[1, *]=U_TRUE_2[1, *]
            true_son=bearing_avg(U_TRUE_2[3, *], U_TRUE_2[2, *])
-           true_sonic_vel=true_son[0, 1]
+           true_sonic_spd=true_son[0, 1]
            true_sonic_dir=true_son[0, 0]
            raw_son=bearing_avg(U_TRUE_2[5, *], U_TRUE_2[4, *])
-           raw_sonic_vel=raw_son[0, 1]
+           raw_sonic_spd=raw_son[0, 1]
            raw_sonic_dir=raw_son[0, 0]
         ENDIF
 
@@ -810,6 +847,236 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                         diag.pressure[fperiod], $
                         float(ec_period) / 60, $ ; in minutes
                         sf_hz, CORR_MASSMAN=[isample_rate, 0.145])
+        cov_w_u=mom[0]
+        cf_wu=mom[1]
+        Ustar=mom[2]
+        Tau=mom[3]
+        MO_L=mom[4]
+        cov_w_psTair=mom[6]
+        psH=mom[7]
+
+        ;; Open path calculations
+        IF open_flag NE 1 THEN BEGIN
+           open_path=ec_open(wind, sonic_temperature, flux.co2_op, $
+                             flux.h2o_op, flux.pressure_op, $
+                             float(ec_period) / 60, $ ; in minutes
+                             sf_hz, $
+                             CORR_MASSMAN=[isample_rate, 0.145, -0.04, $
+                                           0.38, !VALUES.D_NAN, 0.01, $
+                                           0.125], $
+                             BURBA=[sw_avg, lw_avg, raw_sonic_spd], $
+                             pkt=Ustar)
+           meanCO2_op=open_path[11]
+           mean_H2O_op=open_path[12]
+           cov_w_Tair=open_path[0]
+           cf_wTair=open_path[1]
+           H=open_path[2]
+           cov_w_CO2_op=open_path[3]
+           cf_CO2_op=open_path[4]
+           FCO2_op=open_path[5]
+           cov_w_h2o_op=open_path[6]
+           cf_wH2O_op=open_path[7]
+           E_op=open_path[8]
+           Qe_op=open_path[9]
+           lag_op=open_path[10] 
+           WPLcont=open_path[13]
+           CO2Burba_mt=open_path[14]
+           CO2Burba_ln=open_path[15]
+           H2OBurba_mt=open_path[16]
+           H2OBurba_ln=open_path[17]
+           pkt_FCO2_op=open_path[18]
+           pkt_loop=open_path[19]
+           cflux_det=open_path[20]
+           dRH_by_dq=open_path[21]
+           dc_by_drh_initial=open_path[22]
+           dc_by_drh_final=open_path[23]
+           dc_by_dq_initial=open_path[24]
+           dc_by_dq_final=open_path[25]
+           diag_op=mean(fix(flux.diag_op), /NAN)
+        ENDIF
+
+        ;; Closed-path flow rate for 2010 = 11.5 LPM.  Sample tube length
+        ;; for 2010 = 8.0m.  Do closed path calculations if available
+        IF closed_flag EQ 0 THEN BEGIN
+           cl_flow=11.5         ; NEED LUT FOR FLOW RATE
+           ;; co2_cl2=co2_cl
+           ;; ;; for some reason, I am losing these values... save for
+           ;; ;; plotting.  [SPL: with code below, this doesn't seem necessary
+           ;; ;; anymore
+           ;; h2o_cl2=h2o_cl
+           closed_path=ec_closed(wind, flux.co2_cl, flux.h2o_cl, $
+                                 flux.pressure_cl, flux.temperature_cl, $
+                                 diag.air_temperature[fperiod], $
+                                 diag.rh_percent[fperiod], $
+                                 diag.pressure[fperiod], [-10, 50], $
+                                 float(ec_period) / 60, $ ; in minutes
+                                 sf_hz, $
+                                 CORR_MASSMAN=[isample_rate, 0.10, -0.06, $
+                                               0.44, !VALUES.D_NAN, $
+                                               !VALUES.D_NAN, $
+                                               !VALUES.D_NAN, cl_flow, $
+                                               0.005, 8.0])
+           meanCO2_cl=closed_path[9]
+           meanH2O_cl=closed_path[10]
+           cov_w_Xco2_cl=closed_path[0]
+           cf_wXco2_cl=closed_path[1]
+           lag_co2_cl=closed_path[2]
+           FCO2_cl=closed_path[3]
+           cov_w_Xh2o_cl=closed_path[4]
+           cf_wXh2o_cl=closed_path[5]
+           lag_h2o_cl=closed_path[6]
+           E_cl=closed_path[7]
+           Qe_cl=closed_path[8]
+        ENDIF
+
+        ;; MICROMET CALCULATIONS
+
+        ;; Here, we make a number of micromet calculations that calculate
+        ;; the following things:
+        ;;  - 10m wind speed
+        ;;  - zo
+        ;;  - footprint modeling
+        ;;  - CD_10m, CH_10m, CV_10m
+        
+        ;; The following publications are heavily used, and I will try to
+        ;; cite them and there specific eq'ns when necessary: Andreas et
+        ;; al. 2005, BLM 114:439-460 Jordan et al. 1999, JGR 104
+        ;; No. C4:7785-7806
+  
+        ;; First, we need to extract the measurement height... we'll just
+        ;; give it a value of 14.1m... come back to that
+        zm=14.1 
+        ;; couple of constants
+        vonk=0.4          ; von karman constant
+        Rval=8.31451      ; j/mol/k universal gas constant
+        mv=18.02          ; g/mol molecular weight for water, Stull(1995)
+        ma=28.96          ; g/mol molecular weight for dry air, Stull(1995)
+        ;; J/g/K specific heat for dry air at constant pressure Stull(1995)
+        cpd=1004.67 / 1000.0
+        
+        ;; Now, we need to calculate the air density.  Sat'n vapour
+        ;; pressure (Pa)
+        es_met=[6.112 * exp((17.67 * diag.air_temperature[fperiod]) / $
+                            (diag.air_temperature[fperiod] + 243.5))] * $
+               100.0
+        ;; Vapour pressure (Pa)
+        ev_met=(diag.rh_percent[fperiod] / double(100)) * es_met
+        ;;  mol 
+        c_h2o_met=ev_met / (Rval * (diag.air_temperature[fperiod] + 273.15))
+        rho_v_met=c_h2o_met * mv                         ; g/m3
+        rho_d_met=((diag.pressure[fperiod] * double(1000) - ev_met) / $
+                   (Rval * (diag.air_temperature[fperiod] + 273.15))) * ma
+        rhoa=(rho_v_met + rho_d_met) / 1000.0 ; kg/m3
+
+        ;; Calculate CD at measurement height.  CD at measurement height,
+        ;; Andreas (2005), eqn, 10a)
+        CDm=Tau/(rhoa * true_sonic_spd ^ double(2))
+        
+        ;; Drag coefficient should be positive... if not, do no more calcs
+        IF CDm GT 0 THEN BEGIN
+           ;; Calculate the wind profile modifiers.  Calculate the profile
+           ;; modifier for stable conditions (Jordan, 1999, eq 33)
+           IF zm / MO_L GT 0.5 THEN BEGIN    
+              psim=-[((0.70 * zm) / MO_L) + 0.75 * $
+                     ((zm / L) - 14.3) * exp((-0.35 * zm) / MO_L ) + $
+                     10.7]
+              psih=psim
+           ENDIF
+           ;; Calculate the profile modifier for neutral/slightly stable
+           ;; (Jordan, 1999, eq 32)
+           IF zm / MO_L GE 0 AND zm / MO_L LE 0.5 THEN BEGIN
+              psim=-6.0 * (zm / MO_L)
+              psih=psim
+           ENDIF
+           ;; Calculate the profile modifier for unstable conditions
+           ;; (Jordan, 1999, eq 30)
+           IF zm/MO_L LT 0 THEN BEGIN
+              xval=(1.0 - 16.0 * (zm / MO_L)) ^ (1.0 / 4.0)
+              psim=alog((1.0 + xval ^ 2.0) / 2.0) + 2.0 * $
+                   alog((1.0 + xval) / 2.0) - 2.0 * atan(xval) + $
+                   (!PI / 2.0)
+              ;; Jordan (1999), eq 31
+              psih=2.0 * alog((1.0 + xval ^ 2.0) / 2.0)
+           ENDIF
+           ;; Calculate the roughness length (Andreas, 2005, eq 12a)
+           z0=zm * EXP( -[vonk * CDm ^ (-0.5) + psim * (zm / MO_L)])
+           ;; Calculate the Drag coefficient at 10m (Andreas, 2005, eq 11a)
+           CD10=vonk ^ 2.0 / $
+                (alog(10.0 / z0) - psim * (10.0 / MO_L)) ^ 2.0
+           ;; Calculate wind speed at 10m & for interest sake, we'll see
+           ;; what our profile gives us for the measurement height wind
+           ;; speed...  Stull (1988), eq'n 9.7.5g
+           U10=[(1.0 / vonk) * $
+                (alog(10.0 / z0) + psim * (10.0 / MO_L))] * ustar
+           Um=[(1.0 / vonk) * $
+               (alog(zm / z0) + psim * (zm / MO_L))] * ustar
+           ;; Calculate the wind speed at 10m assuming neutral stability
+           U10N=[(double(1) / vonk) * (alog(zm / z0))] * ustar
+           ;; Calculate the wind speed at 10m assuming neutral stability
+           ;; AND that we're over the ocean
+           z0charnock=(0.016 * ustar ^ 2) / 9.81 ; Stull 9.7.2c
+           U10Nocean=[(double(1) / vonk) * $
+                      (alog(zm / z0charnock))] * ustar
+           ;; Make call to the footprint routine, which follows Hsieh et
+           ;; al. 2000, Advances in Water Resources 23 (2000) 765-777
+           foot_ofile_name=strcompress(footprint_odir + path_sep() + $
+                                       iname_prefix + '_' + 'spec.ps', $
+                                       /remove_all)
+           IF finite(z0) EQ 1 THEN BEGIN
+              foot=hkt_footprint(MO_L, z0, zm, 1.0, 100.0, 0.99, $
+                                 PLOT_FILE=footplot)
+           ENDIF
+           peakF=foot[0]
+           dist90=foot[1]
+           ;; Now we can also calculate the heat and water vapour transfer
+           ;; coefficients...  BUT BEWARE... fundamentally, we need surface
+           ;; T... we have to use our unreliable IR transducer for this...
+           ;; NOTE - using a new type of IR transducer starting in 2010
+           ;; which is more reliable
+           ;;  
+           ;; Calculate a few terms we'll need from the MET data.  Mean
+           ;; specific humidity (g_h2o/g_moist air)
+           mean_qh2o=rho_v_met / (rhoa * 1000.0)
+           ;; Mean specific heat capacity of moist air (J/g/K)
+           mean_cp=cpd * (1.0 + 0.84 * mean_qh2o)
+           IF (mean_airT GE 0) THEN $ ; vaporization
+              Lv=(2.50057 - 0.00245715 * mean_airT) * 1000.0
+           IF (diag.air_temperature[fperiod] LT 0) THEN $ ; sublimation
+              lv=(2.83539 - 0.000135713 * $
+                  diag.air_temperature[fperiod]) * 1000.0
+           ;; Sat'n vapour pressure (Pa)
+           ev_surf=[6.112 * EXP((17.67 * mean_Tsfc) / $
+                                (mean_Tsfc + 243.5))] * 100.0
+           c_h2o_surf=ev_surf / (Rval * (mean_Tsfc + 273.15)) ; mol 
+           rho_v_surf=c_h2o_surf * mv                         ; g/m3
+           surf_qh2o=rho_v_surf / (rhoa * 1000.0) 
+           ;; Calculate the H coeficient and the T roughness length... from
+           ;; that get CH at 10m
+           CHm=H / ((rhoa * 1000.0) * mean_cp * true_sonic_spd * $
+                    (mean_Tsfc - mean_airT) ) ; Andreas (2005) eq'n 10b
+           ;; Andreas (2005) eq'n 12b
+           zT=zm * EXP( -(vonk * CDm ^ (1.0 / 2.0) * $
+                          CHm ^ (-1.0) + psih * (zm / MO_L)))
+           ;; Andreas (2005) eq'n 11b
+           CH10=vonk ^ 2.0 / $
+                [(alog(10.0 / z0) - psim * (10.0 / MO_L)) * $
+                 (alog(10.0 / zT) - psih * (10.0 / MO_L)) ]
+           ;; Now calculate the E coefficient, and the Q roughness
+           ;; length... from that get CE at 10m
+           CEm=Qe_op / [(rhoa * 1000.0) * Lv * raw_sonic_spd * $
+                        (surf_qh2o - mean_qh2o)]
+           zQ=zm * exp(-(vonk * CDm ^ (1.0 / 2.0) * CEm ^ (-1.0) + $
+                         psih * (zm / MO_L))) ;Andreas (2005) eq'n 12c
+           ;; Andreas (2005) eq'n 11c
+           CE10=vonk ^ 2.0 / $
+                [(alog(10.0 / z0) - psim * (10.0 / MO_L)) * $
+                 (alog(10.0 / zQ) - psih * (10.0 / MO_L))]
+        ENDIF
+
+        ;; ;; Time to append data to output hash
+        ;; FOREACH tfld, diag_time_names DO BEGIN
+        ;;    help, fluxes[tfld]
+        ;; ENDFOREACH
 
      ENDFOREACH
 
