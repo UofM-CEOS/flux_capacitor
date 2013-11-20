@@ -1,7 +1,7 @@
 ;; $Id$
-;; Author: Bruce Johnson, Sebastian Luque
+;; Author: Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-10-26T10:47:22+0000
+;; Last-Updated: 2013-11-20T17:54:52+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:

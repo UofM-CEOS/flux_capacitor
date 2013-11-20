@@ -1,7 +1,7 @@
-;; $Id: $
+;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-19T16:31:01+0000
-;; Last-Updated: 2013-11-20T17:00:50+0000
+;; Last-Updated: 2013-11-20T18:12:07+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -11,7 +11,7 @@
 ;; PURPOSE:
 ;; 
 ;;     This program does footprint modeling according to Hsieh et al. 2000,
-;;     "An Approximate analystical model for footprint estimation of scalar
+;;     "An Approximate analytical model for footprint estimation of scalar
 ;;     fluxes in thermally stratified atmospheric flows" Advances in Water
 ;;     Resources 23 (2000) 765-777.
 ;; 

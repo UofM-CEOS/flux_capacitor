@@ -1,7 +1,7 @@
 ;; $Id$
-;; Author: Sebastian Luque
+;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T19:12:08+0000
-;; Last-Updated: 2013-11-18T16:02:18+0000
+;; Last-Updated: 2013-11-20T18:15:11+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
