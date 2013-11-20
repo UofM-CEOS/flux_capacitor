@@ -1,3 +1,36 @@
+2013-11-20  spluque@gmail.com
+
+	* flux.pro:
+	  Fixed references to MET diag structure. Finished adding to
+	  output hash.  Fix footprint plot arguments.  Final calculations
+	  working. Need more testing.
+
+	* hkt_footprint.pro:
+	  Use statement block to group the two statements.
+
+	* subset_flux.pro:
+	  Finished implementing subsetting sub-routine.
+
+	* level_motionpak.pro:
+	  Added error status check so that we can control what to do.
+
+	* c_covariance.pro, ec_momentum.pro, yawpitch.pro:
+	  Protected against NANs.
+
+2013-11-15  spluque@gmail.com
+
+	* lowpass_filter.pro:
+	  Simplified and cleaned code.
+
+	* flux.pro:
+	  Output motion-corrected files.
+
+	* c_covariance.pro, ec_momentum.pro, sonict2airt.pro, yawpitch.pro:
+	  Adding new routines used in EC_MOMENTUM.
+
+	* low_freq_corr.pro:
+	  Simplified statements for readability.
+
 2013-11-14  spluque@gmail.com
 
 	* filter_series.pro, flux.pro, flux_startup.pro:
