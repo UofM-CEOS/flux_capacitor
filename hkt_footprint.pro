@@ -1,7 +1,7 @@
 ;; $Id: $
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-19T16:31:01+0000
-;; Last-Updated: 2013-11-19T19:25:41+0000
+;; Last-Updated: 2013-11-20T17:00:50+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -74,10 +74,15 @@ FUNCTION HKT_FOOTPRINT, MOL, ZO, ZM, INTERVAL, MAXX, MAX_RATIO, $
   ;; understanding of the paper, unstable: zu/L < -0.04, neutral: -0.04 <
   ;; zu/L < 0.04, stable: zu/L > 0.04
   thresh=0.04
-  IF zu / MOL LT -thresh THEN Dval=0.28 & Pval=0.59
-  IF zu / MOL GE -thresh AND zu / MOL LE thresh THEN Dval=0.97 & Pval=1.0
-  IF zu / MOL GE thresh THEN Dval=2.44 & Pval=1.33
-
+  IF zu / MOL LT -thresh THEN BEGIN 
+     Dval=0.28 & Pval=0.59
+  ENDIF
+  IF zu / MOL GE -thresh AND zu / MOL LE thresh THEN BEGIN
+     Dval=0.97 & Pval=1.0
+  ENDIF
+  IF zu / MOL GE thresh THEN BEGIN
+     Dval=2.44 & Pval=1.33
+  ENDIF
   ;; Going to run this doing a while loop... if I can...  first, we'll make
   ;; two that we'll slowly add to:
   CNFcurr=0.0 & CNF=[CNFcurr]   ;fraction
