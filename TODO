@@ -1,24 +1,24 @@
 
-* TODO Entire program should run independently of year
+* DONE Entire program should run independently of year
 
-** TODO Rename files and all names to reflect this independence
+** DONE Rename files and all names to reflect this independence
 
 * TODO Implement temporary() where appropriate
 
-* Database design
+* TODO Database design
 
 ** Preliminary list of fields
 
-*** time
+*** =time=
 
 This will be a timestamp field, common to all files.
 
-*** program_version
+*** =program_version=
 
 I assume this is the program version of the datalogger that recorded the
 data for each set of files.  This field is reported in MET and EC files.
 
-*** battery_voltage
+*** =battery_voltage=
 
 Units: v.
 
@@ -26,11 +26,11 @@ This field is reported in MET and RAD files.  Is the value of this field
 the same in both sets of files?  I don't think so, as they are different
 data loggers.
 
-*** battery_voltage_sd
+*** =battery_voltage_sd=
 
 This field is reported in RAD files only.
 
-*** logger_temperature
+*** =logger_temperature=
 
 Units: C
 
@@ -38,18 +38,18 @@ Referred to as "panel_temperature" in the files/code.  This field is
 reported in MET and RAD files.  Is the value of this field the same in both
 sets of files?
 
-*** logger_temperature_sd
+*** =logger_temperature_sd=
 
 This field is reported in RAD files only.
 
-*** atmospheric_pressure
+*** =atmospheric_pressure=
 
 Units: kPa
 
 I assume this is what is reported in MET and EC (as "P_tower") files.
 Sampling frequency aside, are these duplicate data?
 
-*** air_temperature
+*** =air_temperature=
 
 Units: C
 
@@ -57,49 +57,49 @@ This field is reported in MET files.  It is also reported in EC flux files,
 where it is recorded by a sonic anemometer, both as serial and analogue
 form.
 
-*** relative_humidity
+*** =relative_humidity=
 
 Units: %
 
 This is referred to as "rh_percent" in the files/code I've seen.  This
 field is reported in MET files only.
 
-*** surface_temperature
+*** =surface_temperature=
 
 Units: C
 
 Temperature of the surface (whatever the ship is over).  This field is
 reported in MET files only, and comes from an IR transducer.
 
-*** wind_speed
+*** =wind_speed=
 
 Units: m/s
 
 This field is reported in MET files only.  Uncorrected for ship motion.
 
-*** wind_direction
+*** =wind_direction=
 
 Units: degrees (0 - 360; 360 is wind coming into the ship's bow).
 
 This field is reported in MET files only.  Uncorrected for ship motion.
 
-*** wind_direction_sd
+*** =wind_direction_sd=
 
 I assume this is the standard deviation of wind direction during each
 sampling interval.  This field is reported in MET files only.
 
-*** par
+*** =par=
 
 Units: umol/m2/s
 
 Incoming photosynthetic radiation .  This field is reported in MET and RAD
 files.  Are these duplicate data?
 
-*** par_sd
+*** =par_sd=
 
 Standard deviation.  This field is reported in RAD files only.
 
-*** pitch
+*** =pitch=
 
 Units: degrees
 
@@ -109,7 +109,7 @@ relative to sea surface.  Range of values/interpretation?
 This is actually a derived field, which is calculated from 3-D acceleration
 measured by the Motion Pak.
 
-*** roll
+*** =roll=
 
 Units: degrees
 
@@ -119,183 +119,183 @@ relative to sea surface.  Range of values/intepretation?
 This is actually a derived field, which is calculated from 3-D acceleration
 measured by the Motion Pak.
 
-*** longitude
+*** =longitude=
 
 Units: decimal degrees.
 
 This field is reported in RMC files only.
 
-*** latitude
+*** =latitude=
 
 Units: decimal degrees.
 
 This field is reported in RMC files only.
 
-*** sog
+*** =sog=
 
 Units: kts
 
 Ship's speed over ground.  This field is reported in RMC files only.
 
-*** cog
+*** =cog=
 
 Units: degrees
 
 Ship's course over ground.  This field is reported in RMC files only.
 
-*** heading
+*** =heading=
 
 Units: degrees
 
 This field is reported in Gyro files only.
 
-*** k_down
+*** =k_down=
 
 Units: W/m2
 
 Incoming shortwave radiation.  This field is reported in RAD files only.
 
-*** k_down_sd
+*** =k_down_sd=
 
 Standard deviation.  This field is reported in RAD files only.
 
-*** temperature_thermopile
+*** =temperature_thermopile=
 
 Units: C?
 
 This field is reported in RAD files only, and comes from the pyrgeometer.
 
-*** thermopile_sd
+*** =thermopile_sd=
 
 Standard deviation.  This field is reported in RAD files only.
 
-*** temperature_case
+*** =temperature_case=
 
 Units: C?
 
 This field is reported in RAD files only, and comes from the pyrgeometer.
 
-*** temperature_case_sd
+*** =temperature_case_sd=
 
 Standard deviation.  This field is reported in RAD files only.
 
-*** temperature_dome
+*** =temperature_dome=
 
 Units: C?
 
 This field is reported in RAD files only, and comes from the pyrgeometer.
 
-*** temperature_dome_sd
+*** =temperature_dome_sd=
 
 Standard deviation.  This field is reported in RAD files only.
 
-*** lw_in
+*** =lw_in=
 
 Units: W/m2
 
 Incoming longwave radiation.  This field is reported in RAD files only.
 
-*** lw_in_sd
+*** =lw_in_sd=
 
 Standard deviation.  This field is reported in RAD files only.
 
-*** uv_sensor_temperature
+*** =uv_sensor_temperature=
 
 Units: C
 
 Temperature of UV sensor, presumably.  Is this right?  This field is
 reported in RAD files only.
 
-*** uv_sensor_temperature_sd
+*** =uv_sensor_temperature_sd=
 
 Standard deviation.  Is this right?  This field is reported in RAD files
 only.
 
-*** uv_b
+*** =uv_b=
 
 Units: W/m2
 
 Incoming UV-B radiation.  This field is reported in RAD files only.
 
-*** uv_b_sd
+*** =uv_b_sd=
 
 Standard deviation.  This field is reported in RAD files only.
 
-*** uv_a
+*** =uv_a=
 
 Units: W/m2
 
 Incoming UV-A radiation.  This field is reported in RAD files only.
 
-*** uv_a_sd
+*** =uv_a_sd=
 
 Standard deviation.  This field is reported in RAD files only.
 
-*** uv_broad
+*** =uv_broad=
 
 Units: W/m2
 
 Incoming UV-broad radiation.  This field is reported in RAD files only.
 
-*** uv_broad_sd
+*** =uv_broad_sd=
 
 Standard deviation.  This field is reported in RAD files only.
 
-*** acceleration_x
+*** =acceleration_x=
 
 Units: g0 / s?
 
 Is this from motion pack?  This field is reported in EC files only.
 
-*** acceleration_y
+*** =acceleration_y=
 
 Units: g0 / s?
 
 Is this from motion pack? This field is reported in EC files only.
 
-*** acceleration_z
+*** =acceleration_z=
 
 Units: g0 / s?
 
 Is this from motion pack? This field is reported in EC files only.
 
-*** rate_x
+*** =rate_x=
 
 Units: degrees / s?
 
 What does this field represent? This field is reported in EC files only.
 
-*** rate_y
+*** =rate_y=
 
 Units: degrees / s?
 
 What does this field represent? This field is reported in EC files only.
 
-*** rate_z
+*** =rate_z=
 
 Units: degrees / s?
 
 What does this field represent? This field is reported in EC files only.
 
-*** wind_speed_u
+*** =wind_speed_u=
 
 Units: ?
 
 This field is reported in EC files only, in serial and/or analogue form.
 
-*** wind_speed_v
+*** =wind_speed_v=
 
 Units: ?
 
 This field is reported in EC files only, in serial and/or analogue form.
 
-*** wind_speed_w
+*** =wind_speed_w=
 
 Units: ?
 
 This field is reported in EC files only, in serial and/or analogue form.
 
-*** co2
+*** =co2=
 
 Units: ?
 
@@ -303,7 +303,7 @@ What does this field rperesent?  This field is reported in EC files only,
 for open path (OP), closed path (CL), shrouded open path (OPSH), dry (what
 is this?), and LI7200 (is this open or closed?)  systems.
 
-*** h2o
+*** =h2o=
 
 Units: ?
 
@@ -311,7 +311,7 @@ What does this field represent?  This field is reported in EC files only,
 for open path (OP), closed path (CL), shrouded open path (OPSH), dry (what
 is this?), and LI7200 (is this open or closed?) systems.
 
-*** pressure
+*** =pressure=
 
 Units: kPa ?
 
@@ -319,7 +319,7 @@ What pressure does this field represent?  This field is reported in EC
 files only, for open path (OP), closed path (CL), shrouded open path
 (OPSH), and LI7200 (is this open or closed?)  systems.
 
-*** temperature
+*** =temperature=
 
 Units: C
 
@@ -327,68 +327,68 @@ What temperature does this field represent?  This field is reported in EC
 files only, for open path (OP), closed path (CL), shrouded open path
 (OPSH), and LI7200 (is this open or closed?)  systems.
 
-*** diag
+*** =diag=
 
 Diagnostic flag.  This field is reported in EC files only.
 
-*** sound_speed
+*** =sound_speed=
 
 Units: m/s ?
 
 Speed of sound, in digital form.  This field is reported in EC files only.
 
-*** gill_anemometer_status
+*** =gill_anemometer_status=
 
 Not sure what this represents, but it seems to be a diagnostic value from
 the Gill sonic anemometer, reported in digital form.  This field is
 reported in EC files only.
 
-*** LI7000_status
+*** =LI7000_status=
 
 What does this field represent?  It is referred to as LI7000_mode in the
 files/code I've seen.  It seems to be some status mode indicator.  This
 field is reported in EC files only, as "LI7000_mode".
 
-*** agc_diag
+*** =agc_diag=
 
 A diagnostic value from the LI-7200 analyzer, indicating how dirty the lens
 is.  This field is only reported in EC files only.
 
-*** temperature_in
+*** =temperature_in=
 
 Units: C
 
 Temperature of gas going into LI-7200 analyzer?  This field is reported in
 EC files only.
 
-*** temperature_out
+*** =temperature_out=
 
 Units: C
 
 Temperature of gas coming out of LI-7200 analyzer?  This field is reported
 in EC files only.
 
-*** temperature_avg
+*** =temperature_avg=
 
 Units: C
 
 Average of what?  This field is reported in EC files only.
 
-*** temperature_base
+*** =temperature_base=
 
 Units: C
 
 Temperature at some location of the LI-7500.  This field is reported in EC
 files only.
 
-*** temperature_spar
+*** =temperature_spar=
 
 Units: C
 
 Temperature at some location of the LI-7500.  This field is reported in EC
 files only.
 
-*** temperature_bulb
+*** =temperature_bulb=
 
 Units: C
 
