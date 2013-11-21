@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-21T20:48:58+0000
+;; Last-Updated: 2013-11-21T22:09:37+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -18,42 +18,72 @@
 ;; 
 ;; INPUTS:
 ;; 
-;;     Idir:
-;;     Itemplate_Sav:
-;;     Time_Idx:
-;;     Isample_Rate:
-;;     Diag_Dir:
-;;     Diag_Itemplate_Sav:
-;;     Diag_Time_Idx:
-;;     Diag_Idx:
-;;     Ec_Period:
-;;     RMC_Dir:
-;;     RMC_Itemplate_Sav:
-;;     RMC_Time_Idx:
-;;     Gyro_Dir:
-;;     Gyro_Itemplate_Sav:
-;;     Gyro_Time_Idx:
-;;     RAD_Dir:
-;;     RAD_Itemplate_Sav:
-;;     RAD_Time_Idx:
-;;     Motpak_Offset:
-;;     SOG_Thr:
-;;     Lfreq_Thr:
-;;     Hfreq_Thr:
-;;     Xover_freq_Thr:
-;;     Log_File:
-;;     Log_Itemplate_Sav:
-;;     Log_Time_Beg_Idx:
-;;     Log_Time_End_Idx:
-;;     Log_Status_Idx:
-;;     Mot_Corr_Odir:
-;;     Ofile:
-;;     Footprint_Odir:
+;;     Idir:                 Input directory (no trailing separator), with
+;;                           flux files.
+;;     Itemplate_Sav:        Ascii template to read Idir files.
+;;     Time_Idx:             Index (in template) where time in Idir files.
+;;     Isample_Rate:         Scalar indicating the frequency (s) with which
+;;                           input Idir data were sampled.
+;;     Diag_Dir:             Directory (no trailing separator) containing
+;;                           processed MET files, averaged across flux
+;;                           periods, and with a diagnostic field
+;;                           indicating whether the period is suitable for
+;;                           flux analyses (flag=0).
+;;     Diag_Itemplate_Sav:   Ascii template to read Diag_Dir files.
+;;     Diag_Time_Idx:        Index (in template) where time is in files in
+;;                           Diag_Dir.
+;;     Diag_Idx:             Index (in template) where the diagnostic
+;;                           field is in files in Diag_Dir.
+;;     Ec_Period:            Scalar indicating the duration (s) of flux
+;;                           study periods.
+;;     Rmc_Dir:              Directory (no trailing separator) containing
+;;                           standardized daily RMC files.
+;;     Rmc_Itemplate_Sav:    Ascii template to read Rmc_Dir files.
+;;     Rmc_Time_Idx:         Index (in template) where time is in files in
+;;                           Rmc_Dir.
+;;     Gyro_Dir:             Directory (no trailing separator) containing
+;;                           standardized daily GYRO files.
+;;     Gyro_Itemplate_Sav:   Ascii template to read Gyro_Dir files.
+;;     Gyro_Time_Idx:        Index (in template) where time is in files in
+;;                           Gyro_Dir.
+;;     RAD_Dir:              Directory (no trailing separator) containing
+;;                           standardized daily processed RAD files.
+;;     RAD_Itemplate_Sav:    Ascii template to read RAD_Dir files.
+;;     RAD_Time_Idx:         Index (in template) where time is in files in
+;;                           RAD_Dir.
+;;     Motpak_Offset:        Vector showing displacement between motionPak
+;;                           and anemometer (in m), x, y, z.
+;;     SOG_Thr:              Threshold SOG (knots) below which we do not do
+;;                           motion correction (i.e. we assume ship is
+;;                           drifting due to ice, etc.)
+;;     Lfreq_Thr:            Low frequency threshold (Hz) for high pass
+;;                           filter operation during accelerometer
+;;                           integration.
+;;     Hfreq_Thr:            High frequency threshold (Hz) for low pass
+;;                           filter operation on derived
+;;                           angles/translational velocities (filtering
+;;                           motionpak noise.)
+;;     Xover_freq_Thr:       Crossover period (Hz) which serves as a
+;;                           threshold frequency for low pass filtering the
+;;                           linear accelerations and for high pass
+;;                           filtering the angular rates.
+;;     Log_File:             Path to file with MET log.
+;;     Log_Itemplate_Sav:    Ascii template to read MET log file.
+;;     Log_Time_Beg_Idx:     Index (in template) where starting time is in
+;;                           log file.
+;;     Log_Time_End_Idx:     Index (in template) where ending time is in
+;;                           log file.
+;;     Log_Status_Idx:       Index (in template) where status flag is in
+;;                           log file.
+;;     Mot_Corr_Odir:        Output directory for motion-corrected files.
+;;     Ofile:                Output file path for fluxes.
+;;     Footprint_Odir:       Output directory for footprint plots.
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
-;;     SERIAL:
-;;     OVERWRITE:
+;;     SERIAL:               Whether we want to use serial anemometer data.
+;;     OVERWRITE:            Whether to overwrite files in output
+;;                           directories.
 ;; 
 ;; OUTPUTS:
 ;; 
@@ -267,7 +297,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
         ;; Read matching flux file
         flux_pair=where(flux_files_mstr EQ (dfile_mstr + tstamp), mcount)
-        IF mcount LT 1 THEN BEGIN
+        IF mcount LT 1 THEN BEGIN ; MET data, but no flux file available
            message, 'Flux file missing.  Skipping.', /CONTINUE
            CONTINUE
         ENDIF

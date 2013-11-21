@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-10-01T02:19:03+0000
-;; Last-Updated: 2013-10-24T21:18:51+0000
+;; Last-Updated: 2013-11-22T16:04:05+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -51,16 +51,16 @@ FUNCTION LOCATE_TIME_STRINGS, NAMES
               'month', $ ; string that can be formatted to 2-digit month
               'day', $   ; string that can be formatted to 2-digit day
               'hour', $  ; string that can be formatted to 2-digit hour
-              'minute', $       ; string that can be formatted to 2-digit minute
-              'second', $       ; string that can be formatted to 2-digit second
-              'doy', $          ; string that can be formatted to 3-digit DOY
-              ;; String with 4-digit year, 2-digit month, and 2-digit
-              ;; day, in that order, with any one-character separator
-              ;; between them
+              'minute', $  ; string that can be formatted to 2-digit minute
+              'second', $  ; string that can be formatted to 2-digit second
+              'doy', $     ; string that can be formatted to 3-digit DOY
+              ;; String with 4-digit year, 2-digit month, and 2-digit day,
+              ;; in that order, with any one-character separator between
+              ;; them
               'yyyymmdd', $
               'mmddyyyy', $     ; same with different ordering
               'ddmmyyyy', $     ; same with different ordering
-              'ddmmyy', $       ; we have to assume a year
+              'ddmmyy', $       ; we have to guess a given century for year
               ;; String with 2-digit hour, 2-digit minute, and 2-digit
               ;; second, in that order, with any one-character separator
               ;; between them

@@ -1,7 +1,7 @@
-;;; control.inc --- Variables for flux_capacitor.pro
+;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-10-03T14:51:30+0000
+;; Last-Updated: 2013-11-22T15:57:07+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 

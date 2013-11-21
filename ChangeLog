@@ -1,9 +1,26 @@
+2013-11-21  spluque@gmail.com
+
+	* TODO, flux.pro:
+	  Use a better output name for the micromet variables.
+
+	* flux.pro:
+	  OFILE argument should be last. Make sure diag_op is appended to
+	  output. Write output.
+
+	* flux.pro:
+	  Use CONTINUE keyword for message when we do want to report an
+	  error. We may need to use some error handling in these cases.
+
+	* flux.pro:
+	  Variable previously named L is now MOTPAK_OFFSET argument.
+
 2013-11-20  spluque@gmail.com
 
 	* flux.pro:
 	  Fixed references to MET diag structure. Finished adding to
 	  output hash.  Fix footprint plot arguments.  Final calculations
-	  working. Need more testing.
+	  working.  Simplify messages.  Fix footprint plot arguments.  Need
+	  more testing.
 
 	* hkt_footprint.pro:
 	  Use statement block to group the two statements.
