@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-21T13:38:15+0000
+;; Last-Updated: 2013-11-21T17:43:28+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -85,8 +85,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
           RAD_DIR, RAD_ITEMPLATE_SAV, RAD_TIME_IDX, $
           MOTPAK_OFFSET, SOG_THR, LFREQ_THR, HFREQ_THR, XOVER_FREQ_THR, $
           LOG_FILE, LOG_ITEMPLATE_SAV, LOG_TIME_BEG_IDX, $
-          LOG_TIME_END_IDX, LOG_STATUS_IDX, MOT_CORR_ODIR, OFILE, $
-          FOOTPRINT_ODIR, SERIAL=SERIAL, OVERWRITE=OVERWRITE
+          LOG_TIME_END_IDX, LOG_STATUS_IDX, MOT_CORR_ODIR, FOOTPRINT_ODIR, $
+          OFILE, SERIAL=SERIAL, OVERWRITE=OVERWRITE
 
   log_file_info=file_info(log_file)
   IF log_file_info.regular NE 1 THEN $
@@ -1142,7 +1142,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ENDFOREACH
         ;; The mean diagnostic value for the open path flux data.  Not sure
         ;; what the meaning of such a value would be.
-        fluxes['diag']=mean(fix(flux.diag_op), /NAN)
+        fluxes['diag_op']=[fluxes['diag_op'], mean(fix(flux.diag_op), /NAN)]
         ;; Next we have closed path output.  We need to find out which
         ;; elements from closed_path object correspond to field names in
         ;; okeys_cl.  Number of elements must be the same.
@@ -1170,8 +1170,36 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
   ENDFOR
 
-  ;; Write all the full hash
-  help, fluxes
+  ;; Write all the full hash, ordering fields in some way
+  odata=create_struct(diag_time_names[0], fluxes[diag_time_names[0]])
+  FOREACH fld, diag_time_names[1:*] DO BEGIN ; time stamps
+     odata=create_struct(odata, $
+                         diag_time_names[where(diag_time_names EQ fld)], $
+                         fluxes[fld])
+  ENDFOREACH
+  FOREACH fld, okeys_diag DO BEGIN ; MET summary data
+     odata=create_struct(odata, $
+                         okeys_diag[where(okeys_diag EQ fld)], $
+                         fluxes[fld])
+  ENDFOREACH
+  FOREACH fld, okeys_mom DO BEGIN ; momentum data
+     odata=create_struct(odata, $
+                         okeys_mom[where(okeys_mom EQ fld)], fluxes[fld])
+  ENDFOREACH
+  FOREACH fld, okeys_op DO BEGIN ; open path data
+     odata=create_struct(odata, $
+                         okeys_op[where(okeys_op EQ fld)], fluxes[fld])
+  ENDFOREACH
+  odata=create_struct(odata, 'diag_op', fluxes['diag_op'])
+  FOREACH fld, okeys_cl DO BEGIN ; closed path data
+     odata=create_struct(odata, $
+                         okeys_cl[where(okeys_cl EQ fld)], fluxes[fld])
+  ENDFOREACH
+  FOREACH fld, okeys_calc DO BEGIN ; calculated data
+     odata=create_struct(odata, $
+                         okeys_calc[where(okeys_calc EQ fld)], fluxes[fld])
+  ENDFOREACH
+  write_csv, ofile, odata, header=strlowcase(tag_names(odata))
 
 END
 
