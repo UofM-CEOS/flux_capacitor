@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-20T23:48:20+0000
+;; Last-Updated: 2013-11-21T13:18:04+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -1004,8 +1004,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            ;; modifier for stable conditions (Jordan, 1999, eq 33)
            IF zm / MO_L GT 0.5 THEN BEGIN    
               psim=-[((0.70 * zm) / MO_L) + 0.75 * $
-                     ((zm / L) - 14.3) * exp((-0.35 * zm) / MO_L ) + $
-                     10.7]
+                     ((zm / motpak_offset) - 14.3) * $
+                     exp((-0.35 * zm) / MO_L ) + 10.7]
               psih=psim
            ENDIF
            ;; Calculate the profile modifier for neutral/slightly stable
