@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-21T17:43:28+0000
+;; Last-Updated: 2013-11-21T20:48:58+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -242,11 +242,11 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
               'true_sonic_direction', 'vertical', 'open_flag', $
               'closed_flag', 'sonic_flag', 'motion_flag', $
               'sonic_NAN_pct', 'IRGA_NAN_pct', 'SW', 'CDm']
-  okeys_dragok=['Um', 'U10', 'CD10', 'z0', 'CHm', 'CH10', 'zT', 'CEm', $
-                'CE10', 'zQ', 'peakF', 'dist90', 'psim', 'psih', 'U10N', $
-                'U10Nocean']
+  okeys_micro=['Um', 'U10', 'CD10', 'z0', 'CHm', 'CH10', 'zT', 'CEm', $
+               'CE10', 'zQ', 'peakF', 'dist90', 'psim', 'psih', 'U10N', $
+               'U10Nocean']
   okeys=[diag_time_names, okeys_diag, okeys_mom, okeys_op, 'diag_op', $
-         okeys_cl, okeys_calc, okeys_dragok]
+         okeys_cl, okeys_calc, okeys_micro]
   fluxes=hash(okeys)            ; just empty keys; we'll be appending data
 
   FOR k=0, ndiag_files - 1 DO BEGIN
@@ -1162,15 +1162,15 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                          calc_vals[calc_fld]]
         ENDFOREACH
         ;; What to do with these?
-        ;; dragok_vals=[Um, U10, CD10, z0, CHm, CH10, zT, CEm, CE10, $
-        ;;              zQ, !VALUES.D_NAN, !VALUES.D_NAN, psim, psih, U10N, $
-        ;;              U10Nocean]
+        ;; micro_vals=[Um, U10, CD10, z0, CHm, CH10, zT, CEm, CE10, $
+        ;;             zQ, !VALUES.D_NAN, !VALUES.D_NAN, psim, psih, U10N, $
+        ;;             U10Nocean]
 
      ENDFOREACH
 
   ENDFOR
 
-  ;; Write all the full hash, ordering fields in some way
+  ;; Write the full hash, ordering fields in some way
   odata=create_struct(diag_time_names[0], fluxes[diag_time_names[0]])
   FOREACH fld, diag_time_names[1:*] DO BEGIN ; time stamps
      odata=create_struct(odata, $
