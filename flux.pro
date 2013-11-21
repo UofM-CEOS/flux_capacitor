@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-21T13:18:04+0000
+;; Last-Updated: 2013-11-21T13:38:15+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -533,7 +533,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         flux_matches=where(flux_in_rmc GE 0, mcount, /null)
         IF mcount LT 1 THEN BEGIN
            message, 'No matching RMC records found. Skipping.', $
-                    /informational
+                    /CONTINUE
            ;; [Original comment: if we can't find the rmc file, we'll set
            ;; the motion flag to 1 and skip loading the GPS].  [SPL:
            ;; Skipping the whole period, for now, as I don't understand
@@ -582,7 +582,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         flux_matches=where(flux_in_gyro GE 0, mcount, /null)
         IF mcount LT 1 THEN BEGIN
            message, 'No matching Gyro records found. Skipping.', $
-                    /informational
+                    /CONTINUE
            ;; [Original comment: if we can't find the rmc file, we'll set
            ;; the motion flag to 1 and skip loading the GPS].  [SPL:
            ;; Skipping the whole period, for now, as I don't understand
@@ -632,7 +632,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         IF (nok_cog LT 1) OR (nok_sog LT 1) OR $
            (nok_heading LT 1) THEN BEGIN
            message, 'Unusable COG, SOG, or heading records. Skipping.', $
-                    /informational
+                    /CONTINUE
            CONTINUE
         ENDIF
 
@@ -702,7 +702,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                         (accel[1, *] GT g), nbad_mp)
            IF nbad_mp GT 0 THEN BEGIN
               motion_flag=1
-              message, 'Invalid Motion Pak accelerations', /continue
+              message, 'Invalid Motion Pak accelerations', /CONTINUE
               CONTINUE
            ENDIF
 
