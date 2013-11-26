@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-11-25T22:14:28+0000
+;; Last-Updated: 2013-11-26T15:59:37+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -13,17 +13,15 @@
 
 ;;;_ : Flux (eddy-covariance)
 
-;; Time (in minutes) for flux run periods
-fluxperiod=20
-;; Allowable range of degrees (+/-) of the mean wind direction within the
-;; flux period
-t_wind=45
-;; Allowable range of kts (+/-) of the mean ship velocity within the flux
-;; period
-t_SOG=5.0
-;; Allowable range of degrees (+/-) of the mean heading direction within
-;; the flux period
-t_head=45.0
+ec_daily_rate=0.1               ; sampling rate (s)
+ec_stamp='EC'
+ec_period=1200                  ; duration of flux period (s)
+;; Fields in MET data (averaged over the flux period) used for filtering.
+;; This is the filter_idx argument for FILTER_MET (see docs): mean wind
+;; direction, mean SOG, mean heading, and mean true wind speed.
+met_filter_flds=[15, 22, 19, 23]
+;; And the corresponding thresholds
+met_filter_thrs=[45.0, 5.0, 45.0, !VALUES.F_NAN]
 
 ec_41_42_raw_keep_fields=['prog_version', 'accel_x', 'accel_y', 'accel_z', $
                           'rate_x', 'rate_y', 'rate_z', 'u_wind_analogue', $
@@ -105,9 +103,6 @@ ec_std_fields=['prog_version', 'accel_x', 'accel_y', 'accel_z', $
 ec_std_types=[7, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, $
               7, 4, 4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, $
               4, 4, 4, 7, 4, 4, 4]
-ec_daily_rate=0.1
-ec_stamp='EC'
-ec_period=1200
 
 ;; Raw files
 ec_idir=rootdir + path_sep() + 'Flux'
@@ -152,6 +147,12 @@ met_raw_keep_fields=['prog_version', 'battery_voltage', 'panel_temperature', $
                      'surface_temperature', 'wind_speed', $
                      'wind_direction', 'wind_direction_sd', 'par', $
                      'pitch', 'roll']
+;; Fields to pull from RMC STD files when calling PROCESS_MET (see docs)
+rmc_pull_flds=[6, 7, 8, 9, 10, 11]
+;; Location of angle fields in processed MET files
+met_proc_angle_flds=[14, 17, 18, 21, 25, 26]
+;; Location of magnitude fields in processed MET files
+met_proc_mag_flds=[13, -1, -1, 22, -1, 27]
 
 ;; Raw files
 met_idir=rootdir + path_sep() + 'MET'
@@ -186,6 +187,10 @@ nav_raw_keep_fields=['prog_version', 'latitude', 'longitude', 'sog', 'cog', $
                      'accel_z']
 ;; Corresponding field type codes
 nav_raw_keep_types=[7, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+;; Angle and magnitude fields (args angle_fields and magnitude_fields in
+;; AVERAGE_SERIES; see docs)
+nav_angle_flds=[16, 17, 18, 19]
+nav_mag_flds=[15, -1, -1, -1]
 
 ;; Raw files
 nav_idir=rootdir + path_sep() + 'NAV'
@@ -206,6 +211,7 @@ nav_std_template=templates_dir + path_sep() + 'nav_std_template.sav'
 
 gyro_ship_stamp='GYRO'
 gyro_omg_stamp='GYRO_OMG'
+gyro_hdg_fld=6                  ; heading field index in STD files
 gyro_daily_rate=0.1
 gyro_ship_raw_keep_fields=['heading']
 gyro_omg_raw_keep_fields=gyro_ship_raw_keep_fields
@@ -257,6 +263,8 @@ rmc_omg_raw_keep_fields=rmc_ship_raw_keep_fields
 
 ;;;_  . Ship
 
+rmc_ship_cog_fld=15                  ; COG field in STD files
+rmc_ship_sog_fld=14                  ; SOG field in STD files
 ;; Raw files (*.RAW files)
 rmc_ship_idir=rootdir + path_sep() + 'RMC'
 ;; STD files
@@ -268,6 +276,8 @@ rmc_ship_avg_dir=rmc_ship_idir + path_sep() + '1min'
 
 ;;;_  . OMG
 
+rmc_omg_cog_fld=9                  ; COG field in STD files
+rmc_omg_sog_fld=8                  ; SOG field in STD files
 ;; Raw files (*.RAW files)
 rmc_omg_idir=rootdir + path_sep() + 'OMG' + path_sep() + 'NVG'
 ;; STD files
@@ -299,6 +309,9 @@ rad_raw_keep_fields=['battery_voltage', 'panel_temperature', $
                      'uv_b_sd', 'uv_a_sd', 'uv_broad_sd']
 rad_stamp='RAD'
 rad_daily_rate=60
+;; See PROCESS_RAD docs for the two below.
+rmc_latlon_flds=[6, 7]          ; lat and lon field location in RMC STD files
+met_par_fld=16                  ; location of PAR field in MET STD files
 
 ;; Raw files
 rad_idir=rootdir + path_sep() + 'RAD'
@@ -311,20 +324,21 @@ rad_proc_dir=rad_dir + path_sep() + 'Processed'
 
 ;;;_  . Templates
 
-rad_raw_template=templates_dir + 'rad_raw_template.sav'
-rad_std_template=templates_dir + 'rad_std_template.sav'
+rad_raw_template=templates_dir + path_sep() + 'rad_raw_template.sav'
+rad_std_template=templates_dir + path_sep() + 'rad_std_template.sav'
 
 
-;;;_ : Log files and directories
+;;;_ : Logs
 
-met_log_dir=rootdir + 'TowerData' + path_sep() + 'Logs'
-met_log_name='met_log.csv'
-closed_path_log='closed_path_log.csv'
-full_irga_log=rootdir + 'TowerData' + path_sep() + 'Logs' + path_sep() + $
-              'IRGA_full_log.csv'
-user_IRGA_log=rootdir + 'TowerData' + path_sep() + 'Logs' + path_sep() + $
-              'closed_path_log.csv'
+logs_dir=rootdir + path_sep() + 'Logs'
+met_log_file=logs_dir + path_sep() + 'met_log.csv'
+closed_path_log_file=logs_dir + path_sep() + 'closed_path_log.csv'
 
+;;;_  . Templates
+
+met_log_template=templates_dir + path_sep() + 'met_log_template.sav'
+closed_path_log_template=templates_dir + path_sep() + $
+                         'closed_path_log_template.sav'
 
 
 ;;;_ * Emacs local variables
