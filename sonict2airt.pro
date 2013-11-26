@@ -1,12 +1,12 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T20:12:42+0000
-;; Last-Updated: 2013-11-15T20:20:35+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-26T23:11:33+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
-;; 
+;;     SONICT2AIRT
 ;; 
 ;; PURPOSE:
 ;; 
@@ -17,13 +17,13 @@
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     airt=sonict2airt(Tair_C, C_H2O, P_barometric)
 ;; 
 ;; INPUTS:
 ;; 
-;;     C_H2O:        Water vapour concentration; mol/m3
 ;;     Tair_C:       Sonic virtual temperature; degC
-;;     Pbarometric:  Barometric pressure; Pa
+;;     C_H2O:        Water vapour concentration; mol/m3
+;;     P_barometric: Barometric pressure; Pa
 ;; 
 ;; OUTPUTS:
 ;; 
@@ -68,20 +68,19 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION SONICT2AIRT, TAIR_C, C_H2O, PBAROMETRIC
+FUNCTION SONICT2AIRT, TAIR_C, C_H2O, P_BAROMETRIC
 
   ZeroK=273.15     ; zero deg. C in deg K.
   R=8.31451        ; J/mol/K universal gas constant
-  Tair_C=Tair_C+ZeroK           ; convert to Kelvins
+  Tair_K=Tair_C + ZeroK           ; convert to Kelvins
   FOR x=0, 5 DO BEGIN
      ;; (mol h2o/m3 air * J/mol/K * K ) / Pa=mol h2o/mol wet air
-     chi=c_h2o * [(R * Tair_C) / Pbarometric]
-     Tair_a=Tair_C / (1 + 0.32 * chi)
-     Tair_C=Tair_a
+     chi=c_h2o * [(R * Tair_K) / P_barometric]
+     Tair_a=Tair_K / (1 + 0.32 * chi)
+     Tair_K=Tair_a
   ENDFOR
   ;; convert back to degree C
   Tair_a=Tair_a - ZeroK
-  Tair_C=Tair_C - ZeroK
 
   RETURN, Tair_a
 
