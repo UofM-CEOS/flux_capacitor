@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-18T22:20:50+0000
-;; Last-Updated: 2013-11-20T17:57:58+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-25T23:02:37+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -262,7 +262,7 @@ FUNCTION EC_CLOSED, WIND,XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      c_d=c_m - c_v                 ; molar concentration of dry air
      c_c=Xco2_m * c_m              ; molar concentration of co2
      Xco2_d=c_c / (c_m - c_v)      ; dry air mixing ratio of co2
-     Xh2o_d=c_v/(c_m - c_v)          ; dry air mixing ratio of h2o
+     Xh2o_d=c_v / (c_m - c_v)          ; dry air mixing ratio of h2o
      ;; Calculate means
      mean_Xco2_d=mean(Xco2_d, /NAN, /DOUBLE)
      mean_Xh2o_d=mean(Xh2o_d, /NAN, /DOUBLE)
@@ -272,7 +272,7 @@ FUNCTION EC_CLOSED, WIND,XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      lag_cl=findgen(n_lag_cl)
      
      FOR lagpop=maxc_c[0], maxc_c[1] DO $
-        lag_cl[lagpop-maxc_c[0]]=-lagpop
+        lag_cl[lagpop - maxc_c[0]]=-lagpop
      
      w_Xco2_d=c_covariance(Xco2_d, wrot, lag_cl)
      w_Xh2o_d=c_covariance(Xh2o_d, wrot, lag_cl)

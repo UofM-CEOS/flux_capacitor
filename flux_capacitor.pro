@@ -2,8 +2,8 @@
 ;;; flux_capacitor.pro --- 
 ;; Author: Bruce Johnson, Ryan Smith, Sebastian Luque
 ;; Created: 2013-08-23T22:24:25+0000
-;; Last-Updated: 2013-10-02T18:20:21+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-26T16:25:10+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary:
 ;; 
@@ -37,7 +37,7 @@
 
 ;;;_  . Utility procedure for copying dates in main widget
 
-PRO copydates, event
+PRO COPY_DATES, EVENT
 
   widget_control, event.top, get_uvalue=pState
   widget_control, (*pState).gyro_sdate, get_value=gyro_sdate
@@ -61,7 +61,7 @@ END
 
 ;;;_  . Utility procedure for choosing directories in main widget
 
-PRO chooserootdirectory, event
+PRO CHOOSE_ROOT_DIRECTORY, EVENT
 
   widget_control, event.top, get_uvalue=pState
   filedir=dialog_pickfile(/directory, get_path=rootdir_select, /must_exist)
@@ -72,20 +72,20 @@ END
 
 ;;;_  . Clean up
 
-PRO flux_capacitor_cleanup, base
+PRO FLUX_CAPACITOR_CLEANUP, BASE
 
   widget_control, base, get_uvalue=pState ;free the pointers
   ptr_free, pState
 
 END
 
-PRO flux_capacitor_event, event
+PRO FLUX_CAPACITOR_EVENT, EVENT
 
 END
 
 ;;;_  . Main widget
 
-PRO flux_capacitor
+PRO FLUX_CAPACITOR
 
   ;; First, check to make sure all routines are being called by the program
   ;; correctly
@@ -114,7 +114,7 @@ PRO flux_capacitor
   rootdir=widget_text(rootdirbase, /editable, scr_xsize=275)
   ;; bm=filepath('open.bmp',root_dir='resources',subdir='bitmaps')
   select_rootdir=widget_button(rootdirbase, scr_xsize=25, value='...', $
-                               event_PRO='chooserootdirectory')
+                               event_PRO='choose_root_directory')
 
   label=widget_label(topleft, value='Select digital data stream type:', $
                      /align_left)
@@ -221,14 +221,14 @@ PRO flux_capacitor
   calc_edate=widget_text(flux_calc_dates_base, scr_xsize=150, $
                          value='End Date: (yyyymmdd)', /editable)
                
-  copydatesbase=widget_base(moreoptions, col=1)
-  blank=widget_label(copydatesbase, value=' ', scr_ysize=35)
-  blank=widget_label(copydatesbase, value=' ', scr_ysize=35)
-  blank=widget_label(copydatesbase, value=' ', scr_ysize=35)
+  copy_dates_base=widget_base(moreoptions, col=1)
+  blank=widget_label(copy_dates_base, value=' ', scr_ysize=35)
+  blank=widget_label(copy_dates_base, value=' ', scr_ysize=35)
+  blank=widget_label(copy_dates_base, value=' ', scr_ysize=35)
   ;; bm=filepath('shift_down.bmp',root_dir='resources',subdir='bitmaps')
-  copydates=widget_button(copydatesbase, scr_ysize=35, value=' V ', $
-                          tooltip='Copy these start/end values to ' + $
-                          'all boxes below ...', event_PRO='copydates')
+  copy_dates=widget_button(copy_dates_base, scr_ysize=35, value=' V ', $
+                           tooltip='Copy these start/end values to ' + $
+                           'all boxes below ...', event_PRO='copy_dates')
                 
   label=widget_label(col1, value=' ')
   start=widget_button(col1, value='Process ...', $
@@ -265,7 +265,7 @@ END
 
 ;;;_  . Drawing function used throughout the main procedure
 
-PRO draw_msg, ptr_viewer, msg
+PRO DRAW_MSG, PTR_VIEWER, MSG
 
   widget_control, ptr_viewer, get_uvalue=xval
   x=float(xval)
@@ -282,7 +282,7 @@ END
 
 ;;;_  . Check value of a given variable selected in main widget
 
-FUNCTION check_ctrl_var, strc_var
+FUNCTION CHECK_CTRL_VAR, STRC_VAR
 
   val=widget_info(strc_var, /button_set)
 
@@ -294,7 +294,7 @@ END
 
 ;; Make sure to set proper values for variables in control.inc 
 
-PRO process, event
+PRO PROCESS, EVENT
 
   widget_control, event.top, get_uvalue=pState
   widget_control, (*pState).rootdir, get_value=rootdir
