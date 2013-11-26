@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T21:32:25+0000
-;; Last-Updated: 2013-11-20T17:58:22+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-26T22:34:54+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -138,8 +138,8 @@ FUNCTION EC_open, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   ;; required in the spectral correction
   horwind=[mean(WIND[0, *], /nan), mean(WIND[1, *], /nan)]
   ;; do the wind rotations
-  WINDrot=transpose(yawpitch(WIND[0, *], WIND[1, *], WIND[2, *], $
-                             n_elements(WIND[0, *])))
+  WINDrot=yawpitch(WIND[0, *], WIND[1, *], WIND[2, *], $
+                   n_elements(WIND[0, *]))
   urot=WINDrot[0, *] & vrot=WINDrot[1, *] & wrot=WINDrot[2, *]
 
   ;;========CALCULATE NECESSARY TERMS=================

@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T18:01:54+0000
-;; Last-Updated: 2013-11-19T20:06:30+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-26T22:34:47+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -319,8 +319,8 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
   ;; required in the spectral correction
   horwind=[mean(WIND[0, *], /nan), mean(WIND[1, *], /nan)]
   ;; do the wind rotations
-  WINDrot=transpose(yawpitch(WIND[0, *], WIND[1, *], $
-                             WIND[2, *], n_elements(WIND[0, *])))
+  WINDrot=yawpitch(WIND[0, *], WIND[1, *], $
+                   WIND[2, *], n_elements(WIND[0, *]))
   urot=WINDrot[0, *] & vrot=WINDrot[1, *] & wrot=WINDrot[2, *]
 
   ;; calculate w/u covariance

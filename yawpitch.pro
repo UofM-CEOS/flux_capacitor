@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T19:12:08+0000
-;; Last-Updated: 2013-11-20T18:15:11+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-26T22:34:05+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -121,7 +121,7 @@ FUNCTION YAWPITCH, U1, V1, W1, N
         [0, -1 * sin(bbeta), cos(bbeta)]]
   xyz2=roll ## xyz1
 
-  RETURN, xyz2
+  RETURN, transpose(xyz2)
 
 END
 

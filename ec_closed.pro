@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-18T22:20:50+0000
-;; Last-Updated: 2013-11-25T23:02:37+0000
+;; Last-Updated: 2013-11-26T22:34:25+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -132,8 +132,8 @@ FUNCTION EC_CLOSED, WIND,XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
   ;; required in the spectral correction
   horwind=[mean(WIND[0, *], /nan), mean(WIND[1, *], /nan)]
   ;; do the wind rotations
-  WINDrot=transpose(yawpitch(WIND[0, *], WIND[1, *], WIND[2, *], $
-                             n_elements(WIND[0, *])))
+  WINDrot=yawpitch(WIND[0, *], WIND[1, *], WIND[2, *], $
+                   n_elements(WIND[0, *]))
   urot=WINDrot[0, *] & vrot=WINDrot[1, *] & wrot=WINDrot[2, *]
   
   IF keyword_set(pseudo_wpl) THEN BEGIN
