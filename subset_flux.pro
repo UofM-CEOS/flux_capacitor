@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-03T18:49:19+0000
-;; Last-Updated: 2013-11-19T23:28:18+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-26T18:53:49+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -122,7 +122,7 @@ END
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;     SUBSET_FLUX, Idir, Odir, Itemplate_Sav, Time_Beg_Idx, Isample_Rate, $
+;;     SUBSET_FLUX, Idir, Itemplate_Sav, Time_Beg_Idx, Isample_Rate, $
 ;;                  Diag_Dir, Diag_Itemplate_Sav, Diag_Time_Idx, Diag_Idx, $
 ;;                  Ec_Period, RMC_Dir, RMC_Itemplate_Sav, RMC_Time_Idx,
 ;;                  Gyro_Dir, Gyro_Itemplate_Sav, Gyro_Time_Idx, RAD_Dir,
@@ -132,7 +132,6 @@ END
 ;; 
 ;;     Idir:                  Input directory (no trailing separator) for
 ;;                            (standardized) daily EC flux files.
-;;     Odir:                  Output directory (no trailing separator).
 ;;     Itemplate_Sav:         Ascii template to read input files.
 ;;     Time_Beg_Idx:          Index (in template) where time is.
 ;;     Isample_Rate:          Scalar indicating the frequency (s) with
@@ -167,7 +166,8 @@ END
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
-;;     OVERWRITE:             Whether to overwrite files in Odir.
+;;     OVERWRITE:             Whether to overwrite files in output
+;;                            subdirectories.
 ;; 
 ;; SIDE EFFECTS:
 ;; 
@@ -187,7 +187,7 @@ END
 ;; 
 ;;- -----------------------------------------------------------------------
 
-PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
+PRO SUBSET_FLUX, IDIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
                  DIAG_DIR, DIAG_ITEMPLATE_SAV, DIAG_TIME_IDX, DIAG_IDX, $
                  EC_PERIOD, RMC_DIR, RMC_ITEMPLATE_SAV, RMC_TIME_IDX, $
                  GYRO_DIR, GYRO_ITEMPLATE_SAV, GYRO_TIME_IDX, $
@@ -195,17 +195,15 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
                  OVERWRITE=OVERWRITE
 
   ;; Check parameters
-  IF (n_params() NE 19) THEN $
-     message, 'Usage: SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, ' + $
-              'TIME_BEG_IDX, ISAMPLE_RATE, DIAG_DIR, DIAG_ITEMPLATE_SAV, ' + $
+  IF (n_params() NE 18) THEN $
+     message, 'Usage: SUBSET_FLUX, IDIR, ITEMPLATE_SAV, TIME_BEG_IDX, ' + $
+              'ISAMPLE_RATE, DIAG_DIR, DIAG_ITEMPLATE_SAV, ' + $
               'DIAG_TIME_IDX, DIAG_IDX, EC_PERIOD, RMC_DIR, ' + $
               'RMC_ITEMPLATE_SAV, RMC_TIME_IDX, GYRO_DIR, ' + $
               'GYRO_ITEMPLATE_SAV, GYRO_TIME_IDX, ' + $
               'RAD_DIR, RAD_ITEMPLATE_SAV, RAD_TIME_IDX'
   IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
      message, 'IDIR is undefined or is empty string'
-  IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
-     message, 'ODIR is undefined or is empty string'
   IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
      message, 'ITEMPLATE_SAV is undefined or is empty string'
   IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
@@ -396,12 +394,15 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
         ENDIF
         ;; Build a name for output file and check existence
         iname=strsplit(file_basename(rmc_files[rmc_pair]), '.', /extract)
-        ;; Get a path for the file, check if it already exists
-        oname_prefix=strcompress(odir + path_sep() + iname[0])
+        ;; Get a path for the file, check if it already exists.  We are
+        ;; placing this in a sub-directory in RMC_DIR.
+        rmc_subdir=rmc_dir + path_sep() + 'Periods'
+        file_mkdir, rmc_subdir
+        oname_prefix=strcompress(rmc_subdir + path_sep() + iname[0])
         ofile_name=strcompress(oname_prefix + '_' + tstamp + '.' + $
                                iname[1], /remove_all)
         ofile_stamp=file_basename(ofile_name)
-        out_list=file_search(odir + path_sep() + '*.' + iname[1], $
+        out_list=file_search(rmc_subdir + path_sep() + '*.' + iname[1], $
                              /nosort, /fold_case, /test_regular)
         matchfiles=where(ofile_stamp EQ file_basename(out_list), $
                          matchfilecount)
@@ -435,12 +436,15 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
         ENDIF
         ;; Build a name for output file and check existence
         iname=strsplit(file_basename(gyro_files[gyro_pair]), '.', /extract)
-        ;; Get a path for the file, check if it already exists
-        oname_prefix=strcompress(odir + path_sep() + iname[0])
+        ;; Get a path for the file, check if it already exists.  We are
+        ;; placing this in a sub-directory in GYRO_DIR.
+        gyro_subdir=gyro_dir + path_sep() + 'Periods'
+        file_mkdir, gyro_subdir
+        oname_prefix=strcompress(gyro_subdir + path_sep() + iname[0])
         ofile_name=strcompress(oname_prefix + '_' + tstamp + '.' + $
                                iname[1], /remove_all)
         ofile_stamp=file_basename(ofile_name)
-        out_list=file_search(odir + path_sep() + '*.' + iname[1], $
+        out_list=file_search(gyro_subdir + path_sep() + '*.' + iname[1], $
                              /nosort, /fold_case, /test_regular)
         matchfiles=where(ofile_stamp EQ file_basename(out_list), $
                          matchfilecount)
@@ -474,12 +478,15 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
         ENDIF
         ;; Build a name for output file and check existence
         iname=strsplit(file_basename(rad_files[rad_pair]), '.', /extract)
-        ;; Get a path for the file, check if it already exists
-        oname_prefix=strcompress(odir + path_sep() + iname[0])
+        ;; Get a path for the file, check if it already exists.  We are
+        ;; placing this in a sub-directory in RAD_DIR.
+        rad_subdir=rad_dir + path_sep() + 'Periods'
+        file_mkdir, rad_subdir
+        oname_prefix=strcompress(rad_subdir + path_sep() + iname[0])
         ofile_name=strcompress(oname_prefix + '_' + tstamp + '.' + $
                                iname[1], /remove_all)
         ofile_stamp=file_basename(ofile_name)
-        out_list=file_search(odir + path_sep() + '*.' + iname[1], $
+        out_list=file_search(rad_subdir + path_sep() + '*.' + iname[1], $
                              /nosort, /fold_case, /test_regular)
         matchfiles=where(ofile_stamp EQ file_basename(out_list), $
                          matchfilecount)
@@ -513,7 +520,10 @@ PRO SUBSET_FLUX, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
         ENDIF
         ;; Build a name for output file and check existence
         iname=strsplit(file_basename(idir_files[flux_pair]), '.', /extract)
-        ;; Get a path for the file, check if it already exists
+        ;; Get a path for the file, check if it already exists.  We are
+        ;; placing this in a sub-directory in IDIR
+        odir=idir + path_sep() + 'Periods'
+        file_mkdir, odir
         oname_prefix=strcompress(odir + path_sep() + iname[0])
         ofile_name=strcompress(oname_prefix + '_' + tstamp + '.' + $
                                iname[1], /remove_all)
