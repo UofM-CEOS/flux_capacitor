@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-21T22:09:37+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-26T22:00:59+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -216,7 +216,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                   flux_files_a[flux_files_mstr_dims[0] - 2, *]
   ;; [Original comment: Temporarily set g for filtering purposes... true g
   ;; will be calculated later... we'll set this low to make sure we filter
-  ;; properly]
+  ;; properly].  CHECK
   g=8.0
 
   ;; Read log file and obtain beginning and end times
@@ -627,27 +627,21 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; [Original comment: now fill in the gaps by applying a moving
         ;; average... In this case, we use a 100 sample window (10 sec)
         ;; moving average... may need to tweak this value].  [SPL: I THINK
-        ;; THIS STEP SHOULD HAVE BEEN DONE EARLY DURING RMC PROCESSING.
+        ;; THIS STEP SHOULD HAVE BEEN DONE EARLIER DURING RMC PROCESSING.
         ;; Also, perhaps a simple linear interpolation is better; I don't
         ;; know why this moving average is used, where a window must be
-        ;; specified and seems to be introducing bias.  Why aren't latitude
-        ;; and longitude not similarly interpolated?]
-        cog_xy=decompose(cog, sog)
-        cog_x=smooth(cog_xy[0, *], 100, /nan, /edge_truncate)
-        cog_y=smooth(cog_xy[1, *], 100, /nan, /edge_truncate)
-        cog_sm=recompose(cog_x, cog_y)
-        cog=reform(cog_sm[0, *])
-        sog=reform(cog_sm[1, *])
+        ;; specified and may be introducing bias.  Why aren't latitude and
+        ;; longitude not similarly interpolated?]
+        cog_xy=smooth_angle(cog, sog, 100)
+        cog=reform(cog_xy[0, *])
+        sog=reform(cog_xy[1, *])
         ;; Dummy heading magnitude for decomposition purposes only
         vheading=rebin([1], flux_times_dims[1], /sample)
         ;; Guard if missing heading
         noheading=where(~finite(heading), nnoheading)
         IF nnoheading GT 0 THEN vheading[noheading]=!VALUES.D_NAN
-        heading_xy=decompose(heading, vheading)
-        heading_x=smooth(heading_xy[0, *], 100, /nan, /edge_truncate)
-        heading_y=smooth(heading_xy[1, *], 100, /nan, /edge_truncate)
-        heading_sm=recompose(heading_x, heading_y)
-        heading=reform(heading_sm[0, *])
+        heading_xy=smooth_angle(heading, vheading, 100)
+        heading=reform(heading_xy[0, *])
 
         ;; [Original comment: Check to make sure that no 'NaNs' dropped
         ;; through... if they did, we'll have to skip this one]

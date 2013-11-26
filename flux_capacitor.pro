@@ -2,7 +2,7 @@
 ;;; flux_capacitor.pro --- 
 ;; Author: Bruce Johnson, Ryan Smith, Sebastian Luque
 ;; Created: 2013-08-23T22:24:25+0000
-;; Last-Updated: 2013-11-26T16:25:10+0000
+;; Last-Updated: 2013-11-26T21:20:59+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary:
@@ -98,17 +98,16 @@ PRO FLUX_CAPACITOR
   
   ;; Define the base widget, from which all other widgets will be added to...
 
-  base=widget_base(title='Flux Capacitor 2012', scr_xsize=700, scr_ysize=800, $
+  base=widget_base(title='Flux Capacitor', scr_xsize=700, scr_ysize=800, $
                    col=3, /align_left)
   col1=widget_base(base, col=1, /align_left)
   top=widget_base(col1, col=2, /align_left)
   topleft=widget_base(top, col=1)
   label=widget_label(topleft, value=' ')
-  label=widget_label(topleft, value='Welcome to Flux Capacitor 2012', $
+  label=widget_label(topleft, value='Welcome to Flux Capacitor', $
                      /align_left)
   label=widget_label(topleft, value=' ')
-  label=widget_label(topleft, $
-                     value='Select root directory for ArcticNet data:', $
+  label=widget_label(topleft, value='Select root directory:', $
                      /align_left)
   rootdirbase=widget_base(topleft, col=2, /align_left)
   rootdir=widget_text(rootdirbase, /editable, scr_xsize=275)
