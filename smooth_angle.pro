@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-14T00:15:07+0000
-;; Last-Updated: 2013-11-26T21:54:49+0000
+;; Last-Updated: 2013-11-26T22:09:39+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -10,39 +10,27 @@
 ;; 
 ;; PURPOSE:
 ;; 
-;; 
+;;     Smooth angles by decomposing them, applying a boxcar average with a
+;;     given window, and recomposing back into angles and vectors.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     vector=Smooth_Angle(Iangle, VMag, Width)
 ;; 
 ;; INPUTS:
 ;; 
-;; 
-;; 
-;; KEYWORD PARAMETERS:
-;; 
-;; 
+;;     Iangle:     Array of angles (degrees).
+;;     VMag:       Array of corresponding magnitude.
+;;     Width:      Window for the boxcar average smoothing.
 ;; 
 ;; OUTPUTS:
 ;; 
-;; 
-;; 
-;; SIDE EFFECTS:
-;; 
-;; 
-;; 
-;; RESTRICTIONS:
-;; 
-;; 
-;; 
-;; PROCEDURE:
-;; 
-;; 
+;;     A 2-column array with the smoothed angle and magnitude,
+;;     respectively.
 ;; 
 ;; EXAMPLE:
 ;; 
-;; 
+;;     
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
