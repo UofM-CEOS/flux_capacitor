@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-26T22:00:59+0000
+;; Last-Updated: 2013-11-26T23:28:12+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -14,7 +14,15 @@
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     FLUX, Idir, Itemplate_Sav, Time_Idx, Isample_Rate, Diag_Dir, $
+;;                 Diag_Itemplate_Sav, Diag_Time_Idx, Diag_Idx, $
+;;                 Ec_Period, RMC_Dir, RMC_Itemplate_Sav, RMC_Time_Idx, $
+;;                 Gyro_Dir, Gyro_Itemplate_Sav, Gyro_Time_Idx, $
+;;                 RAD_Dir, RAD_Itemplate_Sav, RAD_Time_Idx, $
+;;                 Motpak_Offset, SOG_Thr, Lfreq_Thr, Hfreq_Thr, $
+;;                 Xover_freq_Thr, Log_File, Log_Itemplate_Sav, $
+;;                 Log_Time_Beg_Idx, Log_Time_End_Idx, Log_Status_Idx, $
+;;                 Mot_Corr_Odir, Footprint_Odir, Ofile
 ;; 
 ;; INPUTS:
 ;; 
@@ -85,13 +93,11 @@
 ;;     OVERWRITE:            Whether to overwrite files in output
 ;;                           directories.
 ;; 
-;; OUTPUTS:
-;; 
-;; 
-;; 
 ;; SIDE EFFECTS:
 ;; 
-;; 
+;;     Writes a file Ofile with the eddy covariance calculations.  Writes
+;;     motion-corrected files in Mot_Corr_Odir, and footprint plots in
+;;     Footprint_Odir.
 ;; 
 ;; RESTRICTIONS:
 ;; 
@@ -949,11 +955,6 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; for 2010 = 8.0m.  Do closed path calculations if available
         IF closed_flag EQ 0 THEN BEGIN
            cl_flow=11.5         ; NEED LUT FOR FLOW RATE
-           ;; co2_cl2=co2_cl
-           ;; ;; for some reason, I am losing these values... save for
-           ;; ;; plotting.  [SPL: with code below, this doesn't seem necessary
-           ;; ;; anymore
-           ;; h2o_cl2=h2o_cl
            closed_path=ec_closed(wind, flux.co2_cl, flux.h2o_cl, $
                                  flux.pressure_cl, flux.temperature_cl, $
                                  diag.air_temperature[fperiod], $

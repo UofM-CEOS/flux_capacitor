@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T18:01:54+0000
-;; Last-Updated: 2013-11-26T22:34:47+0000
+;; Last-Updated: 2013-11-26T23:20:45+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -271,7 +271,7 @@ END
 ;; 
 ;;     CORR_MASSMAN: Set this keyword to run a spectral correction
 ;;                   following Massman this keyword must be used to set a
-;;                   number of parameters for the massman correction.  ALL
+;;                   number of parameters for the Massman correction.  ALL
 ;;                   fields must be filled.  If they are not applicable to
 ;;                   the specific application, set them to the string value
 ;;                   'NAN' (for not applicable).  CORR_MASSMAN=[sample rate
@@ -339,7 +339,7 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
      cf_wu=spec_massman(wrot[where(finite(wrot))], $
                         urot[where(finite(urot))], horwind, $
                         cmass[0], cmass[1], /MOMENTUM)
-     cov_w_u=cov_w_u * cf_wu      ;calculate the corrected covariance
+     cov_w_u=cov_w_u * cf_wu    ; calculate the corrected covariance
   ENDIF
 
   ;; calculate u*
