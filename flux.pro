@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-26T23:28:12+0000
+;; Last-Updated: 2013-11-27T15:57:46+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -732,7 +732,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                         (accel[1, *] GT g), nbad_mp)
            IF nbad_mp GT 0 THEN BEGIN
               motion_flag=1
-              message, 'Invalid Motion Pak accelerations', /CONTINUE
+              message, 'Invalid Motion Pak accelerations. Skipping.', $
+                       /CONTINUE
               CONTINUE
            ENDIF
 
@@ -761,12 +762,18 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            ;; south=PI, west=-PI/2
            heading_rad=atan(sin(heading * !DTOR), cos(heading * !DTOR))
     
-           ;; Demean low pass filter that
+           ;; Demean and low pass filter
            gyro_sf=flux_times_dims[1] / double(ec_period) ; sampling freq
            head_dmean=heading_rad - mean(heading_rad, /NAN)
            flux_lf_yaw=lowpass_filter([head_dmean], gyro_sf, $
                                       xover_freq_thr)
-  
+           ;; We need to stop here if low pass filter failed
+           lpf_ok=where(finite(flux_lf_yaw), nlpf_ok)
+           IF nlpf_ok EQ 0 THEN BEGIN
+              message, 'Low pass filter for heading failed. Skipping.', $
+                       /CONTINUE
+              CONTINUE
+           ENDIF
            ;; Add the lowfreq and highfreq components --> BUT multiply
            ;; lf_yaw by -1 to convert to L.H. system
            yaw=reform(-flux_lf_yaw + hf_yaw)
