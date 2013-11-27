@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-14T22:43:46+0000
-;; Last-Updated: 2013-11-15T03:40:27+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-27T16:03:17+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -94,10 +94,8 @@ FUNCTION LOW_FREQ_CORR, U, V, COG, SOG, HEADING, ZREF
      ;; calculate proper x/y (u/v) variables
      wspd=Utrue[1]
      Apo=270 - Utrue[0]
-     x=wspd * cos(Apo * !PI /180)
-     y=wspd * sin(Apo * !PI / 180)
-     corr_wind[0, q]=y
-     corr_wind[1, q]=x
+     corr_wind[0, q]=wspd * sin(Apo * !PI / 180)
+     corr_wind[1, q]=wspd * cos(Apo * !PI /180)
      corr_wind[2, q]=Utrue[1]
      corr_wind[3, q]=Utrue[0]
      corr_wind[4, q]=T
