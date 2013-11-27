@@ -398,6 +398,13 @@ files only.
 *** Gyro
 
 *** Radiation
+
+* TODO Work on templates
+
+** TODO Make file names more meaningful
+
+** TODO Rename fields to reflect structure in planned database
+
 * DONE Entire program should run independently of year
 
 ** DONE Rename files and all names to reflect this independence

@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-11-26T19:59:47+0000
+;; Last-Updated: 2013-11-27T00:36:03+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -55,13 +55,12 @@ rmc_omg_period_dir=rmc_omg_daily_dir + path_sep() + 'Periods'
 
 ;;;_  . Templates
 
-rmc_ship_raw_template=templates_dir + path_sep() + 'rmc_raw_template.sav'
-rmc_omg_raw_template=templates_dir + path_sep() + 'omg_nav_raw_template.sav'
-rmc_ship_std_template=templates_dir + path_sep() + 'rmc_std_template.sav'
-rmc_omg_std_template=templates_dir + path_sep() + 'omg_nav_std_template.sav'
-rmc_ship_avg_template=templates_dir + path_sep() + 'rmc_avg_template.sav'
-rmc_omg_avg_template=templates_dir + path_sep() + $
-                     'omg_nav_std_avg_template.sav'
+rmc_ship_raw_template=templates_dir + path_sep() + 'rmc_ship_raw.sav'
+rmc_omg_raw_template=templates_dir + path_sep() + 'rmc_omg_raw.sav'
+rmc_ship_std_template=templates_dir + path_sep() + 'rmc_ship_std.sav'
+rmc_omg_std_template=templates_dir + path_sep() + 'rmc_omg_std.sav'
+rmc_ship_avg_template=templates_dir + path_sep() + 'rmc_ship_avg.sav'
+rmc_omg_avg_template=templates_dir + path_sep() + 'omg_nav_std_avg_template.sav'
 
 
 ;;;_ : GYRO
@@ -105,13 +104,12 @@ gyro_omg_period_dir=gyro_omg_daily_dir + path_sep() + 'Periods'
 
 ;;;_  . Templates
 
-gyro_ship_raw_template=templates_dir + path_sep() + 'gyro_raw_template.sav'
-gyro_omg_raw_template=templates_dir + path_sep() + 'omg_hdg_raw_template.sav'
+gyro_ship_raw_template=templates_dir + path_sep() + 'gyro_ship_raw.sav'
+gyro_omg_raw_template=templates_dir + path_sep() + 'gyro_omg_raw.sav'
 gyro_ship_std_template=templates_dir + path_sep() + 'gyro_std_template.sav'
-gyro_omg_std_template=templates_dir + path_sep() + 'omg_hdg_std_template.sav'
+gyro_omg_std_template=templates_dir + path_sep() + 'gyro_omg_std.sav'
 ;; gyro_ship_avg_template=templates_dir + path_sep() + 'gyro_avg_template.sav'
-gyro_omg_avg_template=templates_dir + path_sep() + $
-                      'omg_hdg_std_avg_template.sav'
+gyro_omg_avg_template=templates_dir + path_sep() + 'gyro_omg_avg.sav'
 
 
 ;;;_ : MET
@@ -146,16 +144,14 @@ met_proc_dir=met_idir + path_sep() + 'Processed'
 met_proc_avg_dir=met_proc_dir + path_sep() + '20min'
 
 ;;;_  . Templates
-met_raw_template=templates_dir + path_sep() + 'met_raw_template.sav'
-met_std_template=templates_dir + path_sep() + 'met_std_template.sav'
-met_log_template=templates_dir + path_sep() + 'met_log_template.sav'
-met_proc_template=templates_dir + path_sep() + 'met_processed_template.sav'
+met_raw_template=templates_dir + path_sep() + 'met_raw.sav'
+met_std_template=templates_dir + path_sep() + 'met_std.sav'
+met_proc_template=templates_dir + path_sep() + 'met_processed.sav'
 met_proc_avg_pre_template=templates_dir + path_sep() + $
-                          'met_processed_avg_pre_template.sav'
-met_proc_avg_template=templates_dir + path_sep() + $
-                      'met_processed_avg_template.sav'
+                          'met_processed_avg_pre.sav'
+met_proc_avg_template=templates_dir + path_sep() + $ 'met_processed_avg.sav'
 met_proc_avg_diag_template=templates_dir + path_sep() + $
-                           'met_processed_avg_diag_template.sav'
+                           'met_processed_avg_diag.sav'
 
 ;;;_ : NAV
 
@@ -188,8 +184,8 @@ nav_avg_dir=nav_idir + path_sep() + '1min'
 
 ;;;_  . Templates
 
-nav_raw_template=templates_dir + path_sep() + 'nav_raw_template.sav'
-nav_std_template=templates_dir + path_sep() + 'nav_std_template.sav'
+nav_raw_template=templates_dir + path_sep() + 'nav_raw.sav'
+nav_std_template=templates_dir + path_sep() + 'nav_std.sav'
 
 
 ;;;_ : Radiation (RAD)
@@ -220,9 +216,9 @@ rad_period_dir=rad_proc_dir + path_sep() + 'Periods'
 
 ;;;_  . Templates
 
-rad_raw_template=templates_dir + path_sep() + 'rad_raw_template.sav'
-rad_std_template=templates_dir + path_sep() + 'rad_std_template.sav'
-
+rad_raw_template=templates_dir + path_sep() + 'rad_raw.sav'
+rad_std_template=templates_dir + path_sep() + 'rad_std.sav'
+rad_proc_template=templates_dir + path_sep() + 'rad_processed.sav'
 
 ;;;_ : Logs
 
@@ -233,9 +229,8 @@ cl_log_status_fld=10
 
 ;;;_  . Templates
 
-met_log_template=templates_dir + path_sep() + 'met_log_template.sav'
-closed_path_log_template=templates_dir + path_sep() + $
-                         'closed_path_log_template.sav'
+met_log_template=templates_dir + path_sep() + 'met_log.sav'
+closed_path_log_template=templates_dir + path_sep() + 'closed_path_log.sav'
 
 
 ;;;_ : Flux (eddy-covariance)
@@ -359,11 +354,11 @@ xover_freq_thr=0.02
 
 ;;;_  . Templates
 
-ec_raw_template1=templates_dir + path_sep() + 'ec_41_42_template.sav'
-ec_raw_template2=templates_dir + path_sep() + 'ec_43_template.sav'
-ec_raw_template3=templates_dir + path_sep() + 'ec_44_45_template.sav'
-ec_raw_template4=templates_dir + path_sep() + 'ec_46_47_template.sav'
-ec_std_template=templates_dir + path_sep() + 'ec_std_template.sav'
+ec_raw_template1=templates_dir + path_sep() + 'ec_41_42.sav'
+ec_raw_template2=templates_dir + path_sep() + 'ec_43.sav'
+ec_raw_template3=templates_dir + path_sep() + 'ec_44_45.sav'
+ec_raw_template4=templates_dir + path_sep() + 'ec_46_47.sav'
+ec_std_template=templates_dir + path_sep() + 'ec_std.sav'
 
 
 
