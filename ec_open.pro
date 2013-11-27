@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T21:32:25+0000
-;; Last-Updated: 2013-11-26T22:34:54+0000
+;; Last-Updated: 2013-11-27T22:11:05+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -154,13 +154,13 @@ FUNCTION EC_open, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   P=P * double(1000)              ; Atmospheric pressure in Pa
   Tair=sonicT2airT(Ts, c_h2o, P)
   Tair=Tair + 273.15            ; Air temperature into K 
-  mean_Tair=mean(Tair)
+  mean_Tair=mean(Tair, /nan)
 
   ev=c_h2o * R * Tair            ; water vapour pressure (Pa)
   rho_v=c_h2o * mv               ; water vapour density (g/m3)
-  mean_rho_v=mean(rho_v, /DOUBLE) ; mean water vapour density (g/m3)
+  mean_rho_v=mean(rho_v, /DOUBLE, /NAN) ; mean water vapour density (g/m3)
   ;; mean dry air density (g/m3)
-  mean_rho_d=mean((P - ev) / (R * Tair), /DOUBLE) * ma
+  mean_rho_d=mean((P - ev) / (R * Tair), /DOUBLE, /NAN) * ma
   mean_rho=mean_rho_d + mean_rho_v ; mean moist air density (g/m3)
   ;; mean specific humidity (g_h2o/g_moist air)
   mean_qh2o=mean_rho_v / mean_rho
@@ -425,10 +425,10 @@ FUNCTION EC_open, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ;; calculate the point-by-point mixing ratio of CO2, RH for H2O and
      ;; Mixing Ratio (kg/kg) of H2O.
      ;; Fluctuations of rhoc shift
-     rhoc_shift_pr=rhoc_shift - (mean(rhoc_shift))
+     rhoc_shift_pr=rhoc_shift - (mean(rhoc_shift, /nan))
      ;; Fluctuations of rhov shift
-     rhov_shift_pr=rhov_shift - (mean(rhov_shift))
-     T_shift_pr=T_shift - (mean(T_shift)) ; fluctuations of T shift
+     rhov_shift_pr=rhov_shift - (mean(rhov_shift, /nan))
+     T_shift_pr=T_shift - (mean(T_shift, /nan)) ; fluctuations of T shift
      
      ;; High frequency dry air density (from LICOR/SONIC)
      rhod_shift=((P - ev_shift) / (R * T_shift)) * ma
@@ -443,7 +443,7 @@ FUNCTION EC_open, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ;; Not sure if we should be using dry air density or "moist" air
      ;; density... shouldn't make a big difference, but Prytech and Fairall
      ;; are not very specific
-     Xc_shift=Xc_shift_pr + mean(rhoc_shift) / mean(rhod_shift)
+     Xc_shift=Xc_shift_pr + mean(rhoc_shift, /nan) / mean(rhod_shift, /nan)
      ;; Reconstruct the full term. NOTE: the units here are g of C/g of Dry
      ;; Air... this is not really a mixing ratio the way I usually
      ;; calculate it (i.e. mols C/mol dry air).
@@ -507,7 +507,7 @@ FUNCTION EC_open, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
         loop=loop + 1
         cfluxold=cflux
         Xc_nu=Xc_det + $
-              ((RH_shift - mean(RH_shift)) * dc_by_drh) / double(2)
+              ((RH_shift - mean(RH_shift, /nan)) * dc_by_drh) / double(2)
         ;; Now redo the flux calculatioon
         cflux=c_covariance(w_shift, Xc_nu, 0) * mean_rho_d ; flux in g/m2s
         cflux=cflux[0] / double(1000)                      ; kg/m3s
@@ -548,7 +548,7 @@ FUNCTION EC_open, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   c_h2o=c_h2o * double(1000)
   P=P / double(1000)                          ; Atmospheric pressure in Pa
   ;; Mean dry air density (g/m3)
-  mean_rho_d=mean((P - ev) / (R * Tair), /DOUBLE) * ma
+  mean_rho_d=mean((P - ev) / (R * Tair), /DOUBLE, /NAN) * ma
 
   RETURN, returnvec
 

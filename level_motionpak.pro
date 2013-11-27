@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T20:41:26+0000
-;; Last-Updated: 2013-11-20T00:24:53+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-27T23:31:13+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -64,8 +64,8 @@ FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE, STATUS=STATUS
   ;; Create an array which will test the different roll/pitch angles
   roll=(dindgen(r_range * 100) / 100.0) * !DTOR
   pitch=(dindgen(p_range * 100) / 100.0) * !DTOR
-  IF mean(acc[0, *]) GT 0 THEN pitch=-pitch
-  IF mean(acc[1, *]) LT 0 THEN roll=-roll
+  IF mean(acc[0, *], /nan) GT 0 THEN pitch=-pitch
+  IF mean(acc[1, *], /nan) LT 0 THEN roll=-roll
 
  ;; Minimize roll
   min_roll=dindgen(r_range * 100)
@@ -79,7 +79,7 @@ FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE, STATUS=STATUS
      ACCy=ACC[0, *] * cp * sy + ACC[1, *] * $
           (cr[r] * cy + sr[r] * sp * sy) + ACC[2, *] * $
           (-sr[r] * cy + cr[r] * sy * sp)
-     min_roll[r]=mean(ACCy)
+     min_roll[r]=mean(ACCy, /nan)
   ENDFOR
   min_mean_r=min(abs(min_roll))
   min_mean_r_index=where(abs(min_roll) EQ min_mean_r)
@@ -103,7 +103,7 @@ FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE, STATUS=STATUS
      ACCx=ACC[0, *] * cp[p] * cy + ACC[1, *] * $
           (sp[p] * sr * cy - cr * sy) + ACC[2, *] * $
           (sy * sr + sp[p] * cr * cy)
-     min_pitch[p]=mean(ACCx)
+     min_pitch[p]=mean(ACCx, /nan)
   ENDFOR
   min_mean_p=min(abs(min_pitch))
   min_mean_p_index=where(abs(min_pitch) EQ min_mean_p)
@@ -145,9 +145,9 @@ FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE, STATUS=STATUS
   acc_z_ship=reform(-acc[0, *] * sp + acc[1, *] * cp * sr + $
                     acc[2, *] * cp * cr)
 
-  message, 'Motion Pak level - Roll: ' + $
-           strcompress(min_roll_angle / !DTOR) + 'degrees, ' + $
-           'Pitch: ' + strcompress(min_pitch_angle / !DTOR) + ' degrees', $
+  message, 'Motion Pak level - Roll:' + $
+           strcompress(min_roll_angle / !DTOR) + ' degrees, ' + $
+           'Pitch:' + strcompress(min_pitch_angle / !DTOR) + ' degrees', $
            /informational
   corr_pak=[[ACC_x_ship], [ACC_y_ship], [ACC_z_ship], $
             [RATE_phi_ship], [RATE_theta_ship], [RATE_shi_ship]]

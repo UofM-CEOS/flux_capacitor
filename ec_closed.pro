@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-18T22:20:50+0000
-;; Last-Updated: 2013-11-26T22:34:25+0000
+;; Last-Updated: 2013-11-27T23:26:08+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -59,15 +59,15 @@
 ;;                     number of parameters for the massman correction.
 ;;                     ALL fields must be filled.  If they are not
 ;;                     applicable to the specific application, set them to
-;;                     the string value 'NAN' (for not applicable).
-;;     CORR_MASSMAN:  [0 = sample rate (sec), 1 = sonic path length (m), 2
-;;                     = scalar sensor separation in x coord (m), 3 =
-;;                     scalar sensor separation in y coord (m), 4 = line
-;;                     length for scalar sensor with line averaging (m), 5
-;;                     = diameter of scalar sensor with volume averaging
-;;                     (m), 6 = length of scalar sensor with volume
-;;                     averaging (m), 7 = tube flow (LPM), 8 = tube
-;;                     diameter (m), 9 = tube length (m)].
+;;                     the string value 'NAN' (for not applicable): [0:
+;;                     sample rate (sec), 1: sonic path length (m), 2:
+;;                     scalar sensor separation in x coord (m), 3: scalar
+;;                     sensor separation in y coord (m), 4: line length for
+;;                     scalar sensor with line averaging (m), 5: diameter
+;;                     of scalar sensor with volume averaging (m), 6:
+;;                     length of scalar sensor with volume averaging (m),
+;;                     7: tube flow (LPM), 8: tube diameter (m), 9: tube
+;;                     length (m)].
 ;;     OGIVE:          Set this key word to produce an ogvie plot for all
 ;;                     fluxes which are calculated using this routine.
 ;;                     this keyword must be set to a string which indicates
@@ -77,11 +77,11 @@
 ;; 
 ;;     A 10-element array:
 ;;
-;;     [0] = w/Tair covariance, [1] = correction factor for heat flux,
-;;     [2] = heat flux (W/m2), [3] = w/co2 covariance 
-;;     [4] = correction factor for co2 flux, [5] = CO2 flux (mmol/m2/day) 
-;;     [6] = w/h2o covariance, [7] = correction factor for h2o flux 
-;;     [8] = h2o flux (mol/m2/day), [9] = Latent heat flux (W/m2)
+;;     [0]: w/Tair covariance, [1]: correction factor for heat flux,
+;;     [2]: heat flux (W/m2), [3]: w/co2 covariance 
+;;     [4]: correction factor for co2 flux, [5]: CO2 flux (mmol/m2/day) 
+;;     [6]: w/h2o covariance, [7]: correction factor for h2o flux 
+;;     [8]: h2o flux (mol/m2/day), [9]: Latent heat flux (W/m2)
 ;; 
 ;; SIDE EFFECTS:
 ;; 
@@ -102,7 +102,7 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION EC_CLOSED, WIND,XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
+FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
                     MET_P, MAXC_C, AVG_PERIOD, DATA_FREQ, $
                     PSEUDO_WPL=PSEUDO_WPL, CORR_MASSMAN=CMASS, $
                     OGIVE=O_OUTPUT
@@ -213,11 +213,11 @@ FUNCTION EC_CLOSED, WIND,XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      ;; Calculate the flux of CO2, applying a pseudo-WPL correction as per
      ;; eqn 3b of Ibrom et al. 2007.  Mean molar air concentration (moist
      ;; air).
-     mean_c_m=(mean(IRGA_P) * 1000.0) / $
-              (R * (mean(IRGA_T) + 273.15))
+     mean_c_m=(mean(IRGA_P, /nan) * 1000.0) / $
+              (R * (mean(IRGA_T, /nan) + 273.15))
      ;; Mean molar concentration of water vapour
-     mean_c_v=mean(Xh2o_m) * mean_c_m
-     mean_c_c=mean(Xco2_m) * mean_c_m ; mean molar concentration of co2
+     mean_c_v=mean(Xh2o_m, /nan) * mean_c_m
+     mean_c_c=mean(Xco2_m, /nan) * mean_c_m ; mean molar concentration of co2
      ;; Mean dry air mixing ratio of co2
      mean_Xco2_d=mean_c_c / (mean_c_m - mean_c_v)
      
@@ -348,7 +348,8 @@ FUNCTION EC_CLOSED, WIND,XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      returnvec=[cov_w_Xco2_d, cf_wXco2d, lag_co2_cl, $
                 Fco2_cl * 86400000.0, cov_w_Xh2o_d, cf_wXh2od, $
                 lag_h2o_cl, E_cl * 86400.0, Qe_cl, $
-                mean_Xco2_d * 1000000.0, mean(c_v) / mean(c_m)]
+                mean_Xco2_d * 1000000.0, $
+                mean(c_v, /nan) / mean(c_m, /nan)]
 
      RETURN, returnvec
      

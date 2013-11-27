@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Will Drennan, Brent Else, Sebastian Luque
 ;; Created: 2013-11-14T21:10:00+0000
-;; Last-Updated: 2013-11-14T22:32:24+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-27T22:12:38+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -81,7 +81,7 @@ FUNCTION MOTCORR, WIND, ACC, ANGLE, L, FS, LF, HF, G
 
   ;; Mean yaw from the angles (shi) and subtract the mean value from the
   ;; angle derived by filtering.  THIS IS PROBABLY NO LONGER NECESSARY
-  myaw=atan(mean(sin(ANGLE[2, *])), mean(cos(ANGLE[2, *])))
+  myaw=atan(mean(sin(ANGLE[2, *]), /nan), mean(cos(ANGLE[2, *]), /nan))
   cy=cos(ANGLE[2, *] - myaw)
   sy=sin(ANGLE[2, *] - myaw)
 

@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T18:01:54+0000
-;; Last-Updated: 2013-11-26T23:20:45+0000
+;; Last-Updated: 2013-11-27T22:09:28+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -384,7 +384,7 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
 
   ;; calculate L
   grav=9.81 & vonk=0.4
-  mean_Ts_Pot=mean(Ts_Pot)
+  mean_Ts_Pot=mean(Ts_Pot, /nan)
   ;;  As per eq'n 5.7c of Stull
   L=(-mean_Ts_Pot * Ustar ^ 3) / (vonk * grav * cov_w_Ts_Pot)
 
