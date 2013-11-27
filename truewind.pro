@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-10-11T22:38:01+0000
-;; Last-Updated: 2013-10-24T18:20:24+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-27T16:15:59+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -10,41 +10,29 @@
 ;; 
 ;; PURPOSE:
 ;; 
-;; 
-;; 
-;; CATEGORY:
-;; 
-;; 
+;;     Calculate true wind.
+;;
+;;     Note that the code that accompanies the Smith paper is at:
+;;     http://www.coaps.fsu.edu/WOCE/truewind/
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     truew=truewind(0, 45, 5.0, 30, 250, 10)
 ;; 
 ;; INPUTS:
 ;; 
-;; 
-;; 
-;; OPTIONAL INPUTS:
-;; 
-;; 
+;;     Zref:   Zero reference of anemometer (ususally 0)
+;;     Cog:    Course over ground
+;;     Sog:    Speed over ground
+;;     Head:   Vessel heading
+;;     Wdir:   Platform wind direction (meteorological conventions used)
+;;     Wspd:   Platform / apparent wind speed
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
 ;; 
 ;; 
 ;; OUTPUTS:
-;; 
-;; 
-;; 
-;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
-;; COMMON BLOCKS:
-;; 
-;; 
-;; 
-;; SIDE EFFECTS:
 ;; 
 ;; 
 ;; 
@@ -62,20 +50,6 @@
 ;; 
 ;;- -----------------------------------------------------------------------
 ;;; Code:
-
-;; Note that the code that accompanies the smith paper is at:
-;; http://www.coaps.fsu.edu/WOCE/truewind/
-;;
-;; Input variables:
-;;   zref: zero reference of anemometer (ususally 0)
-;;   cog: course over ground
-;;   sog: speed over ground
-;;   head: vessel heading
-;;   wdir: platform wind direction (meteorological conventions used)
-;;   wspd: platform/apparent wind speed
-;;
-;;   EXAMPLE:
-;;     truewind,0,45,5.0,30,250,10
 
 FUNCTION TRUEWIND, ZREF, COG, SOG, HEAD, WDIR, WSPD
 
@@ -96,7 +70,7 @@ FUNCTION TRUEWIND, ZREF, COG, SOG, HEAD, WDIR, WSPD
   is_yok=where((abs(x) LE 1e-5) AND (abs(y) GT 1e-5), nyok)
   is_calm=where((abs(x) LE 1e-5) AND (abs(y) LE 1e-5), ncalm)
   IF nxok GT 0 THEN $
-     mtruedir[is_xok]=ATAN(y[is_xok], x[is_xok]) / !DTOR
+     mtruedir[is_xok]=atan(y[is_xok], x[is_xok]) / !DTOR
   IF nyok GT 0 THEN $
      mtruedir[is_yok]=180.0 - 90.0 * y[is_yok] / ABS(y[is_yok])
   IF ncalm GT 0 THEN BEGIN
