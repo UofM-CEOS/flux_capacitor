@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-11-27T02:51:46+0000
+;; Last-Updated: 2013-11-27T18:49:58+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -60,7 +60,7 @@ rmc_omg_raw_template=templates_dir + path_sep() + 'rmc_omg_raw.sav'
 rmc_ship_std_template=templates_dir + path_sep() + 'rmc_ship_std.sav'
 rmc_omg_std_template=templates_dir + path_sep() + 'rmc_omg_std.sav'
 rmc_ship_avg_template=templates_dir + path_sep() + 'rmc_ship_avg.sav'
-rmc_omg_avg_template=templates_dir + path_sep() + 'omg_nav_std_avg_template.sav'
+rmc_omg_avg_template=templates_dir + path_sep() + 'rmc_omg_avg.sav'
 
 
 ;;;_ : GYRO
@@ -139,7 +139,7 @@ met_std_dir=met_idir + path_sep() + 'STD'
 ;; Daily files
 met_daily_dir=met_idir + path_sep() + 'Daily'
 ;; Processed files
-met_proc_dir=met_idir + path_sep() + 'Processed'
+met_proc_dir=met_daily_dir + path_sep() + 'Processed'
 ;; Processed and averaged files
 met_proc_avg_dir=met_proc_dir + path_sep() + '20min'
 
@@ -210,7 +210,7 @@ rad_std_dir=rad_idir + path_sep() + 'STD'
 ;; Daily files
 rad_daily_dir=rad_idir + path_sep() + 'Daily'
 ;; Processed files (BURBA correction)
-rad_proc_dir=rad_idir + path_sep() + 'Processed'
+rad_proc_dir=rad_daily_dir + path_sep() + 'Processed'
 ;; Period files
 rad_period_dir=rad_proc_dir + path_sep() + 'Periods'
 
