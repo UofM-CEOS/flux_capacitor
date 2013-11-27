@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-11-27T00:36:03+0000
+;; Last-Updated: 2013-11-27T02:51:46+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -28,7 +28,7 @@ rmc_omg_raw_keep_fields=rmc_ship_raw_keep_fields
 rmc_ship_cog_fld=15                  ; COG field in STD files
 rmc_ship_sog_fld=14                  ; SOG field in STD files
 ;; Raw files (*.RAW files)
-rmc_ship_idir=root_dir + path_sep() + 'RMC'
+rmc_ship_idir=root_dir + path_sep() + 'RMC' + path_sep() + 'Ship'
 ;; STD files
 rmc_ship_std_dir=rmc_ship_idir + path_sep() + 'STD'
 ;; Daily files
@@ -43,7 +43,7 @@ rmc_ship_period_dir=rmc_ship_daily_dir + path_sep() + 'Periods'
 rmc_omg_cog_fld=9                  ; COG field in STD files
 rmc_omg_sog_fld=8                  ; SOG field in STD files
 ;; Raw files (*.RAW files)
-rmc_omg_idir=root_dir + path_sep() + 'OMG' + path_sep() + 'NVG'
+rmc_omg_idir=root_dir + path_sep() + 'RMC' + path_sep() + 'OMG'
 ;; STD files
 rmc_omg_std_dir=rmc_omg_idir + path_sep() + 'STD'
 ;; Daily files
@@ -75,7 +75,7 @@ gyro_omg_raw_keep_fields=gyro_ship_raw_keep_fields
 ;;;_  . Ship
 
 ;; Raw files
-gyro_ship_idir=root_dir + path_sep() + 'Gyro'
+gyro_ship_idir=root_dir + path_sep() + 'GYRO' + path_sep() + 'Ship'
 ;; STD files
 gyro_ship_std_dir=gyro_ship_idir + path_sep() + 'STD'
 ;; Filtered (10Hz) files
@@ -90,7 +90,7 @@ gyro_ship_period_dir=gyro_ship_daily_dir + path_sep() + 'Periods'
 ;;;_  . OMG
 
 ;; Raw files
-gyro_omg_idir=root_dir + path_sep() + 'OMG' + path_sep() + 'HDG'
+gyro_omg_idir=root_dir + path_sep() + 'GYRO' + path_sep() + 'OMG'
 ;; STD files
 gyro_omg_std_dir=gyro_omg_idir + path_sep() + 'STD'
 ;; Filtered (10Hz) files
@@ -149,7 +149,7 @@ met_std_template=templates_dir + path_sep() + 'met_std.sav'
 met_proc_template=templates_dir + path_sep() + 'met_processed.sav'
 met_proc_avg_pre_template=templates_dir + path_sep() + $
                           'met_processed_avg_pre.sav'
-met_proc_avg_template=templates_dir + path_sep() + $ 'met_processed_avg.sav'
+met_proc_avg_template=templates_dir + path_sep() + 'met_processed_avg.sav'
 met_proc_avg_diag_template=templates_dir + path_sep() + $
                            'met_processed_avg_diag.sav'
 
