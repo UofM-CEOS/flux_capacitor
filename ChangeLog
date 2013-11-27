@@ -1,3 +1,91 @@
+2013-11-27  spluque@gmail.com
+
+	* flux_capacitor.pro:
+	  Select /OVERWRITE for PROCESS_MET.
+
+	* flux.pro:
+	  Low frequency correction happens under the same test as that for
+	  high frequency correction; namely, when SOG is greater than
+	  specified threshold, so no need to do a separate test for it.
+
+	* ec_closed.pro, ec_momentum.pro, ec_open.pro, level_motionpak.pro,
+	  motcorr.pro, stddev_yamartino.pro:
+	  Protect against NaN when calculating means.
+
+	* control.inc:
+	  Re-organized file directory structure variables.
+
+	* low_freq_corr.pro:
+	  Remove useless variables.
+
+	* flux.pro:
+	  Skip period if low pass filter for heading failed.
+
+	* Templates/closed_path_log.sav,
+	  Templates/closed_path_log_template.sav, Templates/ec_41_42.sav,
+	  Templates/ec_41_42_template.sav, Templates/ec_43.sav,
+	  Templates/ec_43_template.sav, Templates/ec_44_45.sav,
+	  Templates/ec_44_45_template.sav, Templates/ec_46_47.sav,
+	  Templates/ec_46_47_template.sav, Templates/ec_std.sav,
+	  Templates/ec_std_template.sav, Templates/nav_raw.sav,
+	  Templates/nav_raw_template.sav, Templates/nav_std.sav,
+	  Templates/nav_std_template.sav, Templates/rad_raw.sav,
+	  Templates/rad_raw_template.sav, Templates/rad_std.sav,
+	  Templates/rad_std_template.sav, control.inc:
+	  Renaming templates.
+
+	* Templates/met_log.sav, Templates/met_log_template.sav,
+	  Templates/met_processed.sav, Templates/met_processed_avg.sav,
+	  Templates/met_processed_avg_diag.sav,
+	  Templates/met_processed_avg_diag_template.sav,
+	  Templates/met_processed_avg_pre.sav,
+	  Templates/met_processed_avg_pre_template.sav,
+	  Templates/met_processed_avg_template.sav,
+	  Templates/met_processed_template.sav, Templates/met_raw.sav,
+	  Templates/met_raw_template.sav, Templates/met_std.sav,
+	  Templates/met_std_template.sav, control.inc:
+	  Renaming templates.
+
+	* TODO, Templates/gyro_omg_avg.sav, Templates/gyro_omg_raw.sav,
+	  Templates/gyro_omg_std.sav, Templates/gyro_raw_template.sav,
+	  Templates/gyro_ship_raw.sav, Templates/gyro_ship_std.sav,
+	  Templates/gyro_std_template.sav,
+	  Templates/omg_hdg_raw_template.sav,
+	  Templates/omg_hdg_std_avg_template.sav,
+	  Templates/omg_hdg_std_template.sav,
+	  Templates/omg_nav_raw_template.sav,
+	  Templates/omg_nav_std_avg_template.sav,
+	  Templates/omg_nav_std_template.sav,
+	  Templates/rmc_avg_template.sav, Templates/rmc_omg_avg.sav,
+	  Templates/rmc_omg_raw.sav, Templates/rmc_omg_std.sav,
+	  Templates/rmc_raw_template.sav, Templates/rmc_ship_avg.sav,
+	  Templates/rmc_ship_raw.sav, Templates/rmc_ship_std.sav,
+	  Templates/rmc_std_template.sav, control.inc:
+	  Renaming templates.
+
+2013-11-26  spluque@gmail.com
+
+	* ec_closed.pro, ec_momentum.pro, ec_open.pro, yawpitch.pro:
+	  YAWPITCH now returns the transposed array.
+
+	* flux.pro, flux_capacitor.pro:
+	  Implementing SMOOTH_ANGLE function.
+
+	* subset_flux.pro:
+	  Output files are now written to a subdirectory in each input
+	  directory, so no need for Odir argument.
+
+2013-11-25  spluque@gmail.com
+
+	* control.inc, flux_startup.pro:
+	  Set up some initial variables for manual operation. Notes to
+	  check.
+
+	* error_message.pro, setDifference.pro:
+	  Delete these Coyote routines, since we can use them if we have
+	  our path set up correctly. We don't need to keep them in SVN; we
+	  don't need to touch them.
+
 2013-11-21  spluque@gmail.com
 
 	* TODO, flux.pro:
