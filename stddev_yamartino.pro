@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-18T20:47:27+0000
-;; Last-Updated: 2013-10-05T20:09:45+0000
+;; Last-Updated: 2013-11-27T22:13:02+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;;  NAME:
@@ -40,8 +40,8 @@ FUNCTION STDDEV_YAMARTINO, X
   IF goodcount LT 1 THEN BEGIN
      sd='NaN'
   ENDIF ELSE BEGIN
-     mean_sin=mean(sin(rads[goodrad]))
-     mean_cos=mean(cos(rads[goodrad]))
+     mean_sin=mean(sin(rads[goodrad]), /nan)
+     mean_cos=mean(cos(rads[goodrad]), /nan)
      ;;calculate epsilon
      eps=sqrt(1 - (mean_sin ^ 2 + mean_cos ^ 2))
      ;;calculate standard deviation
