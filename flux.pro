@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-27T15:57:46+0000
+;; Last-Updated: 2013-11-27T23:16:17+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -683,8 +683,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; keep it like this for now]
         wind_v_mean=mean(wind[2, *], /nan)
 
-        ;; High frequency motion correction
-
+        ;; High frequency motion correction -> [SPL: but the low frequency
+        ;; correction uses the same test, so what is the difference?]
         IF diag.sog[fperiod] GT sog_thr THEN BEGIN
            ;; [Original comment: shot filter the motion channels... this
            ;; helps with a problem where unreasonably high accelerations
@@ -785,14 +785,12 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                           hfreq_thr, g)
            wind=u_true
 
-        ENDIF
+           ;; Low frequency motion correction
 
-        ;; Low frequency motion correction
-
-        ;; [SPL: WATCH LOW_FREQ_CORR FUNCTION, which redundantly uses
-        ;; truewind.pro code, and also works with a loop that is no longer
-        ;; needed, since the new TRUEWIND can process the entire array.]
-        IF diag.sog[fperiod] GT 0.25 THEN BEGIN
+           ;; [SPL: WATCH LOW_FREQ_CORR FUNCTION, which redundantly uses
+           ;; truewind.pro code, and also works with a loop that is no
+           ;; longer needed, since the new TRUEWIND can process the entire
+           ;; array.]
            U_TRUE_2=low_freq_corr(wind[0, *], wind[1, *], cog, $
                                   sog / 1.9438449, heading, 337.0)
            wind[0, *]=U_TRUE_2[0, *]
@@ -803,6 +801,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            raw_son=bearing_avg(U_TRUE_2[5, *], U_TRUE_2[4, *])
            raw_sonic_spd=raw_son[0, 1]
            raw_sonic_dir=raw_son[0, 0]
+
         ENDIF
 
         ;; Output motion corrected data
@@ -904,7 +903,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         delvar, omot_corr
 
         ;; Eddy covariance calculations
-        sf_hz=float(isample_rate) * 10 ; sampling freq (Hz)
+        sf_hz=float(isample_rate) * 100 ; sampling freq (Hz)
         mom=ec_momentum(wind, sonic_temperature, $
                         diag.air_temperature[fperiod], $
                         diag.rh_percent[fperiod], $
