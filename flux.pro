@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-28T16:43:56+0000
+;; Last-Updated: 2013-11-28T20:03:54+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -921,7 +921,9 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         cov_w_psTair=mom[6]
         psH=mom[7]
 
-        ;; Open path calculations
+        ;; Open path calculations.  IF TEST FAILS, THEN WE CREATE AN ARRAY
+        ;; WITH THE SAME DIMENSIONS AS THAT RETURNED BY EC_OPEN, for
+        ;; printing purposes.
         IF open_flag NE 1 THEN BEGIN
            open_path=ec_open(wind, sonic_temperature, flux.co2_op, $
                              flux.h2o_op, flux.pressure_op, $
@@ -932,36 +934,38 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                            0.125], $
                              BURBA=[sw_avg, lw_avg, raw_sonic_spd], $
                              pkt=Ustar)
-           meanCO2_op=open_path[11]
-           mean_H2O_op=open_path[12]
-           cov_w_Tair=open_path[0]
-           cf_wTair=open_path[1]
-           H=open_path[2]
-           cov_w_CO2_op=open_path[3]
-           cf_CO2_op=open_path[4]
-           FCO2_op=open_path[5]
-           cov_w_h2o_op=open_path[6]
-           cf_wH2O_op=open_path[7]
-           E_op=open_path[8]
-           Qe_op=open_path[9]
-           lag_op=open_path[10] 
-           WPLcont=open_path[13]
-           CO2Burba_mt=open_path[14]
-           CO2Burba_ln=open_path[15]
-           H2OBurba_mt=open_path[16]
-           H2OBurba_ln=open_path[17]
-           pkt_FCO2_op=open_path[18]
-           pkt_loop=open_path[19]
-           cflux_det=open_path[20]
-           dRH_by_dq=open_path[21]
-           dc_by_drh_initial=open_path[22]
-           dc_by_drh_final=open_path[23]
-           dc_by_dq_initial=open_path[24]
-           dc_by_dq_final=open_path[25]
-        ENDIF
+        ENDIF ELSE open_path=make_array(27, value=!VALUES.D_NAN)
+        meanCO2_op=open_path[11]
+        mean_H2O_op=open_path[12]
+        cov_w_Tair=open_path[0]
+        cf_wTair=open_path[1]
+        H=open_path[2]
+        cov_w_CO2_op=open_path[3]
+        cf_CO2_op=open_path[4]
+        FCO2_op=open_path[5]
+        cov_w_h2o_op=open_path[6]
+        cf_wH2O_op=open_path[7]
+        E_op=open_path[8]
+        Qe_op=open_path[9]
+        lag_op=open_path[10]
+        WPLcont=open_path[13]
+        CO2Burba_mt=open_path[14]
+        CO2Burba_ln=open_path[15]
+        H2OBurba_mt=open_path[16]
+        H2OBurba_ln=open_path[17]
+        pkt_FCO2_op=open_path[18]
+        pkt_loop=open_path[19]
+        cflux_det=open_path[20]
+        dRH_by_dq=open_path[21]
+        dc_by_drh_initial=open_path[22]
+        dc_by_drh_final=open_path[23]
+        dc_by_dq_initial=open_path[24]
+        dc_by_dq_final=open_path[25]
 
         ;; Closed-path flow rate for 2010 = 11.5 LPM.  Sample tube length
-        ;; for 2010 = 8.0m.  Do closed path calculations if available
+        ;; for 2010 = 8.0m.  Do closed path calculations if available.  IF
+        ;; CLOSED FLAG IS UP, THEN WE CREATE AN ARRAY OF SAME DIMENSIONS AS
+        ;; THAT RETURNED BY EC_CLOSED, for printing purposes.
         IF closed_flag EQ 0 THEN BEGIN
            cl_flow=11.5         ; NEED LUT FOR FLOW RATE
            closed_path=ec_closed(wind, flux.co2_cl, flux.h2o_cl, $
@@ -976,18 +980,18 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                                !VALUES.D_NAN, $
                                                !VALUES.D_NAN, cl_flow, $
                                                0.005, 8.0])
-           meanCO2_cl=closed_path[9]
-           meanH2O_cl=closed_path[10]
-           cov_w_Xco2_cl=closed_path[0]
-           cf_wXco2_cl=closed_path[1]
-           lag_co2_cl=closed_path[2]
-           FCO2_cl=closed_path[3]
-           cov_w_Xh2o_cl=closed_path[4]
-           cf_wXh2o_cl=closed_path[5]
-           lag_h2o_cl=closed_path[6]
-           E_cl=closed_path[7]
-           Qe_cl=closed_path[8]
-        ENDIF
+        ENDIF ELSE closed_path=make_array(11, value=!VALUES.D_NAN)
+        meanCO2_cl=closed_path[9]
+        meanH2O_cl=closed_path[10]
+        cov_w_Xco2_cl=closed_path[0]
+        cf_wXco2_cl=closed_path[1]
+        lag_co2_cl=closed_path[2]
+        FCO2_cl=closed_path[3]
+        cov_w_Xh2o_cl=closed_path[4]
+        cf_wXh2o_cl=closed_path[5]
+        lag_h2o_cl=closed_path[6]
+        E_cl=closed_path[7]
+        Qe_cl=closed_path[8]
 
         ;; MICROMET CALCULATIONS
 
@@ -1164,10 +1168,10 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            fluxes[okeys_mom[mom_fld]]=[fluxes[okeys_mom[mom_fld]], $
                                        mom[mom_idx[mom_fld]]]
         ENDFOREACH
-        ;; Next we have open path output.  We need to specify (be careful
-        ;; these indices match out which
-        ;; elements from open_path object correspond to field names in
-        ;; okeys_op.  Number of elements must be the same.
+        ;; Next we have open path output.  We need to (be careful these
+        ;; indices match) find out which elements from open_path object
+        ;; correspond to field names in okeys_op.  Number of elements must
+        ;; be the same.
         op_idx=[11, 12, 0, 1, 2, 3, 4, 5, 13, 14, 15, 16, 17, 6, 7, 8, 9, $
                 10, 18, 19, 20, 21, 22, 23, 24, 25]
         FOREACH op_fld, indgen(n_elements(okeys_op)) DO BEGIN
@@ -1211,6 +1215,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                          diag_time_names[where(diag_time_names EQ fld)], $
                          fluxes[fld])
   ENDFOREACH
+  odata=create_struct(odata, 'DOY', calendar2doy())
   FOREACH fld, okeys_diag DO BEGIN ; MET summary data
      odata=create_struct(odata, $
                          okeys_diag[where(okeys_diag EQ fld)], $
