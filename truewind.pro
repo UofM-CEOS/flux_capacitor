@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-10-11T22:38:01+0000
-;; Last-Updated: 2013-11-27T16:15:59+0000
+;; Last-Updated: 2013-11-28T15:42:23+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -61,7 +61,7 @@ FUNCTION TRUEWIND, ZREF, COG, SOG, HEAD, WDIR, WSPD
   x=wspd * cos(apo * !DTOR) + sog * cos(cpo * !DTOR)
   y=wspd * sin(apo * !DTOR) + sog * sin(cpo * !DTOR)
   ;; T magnitude
-  T=(x ^ 2 + y ^ 2) ^ 0.5
+  T=reform((x ^ 2 + y ^ 2) ^ 0.5)
   calm_flag=make_array(n_elements(T), type=2, value=1)
   ;; The To... Note that the atan thing is backwards in IDL; THIS I STOLE
   ;; STRAIGHT FROM SMITH!
