@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-28T20:03:54+0000
+;; Last-Updated: 2013-11-28T23:02:49+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -124,15 +124,107 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
           LOG_TIME_END_IDX, LOG_STATUS_IDX, MOT_CORR_ODIR, FOOTPRINT_ODIR, $
           OFILE, SERIAL=SERIAL, OVERWRITE=OVERWRITE
 
+  ;; Check parameters
+  IF (n_params() NE 31) THEN $
+     message, 'Usage: FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ' + $
+              'ISAMPLE_RATE, DIAG_DIR, DIAG_ITEMPLATE_SAV, ' + $
+              'DIAG_TIME_IDX, DIAG_IDX, EC_PERIOD, RMC_DIR, ' + $
+              'RMC_ITEMPLATE_SAV, RMC_TIME_IDX, GYRO_DIR, ' + $
+              'GYRO_ITEMPLATE_SAV, GYRO_TIME_IDX, RAD_DIR, ' + $
+              'RAD_ITEMPLATE_SAV, RAD_TIME_IDX, MOTPAK_OFFSET, ' + $
+              'SOG_THR, LFREQ_THR, HFREQ_THR, XOVER_FREQ_THR, ' + $
+              'LOG_FILE, LOG_ITEMPLATE_SAV, LOG_TIME_BEG_IDX, ' + $
+              'LOG_TIME_END_IDX, LOG_STATUS_IDX, MOT_CORR_ODIR, ' + $
+              'FOOTPRINT_ODIR, OFILE'
+  idir_info=file_info(idir)
+  itpl_info=file_info(itemplate_sav)
+  diag_dir_info=file_info(diag_dir)
+  diag_tpl_info=file_info(diag_itemplate_sav)
+  rmc_dir_info=file_info(rmc_dir)
+  rmc_tpl_info=file_info(rmc_itemplate_sav)
+  gyro_dir_info=file_info(gyro_dir)
+  gyro_tpl_info=file_info(gyro_itemplate_sav)
+  rad_dir_info=file_info(rad_dir)
+  rad_tpl_info=file_info(rad_itemplate_sav)
   log_file_info=file_info(log_file)
-  IF log_file_info.regular NE 1 THEN $
-     message, 'Log file is not a regular file.  Exiting'
+  log_tpl_info=file_info(log_itemplate_sav)
+  mc_odir_info=file_info(mot_corr_odir)
+  footprint_odir_info=file_info(footprint_odir)
+  IF (~idir_info.directory) THEN $
+     message, 'IDIR must be a string pointing to an existing directory'
+  IF (~itpl_info.read) THEN $
+     message, 'ITEMPLATE_SAV must be a string pointing to a readable file'
+  IF ((n_elements(time_idx) NE 1) OR $
+      ((size(time_idx, /type) NE 2) || time_idx LT 0)) THEN $
+         message, 'TIME_IDX must be an integer scalar >= zero'
+  IF ((n_elements(isample_rate) EQ 0) OR (isample_rate EQ '')) THEN $
+     message, 'ISAMPLE_RATE is undefined or is empty string'
+  IF (~diag_dir_info.directory) THEN $
+     message, 'DIAG_DIR must be a string pointing to an existing directory'
+  IF (~diag_tpl_info.read) THEN $
+     message, 'DIAG_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(diag_time_idx) NE 1) OR $
+      ((size(diag_time_idx, /type) NE 2) || diag_time_idx LT 0)) THEN $
+         message, 'DIAG_TIME_IDX must be an integer scalar >= zero'
+  IF ((n_elements(diag_idx) NE 1) OR $
+      ((size(diag_idx, /type) NE 2) || diag_idx LT 0)) THEN $
+         message, 'DIAG_IDX must be an integer scalar >= zero'
+  IF ((n_elements(ec_period) NE 1) OR (ec_period LT 0)) THEN $
+     message, 'EC_PERIOD must be a scalar >= zero'
+  IF (~rmc_dir_info.directory) THEN $
+     message, 'RMC_DIR must be a string pointing to an existing directory'
+  IF (~rmc_tpl_info.read) THEN $
+     message, 'RMC_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(rmc_time_idx) NE 1) OR $
+      ((size(rmc_time_idx, /type) NE 2) || rmc_time_idx LT 0)) THEN $
+         message, 'RMC_TIME_IDX must be an integer scalar >= zero'
+  IF (~gyro_dir_info.directory) THEN $
+     message, 'GYRO_DIR must be a string pointing to an existing directory'
+  IF (~gyro_tpl_info.read) THEN $
+     message, 'GYRO_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(gyro_time_idx) NE 1) OR $
+      ((size(gyro_time_idx, /type) NE 2) || gyro_time_idx LT 0)) THEN $
+         message, 'GYRO_TIME_IDX must be an integer scalar >= zero'
+  IF (~rad_dir_info.directory) THEN $
+     message, 'RAD_DIR must be a string pointing to an existing directory'
+  IF (~rad_tpl_info.read) THEN $
+     message, 'RAD_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(rad_time_idx) NE 1) OR $
+      ((size(rad_time_idx, /type) NE 2) || rad_time_idx LT 0)) THEN $
+         message, 'RAD_TIME_IDX must be an integer scalar >= zero'
+  IF (n_elements(motpak_offset) NE 3) THEN $
+         message, 'MOTPAK_OFFSET must be a 3-element numerical array'
+  IF ((n_elements(sog_thr) NE 1) OR (sog_thr LT 0)) THEN $
+     message, 'SOG_THR must be a scalar >= zero'
+  IF ((n_elements(lfreq_thr) NE 1) OR (lfreq_thr LT 0)) THEN $
+     message, 'LFREQ_THR must be a scalar >= zero'
+  IF ((n_elements(hfreq_thr) NE 1) OR (hfreq_thr LT 0)) THEN $
+     message, 'HFREQ_THR must be a scalar >= zero'
+  IF ((n_elements(xover_freq_thr) NE 1) OR (xover_freq_thr LT 0)) THEN $
+     message, 'XOVER_FREQ_THR must be a scalar >= zero'
+  IF (~log_file_info.read) THEN $
+     message, 'LOG_FILE must be a string pointing to a readable file'
+  IF (~log_tpl_info.read) THEN $
+     message, 'LOG_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
   IF ((n_elements(log_time_beg_idx) NE 1) OR (log_time_beg_idx LT 0)) THEN $
      message, 'LOG_TIME_BEG_IDX must be a scalar >= zero'
   IF ((n_elements(log_time_end_idx) NE 1) OR (log_time_end_idx LT 0)) THEN $
      message, 'LOG_TIME_END_IDX must be a scalar >= zero'
   IF ((n_elements(log_status_idx) NE 1) OR (log_status_idx LT 0)) THEN $
      message, 'LOG_STATUS_IDX must be a scalar >= zero'
+  IF ((n_elements(mot_corr_odir) NE 1) OR $
+      (size(mot_corr_odir, /type) NE 7)) THEN $
+         message, 'MOT_CORR_ODIR must be a string scalar'
+  IF ((n_elements(footprint_odir) NE 1) OR $
+      (size(footprint_odir, /type) NE 7)) THEN $
+         message, 'FOOTPRINT_ODIR must be a string scalar'
+  IF ((n_elements(ofile) NE 1) OR (size(ofile, /type) NE 7)) THEN $
+         message, 'OFILE must be a string scalar'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
   diag_files=file_search(diag_dir + path_sep() + '*', count=ndiag_files, $
@@ -250,9 +342,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   logn=(size(log_beg_times, /dimensions))[1]
 
   ;; Set up a hash (or structure) to hold output data from all valid flux
-  ;; runs at this point, before starting outermost loop
-  diag_time_names=diag_field_names[where(diag_template.FIELDGROUPS EQ $
-                                         diag_time_idx)]
+  ;; runs at this point, before starting outermost loop.
   ;; BE VERY CAREFUL THESE EXIST IN THE TEMPLATE!  I'm only checking that
   ;; "pressure" gets interpreted as "atmospheric_pressure", and
   ;; "rh_percent" as "relative_humidity" below. Building names in steps, as
@@ -281,7 +371,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   okeys_micro=['Um', 'U10', 'CD10', 'z0', 'CHm', 'CH10', 'zT', 'CEm', $
                'CE10', 'zQ', 'peakF', 'dist90', 'psim', 'psih', 'U10N', $
                'U10Nocean']
-  okeys=[diag_time_names, okeys_diag, okeys_mom, okeys_op, 'diag_op', $
+  okeys=['time', 'DOY', okeys_diag, okeys_mom, okeys_op, 'diag_op', $
          okeys_cl, okeys_calc, okeys_micro]
   fluxes=hash(okeys)            ; just empty keys; we'll be appending data
 
@@ -295,6 +385,16 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      fluxable=where(diag_flag EQ 0, nfluxable)
      IF nfluxable EQ 0 THEN CONTINUE
      dfile_mstr=diag_files_mstr[k]
+     diag_jd=reform(julday(long(diag_times[1, *]), $
+                           long(diag_times[2, *]), $
+                           long(diag_times[0, *]), $
+                           long(diag_times[3, *]), $
+                           long(diag_times[4, *]), $
+                           double(diag_times[5, *])))
+     diag_tstamp=jul2timestamp(diag_jd)
+     diag_doy=calendar2doy(long(diag_times[0, *]), $
+                           long(diag_times[1, *]), $
+                           long(diag_times[2, *]))
 
      FOREACH fperiod, fluxable DO BEGIN
         ;; Time stamp.  Note we are flooring the seconds (as in SUBSET_FLUX)
@@ -808,6 +908,39 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ENDIF
 
         ;; Output motion corrected (if it was needed) data
+        omc_tags=[field_names[time_flds], $
+                  'wind_speed_u', $
+                  'wind_speed_v', $
+                  'wind_speed_w', $
+                  'wind_speed_u_corr', $
+                  'wind_speed_v_corr', $
+                  'wind_speed_w_corr', $
+                  'sonic_temperature', $
+                  'CO2_op', $
+                  'H2O_op', $
+                  'pressure_op', $
+                  'diag_op', $
+                  'accel_x', $
+                  'accel_y', $
+                  'accel_z', $
+                  'accel_x_corr', $
+                  'accel_y_corr', $
+                  'accel_z_corr', $
+                  'rate_phi', $
+                  'rate_theta', $
+                  'rate_shi', $
+                  'rate_phi_corr', $
+                  'rate_theta_corr', $
+                  'rate_shi_corr', $
+                  'CO2_cl', $
+                  'H2O_cl', $
+                  'pressure_cl', $
+                  'temperature_cl', $
+                  'latitude', $
+                  'longitude', $
+                  'SOG', $
+                  'COG', $
+                  'heading']
         omot_corr=create_struct(field_names[time_flds[0]], $
                                 reform(flux_times[0, *]))
         FOREACH tfld, time_flds[1:*] DO BEGIN ; include all time data
@@ -815,71 +948,41 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                    reform(flux_times[tfld, *]))
         ENDFOREACH
         omot_corr=create_struct(omot_corr, $
-                                'wind_speed_u', $
+                                omc_tags[n_elements(time_flds):*], $
                                 reform(wind_raw[0, *]), $
-                                'wind_speed_v', $
                                 reform(wind_raw[1, *]), $
-                                'wind_speed_w', $
                                 reform(wind_raw[2, *]), $
-                                'wind_speed_u_corr', $
                                 reform(wind[0, *]), $
-                                'wind_speed_v_corr', $
                                 reform(wind[1, *]), $
-                                'wind_speed_w_corr', $
                                 reform(wind[2, *]), $
-                                'sonic_temperature', $
                                 sonic_temperature, $
-                                'co2_op', $
                                 flux.co2_op, $
-                                'h2o_op', $
                                 flux.h2o_op, $
-                                'pressure_op', $
                                 flux.pressure_op, $
-                                'diag_op', $
                                 flux.diag_op, $
-                                'accel_x', $
                                 reform(accel_raw[0, *]), $
-                                'accel_y', $
                                 reform(accel_raw[1, *]), $
-                                'accel_z', $
                                 reform(accel_raw[2, *]), $
-                                'accel_x_corr', $
                                 reform(accel[0, *]), $
-                                'accel_y_corr', $
                                 reform(accel[1, *]), $
-                                'accel_z_corr', $
                                 reform(accel[2, *]), $
-                                'rate_phi', $
                                 reform(rate_raw[0, *]), $
-                                'rate_theta', $
                                 reform(rate_raw[1, *]), $
-                                'rate_shi', $
                                 reform(rate_raw[2, *]), $
-                                'rate_phi_corr', $
                                 reform(rate[0, *]), $
-                                'rate_theta_corr', $
                                 reform(rate[1, *]), $
-                                'rate_shi_corr', $
                                 reform(rate[2, *]), $
-                                'co2_cl', $
                                 flux.co2_cl, $
-                                'h2o_cl', $
                                 flux.h2o_cl, $
-                                'pressure_cl', $
                                 flux.pressure_cl, $
-                                'temperature_cl', $
                                 flux.temperature_cl, $
-                                'latitude', $
                                 latitude, $
-                                'longitude', $
                                 longitude, $
-                                'sog', $
                                 sog, $
-                                'cog', $
                                 cog, $
-                                'heading', $
                                 heading)
 
+        file_mkdir, mot_corr_odir
         mc_ofile_name=strcompress(mot_corr_odir + path_sep() + $
                                   iname_prefix + '_' + 'mc.' + $
                                   iname[1], /remove_all)
@@ -893,15 +996,13 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            IF keyword_set(overwrite) THEN BEGIN
               message, msg1 + mc_ofile_stamp + $
                        ' already exists.  Overwriting', /informational
-              write_csv, mc_ofile_name, omot_corr, $
-                         header=strlowcase(tag_names(omot_corr))
+              write_csv, mc_ofile_name, omot_corr, header=omc_tags
            ENDIF ELSE BEGIN
               message, msg1 + mc_ofile_stamp + $
                        ' already exists.  Not overwriting', /informational
            ENDELSE
         ENDIF ELSE BEGIN
-           write_csv, mc_ofile_name, omot_corr, $
-                      header=strlowcase(tag_names(omot_corr))
+           write_csv, mc_ofile_name, omot_corr, header=omc_tags
         ENDELSE
         delvar, omot_corr
 
@@ -1146,11 +1247,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
         ;; Time to append data to output hash.  Start with MET summary
         ;; (diag) data.
-        FOREACH diag_tfld, diag_time_names DO BEGIN
-           match_fld=where(diag_time_names EQ diag_tfld)
-           fluxes[diag_tfld]=[fluxes[diag_tfld], $
-                              reform(diag_times[match_fld, fperiod])]
-        ENDFOREACH
+        fluxes['time']=[fluxes['time'], diag_tstamp[fperiod]]
+        fluxes['DOY']=[fluxes['DOY'], diag_doy[fperiod]]
         FOREACH diag_fld, okeys_diag DO BEGIN
            ;; Map some stupid mistakes in the names in templates.
            true_fld=diag_fld EQ 'atmospheric_pressure' ? $
@@ -1209,13 +1307,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   ENDFOR
 
   ;; Write the full hash, ordering fields in some way
-  odata=create_struct(diag_time_names[0], fluxes[diag_time_names[0]])
-  FOREACH fld, diag_time_names[1:*] DO BEGIN ; time stamps
-     odata=create_struct(odata, $
-                         diag_time_names[where(diag_time_names EQ fld)], $
-                         fluxes[fld])
-  ENDFOREACH
-  odata=create_struct(odata, 'DOY', calendar2doy())
+  odata=create_struct('time', fluxes['time'], 'DOY', fluxes['DOY'])
   FOREACH fld, okeys_diag DO BEGIN ; MET summary data
      odata=create_struct(odata, $
                          okeys_diag[where(okeys_diag EQ fld)], $
@@ -1238,7 +1330,9 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      odata=create_struct(odata, $
                          okeys_calc[where(okeys_calc EQ fld)], fluxes[fld])
   ENDFOREACH
-  write_csv, ofile, odata, header=strlowcase(tag_names(odata))
+  write_csv, ofile, odata, $
+             header=['time', 'DOY', okeys_diag, okeys_mom, okeys_op, $
+                     'diag_op', okeys_cl, okeys_calc]
 
 END
 
