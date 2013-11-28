@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-11-26T23:41:42+0000
-;; Last-Updated: 2013-11-27T18:39:31+0000
+;; Last-Updated: 2013-11-28T17:38:05+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Code:
@@ -250,16 +250,16 @@ FLUX, ec_period_dir, ec_std_template, 0, ec_daily_rate, $
       closed_path_log_file, closed_path_log_template, 0, 5, $
       cl_log_status_fld, ec_motcorr_dir, ec_footprint_dir, ec_fluxes_file, $
       /overwrite
-;; ;; Debugging
-;; FLUX, expand_path('~/tmp/EC'), ec_std_template, 0, ec_daily_rate, $
-;;       met_proc_avg_dir, met_proc_avg_diag_template, 0, met_proc_diag_fld, $
-;;       ec_period, rmc_omg_period_dir, rmc_omg_std_template, 0, $
-;;       gyro_omg_period_dir, gyro_omg_std_template, 0, $
-;;       rad_period_dir, rad_proc_template, 0, $
-;;       motpak_offset, sog_thr, lfreq_thr, hfreq_thr, xover_freq_thr, $
-;;       closed_path_log_file, closed_path_log_template, 0, 5, $
-;;       cl_log_status_fld, ec_motcorr_dir, ec_footprint_dir, ec_fluxes_file, $
-;;       /overwrite
+;; Debugging
+FLUX, expand_path('~/tmp/EC'), ec_std_template, 0, ec_daily_rate, $
+      met_proc_avg_dir, met_proc_avg_diag_template, 0, met_proc_diag_fld, $
+      ec_period, rmc_omg_period_dir, rmc_omg_std_template, 0, $
+      gyro_omg_period_dir, gyro_omg_std_template, 0, $
+      rad_period_dir, rad_proc_template, 0, $
+      motpak_offset, sog_thr, lfreq_thr, hfreq_thr, xover_freq_thr, $
+      closed_path_log_file, closed_path_log_template, 0, 5, $
+      cl_log_status_fld, expand_path('~/tmp/EC/Motion_Corrected'), $
+      ec_footprint_dir, expand_path('~/tmp/fluxes_junk.csv'), /overwrite
 
 
 

@@ -1,3 +1,23 @@
+2013-11-28  spluque@gmail.com
+
+	* flux.pro:
+	  Return NaNs for the open and closed path computations, if the
+	  open/closed flag was up, which means the computations were just
+	  not performed. This avoids printing data that may belong to a
+	  previous period.
+
+	* flux.pro, low_freq_corr.pro, truewind_sonic.pro:
+	  Renaming LOW_FREQ_CORR to the new function TRUEWIND_SONIC.
+
+	* low_freq_corr.pro:
+	  Implementing this as a new function that reflects what this
+	  actually does; essentially a different way of calculating true
+	  wind, but with the definitions for the sonic anemometer. This may
+	  be completely removed, if TRUEWIND could handle it.
+
+	* truewind.pro:
+	  Remove degenerate dimensions we may receive.
+
 2013-11-27  spluque@gmail.com
 
 	* flux_capacitor.pro:
