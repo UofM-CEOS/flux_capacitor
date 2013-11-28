@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-27T23:16:17+0000
+;; Last-Updated: 2013-11-28T16:43:56+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -684,11 +684,14 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         wind_v_mean=mean(wind[2, *], /nan)
 
         ;; High frequency motion correction -> [SPL: but the low frequency
-        ;; correction uses the same test, so what is the difference?]
+        ;; correction uses the same test, so what is the difference? Also,
+        ;; note that some variables created here are used after this block.
+        ;; If the test fails, then everything using these variables later
+        ;; will fail, so an ELSE statement is needed here.  What?]
         IF diag.sog[fperiod] GT sog_thr THEN BEGIN
            ;; [Original comment: shot filter the motion channels... this
            ;; helps with a problem where unreasonably high accelerations
-           ;; cause a 'NaN' calculation
+           ;; cause a 'NaN' calculation]
            accel[0, *]=shot_filter(accel[0, *])
            accel[1, *]=shot_filter(accel[1, *])
            accel[2, *]=shot_filter(accel[2, *])
@@ -787,12 +790,12 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
            ;; Low frequency motion correction
 
-           ;; [SPL: WATCH LOW_FREQ_CORR FUNCTION, which redundantly uses
-           ;; truewind.pro code, and also works with a loop that is no
-           ;; longer needed, since the new TRUEWIND can process the entire
-           ;; array.]
-           U_TRUE_2=low_freq_corr(wind[0, *], wind[1, *], cog, $
-                                  sog / 1.9438449, heading, 337.0)
+           ;; [SPL: Watch TRUEWIND_SONIC function, which redundantly uses
+           ;; truewind.pro code.  See note above regarding these variables
+           ;; needed later; what to do if the test in this block (e.g. SOG
+           ;; is too low) fails?]
+           U_TRUE_2=truewind_sonic(wind[0, *], wind[1, *], cog, $
+                                   sog / 1.9438449, heading, 337.0)
            wind[0, *]=U_TRUE_2[0, *]
            wind[1, *]=U_TRUE_2[1, *]
            true_son=bearing_avg(U_TRUE_2[3, *], U_TRUE_2[2, *])
@@ -804,7 +807,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
         ENDIF
 
-        ;; Output motion corrected data
+        ;; Output motion corrected (if it was needed) data
         omot_corr=create_struct(field_names[time_flds[0]], $
                                 reform(flux_times[0, *]))
         FOREACH tfld, time_flds[1:*] DO BEGIN ; include all time data
