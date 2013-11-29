@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-28T23:02:49+0000
+;; Last-Updated: 2013-11-29T04:05:08+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -148,8 +148,6 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   rad_tpl_info=file_info(rad_itemplate_sav)
   log_file_info=file_info(log_file)
   log_tpl_info=file_info(log_itemplate_sav)
-  mc_odir_info=file_info(mot_corr_odir)
-  footprint_odir_info=file_info(footprint_odir)
   IF (~idir_info.directory) THEN $
      message, 'IDIR must be a string pointing to an existing directory'
   IF (~itpl_info.read) THEN $
@@ -541,7 +539,10 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
               closed_flag=1
 
         ;; [Original comment: now that we have looked for NANs, we may as
-        ;; well fill in the NANs and any spikes using the shot filter]
+        ;; well fill in the NANs and any spikes using the shot filter].
+        ;; [SPL: these changes are done outside the WIND array, which is
+        ;; the one that is used later for motion correction, etc., so they
+        ;; are lost.]
         IF sonic_flag NE 1 THEN BEGIN
            wind_u=shot_filter(wind_u)
            wind_v=shot_filter(wind_v)
@@ -558,8 +559,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                             (6.0 * stddev(flux.co2_op, /NAN)), nbad_co2_op)
            bad_h2o_op=where(abs(flux.h2o_op - mean(flux.h2o_op, /NAN)) GT $
                             (6.0 * stddev(flux.h2o_op, /NAN)), nbad_h2o_op)
-           IF (nbad_co2_op GT 0) OR (nbad_h2o_op GT 0) THEN $
-              open_flag=1
+           IF (nbad_co2_op GT 0) OR (nbad_h2o_op GT 0) THEN open_flag=1
         ENDIF
         IF closed_flag NE 1 THEN BEGIN
            flux.co2_cl=shot_filter(flux.co2_cl)
@@ -606,7 +606,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; Set wind flag high if gt 0.5% of records are frost contaminated
         IF (float(nbad_vert_wind) / flux_times_dims[1] * 100.0 GT 0.5) OR $
            (float(nbad_sonic_temperature) / $
-            flux_times_dims[1] * 100.0 GT 0.5) THEN sonic_flag = 1
+            flux_times_dims[1] * 100.0 GT 0.5) THEN sonic_flag=1
 
         ;; Check for Motion Pak data that are out of range
         bad_motionpak=where((accel_x GT g) OR (accel_y GT g), nbad_motionpak)
@@ -776,7 +776,6 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            finite(diag.pitch[fperiod]) THEN $
               wind=level_sonic(wind, diag.roll[fperiod] * !DTOR, $
                                -diag.pitch[fperiod] * !DTOR)
-
         ;; [Original comment: now let's calculate the raw mean w
         ;; value... this is going to be important for sort of tracking flow
         ;; distortion... We could do something more in depth, but we'll
@@ -981,7 +980,6 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                 sog, $
                                 cog, $
                                 heading)
-
         file_mkdir, mot_corr_odir
         mc_ofile_name=strcompress(mot_corr_odir + path_sep() + $
                                   iname_prefix + '_' + 'mc.' + $
