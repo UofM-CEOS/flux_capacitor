@@ -2,75 +2,75 @@
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T21:32:25+0000
 ;; Last-Updated: 2013-11-29T15:14:04+0000
-;;           By: Sebastian P. Luque
+;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; PURPOSE:
-;; 
+;;
 ;;     This program calculates heat flux, latent heat flux and co2 flux
 ;;     from an open path EC system.
-;; 
+;;
 ;; CALLING SEQUENCE:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; INPUTS:
-;; 
-;;       Wind:         3xn element array of unrotated wind [u,v,w].
-;;       Ts:           1xn array of sonic temperature (C).
-;;       CO2:          1xn array of co2 values in units of mass
-;;                     concentration (mmol/m3).
-;;       H2O:          1xn array of h2o values in units of mass
-;;                     concentration (mmol/m3).
-;;       P:            1xn array of atmospheric pressure (kPa).
-;;       MaxC:         Scalar integer indicating maximum number of records
-;;                     that can be lagged for digital time shifting.
-;;       Avg_Period:   Scalar float with the averaging period under
-;;                     consideration (minutes) (e.g. 30min flux runs, 20min
-;;                     flux runs, 10min flux runs, etc).
-;;       Data_Freq:    Scalar float variable of the data frequency in Hz
-;;                     (e.g. 10Hz).
-;; 
+;;
+;;	 Wind:	       3xn element array of unrotated wind [u,v,w].
+;;	 Ts:	       1xn array of sonic temperature (C).
+;;	 CO2:	       1xn array of co2 values in units of mass
+;;		       concentration (mmol/m3).
+;;	 H2O:	       1xn array of h2o values in units of mass
+;;		       concentration (mmol/m3).
+;;	 P:	       1xn array of atmospheric pressure (kPa).
+;;	 MaxC:	       Scalar integer indicating maximum number of records
+;;		       that can be lagged for digital time shifting.
+;;	 Avg_Period:   Scalar float with the averaging period under
+;;		       consideration (minutes) (e.g. 30min flux runs, 20min
+;;		       flux runs, 10min flux runs, etc).
+;;	 Data_Freq:    Scalar float variable of the data frequency in Hz
+;;		       (e.g. 10Hz).
+;;
 ;; KEYWORD PARAMETERS:
-;; 
-;;     CORR_MASSMAN:     Set this keyword to run a spectral correction
-;;                       following Massman this keyword must be used to set
-;;                       a number of parameters for the massman correction.
-;;                       ALL fields must be filled.  If they are not
-;;                       applicable to the specific application, set them
-;;                       to the string value 'NAn' (for not
-;;                       applicable). [0-sample rate (in seconds), 1-sonic
-;;                       path length (in m), 2-scalar sensor seaparation in
-;;                       x coord (in m), 3-scalar sensor separation in y
-;;                       coord (in m), 4-line length for scalar sensor with
-;;                       line averaging (in m), 5-diameter of scalar sensor
-;;                       with volume averaging (in m), 6-length of scalar
-;;                       sensor with volume averaging (in m)].
-;;     OGIVE:            Set this key word to produce an ogvie plot for all
-;;                       fluxes which are calculated using this routine.
-;;                       this keyword must be set to a string which
-;;                       indicates the directory where the ogvie should be
-;;                       placed.
-;;     BURBA:            Set this keyword to perform the Burba correction
-;;                       (Burba et al. 2008, Glob. Ch. Biol.)  this keyword
-;;                       must be used to set a number of parameters for the
-;;                       Burb correction.  ALL fields must be filled.  If
-;;                       they are not applicable to the specific
-;;                       application, set them to the string value 'NAn'
-;;                       (for not applicable).  [0 - Incoming shortwave
-;;                       radiation (w/m2), 1 - Incoming LW radiation
-;;                       (w/m2), 2 - Mean raw sonic wind velocity (NO
-;;                       MOTION CORRECTION) (m/s)].
-;;     PKT:              Set this keyword to run a correction as per
-;;                       Prytherch et al. 2010 (doi: 10.1029/2009GL041482)
-;;                       keyword MUST BE SET EQUAL TO u* (which can be
-;;                       calculated in a previous call to EC_momentum.
-;; 
+;;
+;;     CORR_MASSMAN:	 Set this keyword to run a spectral correction
+;;			 following Massman this keyword must be used to set
+;;			 a number of parameters for the massman correction.
+;;			 ALL fields must be filled.  If they are not
+;;			 applicable to the specific application, set them
+;;			 to the string value 'NAn' (for not
+;;			 applicable). [0-sample rate (in seconds), 1-sonic
+;;			 path length (in m), 2-scalar sensor seaparation in
+;;			 x coord (in m), 3-scalar sensor separation in y
+;;			 coord (in m), 4-line length for scalar sensor with
+;;			 line averaging (in m), 5-diameter of scalar sensor
+;;			 with volume averaging (in m), 6-length of scalar
+;;			 sensor with volume averaging (in m)].
+;;     OGIVE:		 Set this key word to produce an ogvie plot for all
+;;			 fluxes which are calculated using this routine.
+;;			 this keyword must be set to a string which
+;;			 indicates the directory where the ogvie should be
+;;			 placed.
+;;     BURBA:		 Set this keyword to perform the Burba correction
+;;			 (Burba et al. 2008, Glob. Ch. Biol.)  this keyword
+;;			 must be used to set a number of parameters for the
+;;			 Burb correction.  ALL fields must be filled.  If
+;;			 they are not applicable to the specific
+;;			 application, set them to the string value 'NAn'
+;;			 (for not applicable).	[0 - Incoming shortwave
+;;			 radiation (w/m2), 1 - Incoming LW radiation
+;;			 (w/m2), 2 - Mean raw sonic wind velocity (NO
+;;			 MOTION CORRECTION) (m/s)].
+;;     PKT:		 Set this keyword to run a correction as per
+;;			 Prytherch et al. 2010 (doi: 10.1029/2009GL041482)
+;;			 keyword MUST BE SET EQUAL TO u* (which can be
+;;			 calculated in a previous call to EC_momentum.
+;;
 ;; OUTPUTS:
-;; 
+;;
 ;;     20-element array:
 ;;
 ;;     [0]=w/Tair covariance
@@ -88,47 +88,47 @@
 ;;     [12]=mean specific humidity (g/g)
 ;;     [13]=WPL contribution to CO2 flux (mmol/m2/d)
 ;;     [14]=Burba correction value for CO2 using mutlivariate approach (IS
-;;          NOT ADDED TO CO2 FLUX... MUST BE ADDED AFTER)
+;;	    NOT ADDED TO CO2 FLUX... MUST BE ADDED AFTER)
 ;;     [15]=Burba correction value for CO2 using linear approach (IS NOT
-;;          ADDED TO CO2 FLUX... MUST BE ADDED AFTER)
+;;	    ADDED TO CO2 FLUX... MUST BE ADDED AFTER)
 ;;     [16]=Burba correction value for H2O using multivariate approach (IS
-;;          NOT ADDED TO CO2 FLUX... MUST BE ADDED AFTER)
+;;	    NOT ADDED TO CO2 FLUX... MUST BE ADDED AFTER)
 ;;     [17]=Burba correction value H2O using linear approach (IS NOT ADDED
-;;          TO CO2 FLUX... MUST BE ADDED AFTER)
+;;	    TO CO2 FLUX... MUST BE ADDED AFTER)
 ;;     [18]=CO2 flux (mmol/m2/day) calculated with PKT correction (includes
-;;          WPL correction, but no BURBA correction)
+;;	    WPL correction, but no BURBA correction)
 ;;     [19]=Number of iterations required for PKT correction to converge
-;; 
+;;
 ;; RESTRICTIONS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; PROCEDURE:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; EXAMPLE:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
 FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
-                  CORR_MASSMAN=CMASS, OGIVE=O_OUTPUT, BURBA=BURBA, PKT=PKT
+		  CORR_MASSMAN=CMASS, OGIVE=O_OUTPUT, BURBA=BURBA, PKT=PKT
 
   ;; CONSTANTS:
-  r=8.31451              ; j/mol/k universal gas constant
-  rv=461.5               ; J/kg/K gas constant for water vapour Stull(1995)
-  mv=18.02               ; g/mol molecular weight for water, Stull(1995)
-  ma=28.96               ; g/mol molecular weight for dry air, Stull(1995)
-  mc=44.0098             ; g/mol molecular weight co2 Stull(1995)
+  r=8.31451		 ; j/mol/k universal gas constant
+  rv=461.5		 ; J/kg/K gas constant for water vapour Stull(1995)
+  mv=18.02		 ; g/mol molecular weight for water, Stull(1995)
+  ma=28.96		 ; g/mol molecular weight for dry air, Stull(1995)
+  mc=44.0098		 ; g/mol molecular weight co2 Stull(1995)
   ;; J/g/K specific heat for dry air at constant pressure Stull(1995)
   cpd=1004.67 / 1000
   ;; J/g/K specific heat for water vapour at constant pressure Stull(1995)
   cpv=1875 / 1000
-  mu=0.622                      ; ratio, Rd/Rv, Stull(1988)
-  g=9.807                       ; m2/s
+  mu=0.622			; ratio, Rd/Rv, Stull(1988)
+  g=9.807			; m2/s
   ;; ratio of molar mass c to molar mass co2.  Multiplier to convert from
   ;; mass flux co2 to mass flux c
   conv=0.2729
@@ -139,7 +139,7 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   horwind=[mean(WIND[0, *], /nan), mean(WIND[1, *], /nan)]
   ;; do the wind rotations
   WINDrot=yawpitch(WIND[0, *], WIND[1, *], WIND[2, *], $
-                   n_elements(WIND[0, *]))
+		   n_elements(WIND[0, *]))
   urot=WINDrot[0, *] & vrot=WINDrot[1, *] & wrot=WINDrot[2, *]
 
   ;;========CALCULATE NECESSARY TERMS=================
@@ -149,15 +149,15 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   c_h2o=c_h2o / double(1000)
   mean_c_h2o=mean(c_h2o, /DOUBLE, /NAN)
   mean_c_co2=mean(c_co2, /DOUBLE, /NAN)
-  
+
   ;; Get Ts into Tair
-  P=P * double(1000)              ; Atmospheric pressure in Pa
+  P=P * double(1000)		  ; Atmospheric pressure in Pa
   Tair=sonicT2airT(Ts, c_h2o, P)
-  Tair=Tair + 273.15            ; Air temperature into K 
+  Tair=Tair + 273.15		; Air temperature into K
   mean_Tair=mean(Tair, /nan)
 
-  ev=c_h2o * R * Tair            ; water vapour pressure (Pa)
-  rho_v=c_h2o * mv               ; water vapour density (g/m3)
+  ev=c_h2o * R * Tair		 ; water vapour pressure (Pa)
+  rho_v=c_h2o * mv		 ; water vapour density (g/m3)
   mean_rho_v=mean(rho_v, /DOUBLE, /NAN) ; mean water vapour density (g/m3)
   ;; mean dry air density (g/m3)
   mean_rho_d=mean((P - ev) / (R * Tair), /DOUBLE, /NAN) * ma
@@ -168,12 +168,12 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   mean_cp=cpd * (double(1) + 0.84 * mean_qh2o)
   ;; mean air molar concentration (mol/m3)
   mean_c=(mean_rho_d) / (ma + mean_rho_v / mv)
-  mean_c_dry=mean_rho_d / ma    ;mean dry air molar concentration
-  mean_Xv=mean_c_h2o / mean_c_dry ; mean dry air mixing ratio of water 
+  mean_c_dry=mean_rho_d / ma	;mean dry air molar concentration
+  mean_Xv=mean_c_h2o / mean_c_dry ; mean dry air mixing ratio of water
   ;; mean dry air mixing mixing ration of co2 (in ppm)
   co2ppm=mean_c_co2 / mean_c_dry * double(1000000)
-  
-  ;;========DO H CALCULATIONS UTILIZING THE OPEN PATH========= 
+
+  ;;========DO H CALCULATIONS UTILIZING THE OPEN PATH=========
 
   ;;calculate w/Tair covariance
   cov_w_Tair=correlate(wrot, Tair, /COVARIANCE, /DOUBLE)
@@ -184,9 +184,9 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   cf_wTair=!VALUES.D_NAN
   IF keyword_set(cmass) THEN BEGIN
      cf_wTair=spec_Massman(wrot[where(finite(wrot))], $
-                           Tair[where(finite(wrot))], horwind, $
-                           cmass[0], cmass[1], $
-                           GEOM=[cmass[2], cmass[3]], SCALARLINE=cmass[1])
+			   Tair[where(finite(wrot))], horwind, $
+			   cmass[0], cmass[1], $
+			   GEOM=[cmass[2], cmass[3]], SCALARLINE=cmass[1])
      cov_w_Tair=cf_wTair * cov_w_Tair
   ENDIF
 
@@ -215,7 +215,7 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
 
   ;; Calculate the covariances, using the appropriate lags
   cov_w_c_co2=w_c_co2[lag_co2_op_use]
-  cov_w_c_h2o=w_c_h2o[lag_h2o_op_use] 
+  cov_w_c_h2o=w_c_h2o[lag_h2o_op_use]
   lag_co2_op=lag_op[lag_co2_op_use]
   lag_h2o_op=lag_op[lag_h2o_op_use]
 
@@ -230,32 +230,32 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ;; first, the signals need to be digitally shifted by the lags
      ;; calculated above.
      IF lag_co2_op LT 0 THEN BEGIN
-        co2_shift=c_co2[0 + abs(lag_co2_op):nrecs - 1]
-        w_shift_co2=wrot[0:nrecs - 1 - abs(lag_co2_op)]
+	co2_shift=c_co2[0 + abs(lag_co2_op):nrecs - 1]
+	w_shift_co2=wrot[0:nrecs - 1 - abs(lag_co2_op)]
      ENDIF
      IF lag_co2_op GE 0 THEN BEGIN
-        co2_shift=c_co2[0:nrecs - 1 - lag_co2_op]
-        w_shift_co2=wrot[0 + lag_co2_op:nrecs - 1]
+	co2_shift=c_co2[0:nrecs - 1 - lag_co2_op]
+	w_shift_co2=wrot[0 + lag_co2_op:nrecs - 1]
      ENDIF
      IF lag_co2_op LT 0 THEN BEGIN
-        h2o_shift=c_h2o[0 + abs(lag_co2_op):nrecs - 1]
-        w_shift_h2o=wrot[0:nrecs - 1 - abs(lag_co2_op)]
+	h2o_shift=c_h2o[0 + abs(lag_co2_op):nrecs - 1]
+	w_shift_h2o=wrot[0:nrecs - 1 - abs(lag_co2_op)]
      ENDIF
      IF lag_co2_op GE 0 THEN BEGIN
-        h2o_shift=c_h2o[0:nrecs - 1 - lag_co2_op]
-        w_shift_h2o=wrot[0 + lag_co2_op:nrecs - 1]
+	h2o_shift=c_h2o[0:nrecs - 1 - lag_co2_op]
+	w_shift_h2o=wrot[0 + lag_co2_op:nrecs - 1]
      ENDIF
      ;; now do the spectral correction on the shifted signals
      cf_wco2=spec_massman(w_shift_co2[where(finite(w_shift_co2))], $
-                          co2_shift[where(finite(co2_shift))], horwind, $
-                          cmass[0], cmass[1], $
-                          GEOM=[cmass[2], cmass[3]], $
-                          SCALARVOL=[cmass[5], cmass[6]])
+			  co2_shift[where(finite(co2_shift))], horwind, $
+			  cmass[0], cmass[1], $
+			  GEOM=[cmass[2], cmass[3]], $
+			  SCALARVOL=[cmass[5], cmass[6]])
      cf_wh2o=spec_massman(w_shift_h2o[where(finite(w_shift_h2o))], $
-                          h2o_shift[where(finite(w_shift_h2o))], $
-                          horwind, cmass[0], cmass[1], $
-                          GEOM=[cmass[2], cmass[3]], $
-                          SCALARVOL=[cmass[5], cmass[6]])
+			  h2o_shift[where(finite(w_shift_h2o))], $
+			  horwind, cmass[0], cmass[1], $
+			  GEOM=[cmass[2], cmass[3]], $
+			  SCALARVOL=[cmass[5], cmass[6]])
      cov_w_c_co2=cov_w_c_co2 * cf_wco2
      cov_w_c_h2o=cov_w_c_h2o * cf_wh2o
   ENDIF ELSE BEGIN
@@ -282,25 +282,25 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ;; the calculations for "daytime" conditions, which we'll define as SW
      ;; > 5 w/m2
      IF SW GE 5 THEN BEGIN
-        Tbot_mt=meanT_C + 2.8 - 0.0681 * meanT_C + $
-                0.0021 * SW - 0.334 * rawU ; multiple regression approach
-        Ttop_mt=meanT_C - 0.1 - 0.0044 * meanT_C + $
-                0.0011 * SW - 0.022 * rawU ; multiple regression approach
-        Tspar_mt=meanT_C + 0.3 - 0.00077 * meanT_C + 0.0006 * $
-                 SW - 0.044 * rawU ; multiple regression approach
-        Tbot_ln=0.944 * meanT_C + 2.57 ;linear regression approach
-        Ttop_ln=1.005 * meanT_C + 0.24 ;linear regression approach
-        Tspar_ln=1.01 * meanT_C + 0.36 ;linear regression approach
+	Tbot_mt=meanT_C + 2.8 - 0.0681 * meanT_C + $
+		0.0021 * SW - 0.334 * rawU ; multiple regression approach
+	Ttop_mt=meanT_C - 0.1 - 0.0044 * meanT_C + $
+		0.0011 * SW - 0.022 * rawU ; multiple regression approach
+	Tspar_mt=meanT_C + 0.3 - 0.00077 * meanT_C + 0.0006 * $
+		 SW - 0.044 * rawU ; multiple regression approach
+	Tbot_ln=0.944 * meanT_C + 2.57 ;linear regression approach
+	Ttop_ln=1.005 * meanT_C + 0.24 ;linear regression approach
+	Tspar_ln=1.01 * meanT_C + 0.36 ;linear regression approach
      ENDIF ELSE BEGIN
-        Tbot_mt= meanT_C + 0.5 - 0.116 * meanT_C + $
-                 0.0087 * LW - 0.206 * rawU ; multiple regression approach
-        Ttop_mt=meanT_C - 1.7 - 0.016 * meanT_C + $
-                0.0051 * LW - 0.029 * rawU ; multiple regression approach
-        Tspar_mt=meanT_C - 2.1 - 0.02 * meanT_C + $
-                 0.007 * LW + 0.026 * rawU ; multiple regression approach
-        Tbot_ln=0.883 * meanT_C + 2.17     ; linear regression approach
-        Ttop_ln=1.008 * meanT_C - 0.41     ;linear regression approach
-        Tspar_ln=1.01 * meanT_C - 0.17     ;linear regression approach
+	Tbot_mt= meanT_C + 0.5 - 0.116 * meanT_C + $
+		 0.0087 * LW - 0.206 * rawU ; multiple regression approach
+	Ttop_mt=meanT_C - 1.7 - 0.016 * meanT_C + $
+		0.0051 * LW - 0.029 * rawU ; multiple regression approach
+	Tspar_mt=meanT_C - 2.1 - 0.02 * meanT_C + $
+		 0.007 * LW + 0.026 * rawU ; multiple regression approach
+	Tbot_ln=0.883 * meanT_C + 2.17	   ; linear regression approach
+	Ttop_ln=1.008 * meanT_C - 0.41	   ;linear regression approach
+	Tspar_ln=1.01 * meanT_C - 0.17	   ;linear regression approach
      ENDELSE
      ;; This empirical approach is far from perfect.... If Tbot or Tspar
      ;; are lt air T, set those to air T (it should never get cooler than
@@ -310,10 +310,10 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ;;   if Ttop_mt lt meanT_C then begin
      ;;     Ttop_mt=meanT_C
      ;;   endif
-     ;;  
+     ;;
      ;;   if (Tbot_ln lt meanT_C) and (Ttop_ln lt meanT_C) then begin
      ;;     Tspar_ln=meanT_C
-     ;;   endif    
+     ;;   endif
      ;;   if Tbot_ln lt meanT_C then begin
      ;;     Tbot_ln=meanT_C
      ;;   endif
@@ -329,19 +329,19 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      del_top=0.0045 + 0.0028 * sqrt(ltop / rawU) + 0.00025 / rawU
      del_spar=0.0058 * sqrt(lspar / rawU)
      ;; Individual heat fluxes
-     kair=0.0243                ; Thermal conductivity of air
+     kair=0.0243		; Thermal conductivity of air
      Sbot_mt=kair * ((Tbot_mt - meanT_C) / del_bot)
      Stop_mt=kair * ((rtop + del_top) * (Ttop_mt - meanT_C) / $
-                     (rtop * del_top))
+		     (rtop * del_top))
      Sspar_mt=kair *  (Tspar_mt - meanT_C) / $
-              (rspar * alog((rspar + del_spar) / rspar))
+	      (rspar * alog((rspar + del_spar) / rspar))
      Ssensor_mt=Sbot_mt + Stop_mt + (0.15 * Sspar_mt) ; (W/m2)
-     
+
      Sbot_ln=kair * ((Tbot_ln - meanT_C) / del_bot)
      Stop_ln=kair * ((rtop + del_top) * (Ttop_ln - meanT_C) / $
-                     (rtop * del_top))
+		     (rtop * del_top))
      Sspar_ln=kair * (Tspar_ln - meanT_C) / $
-              (rspar * alog((rspar + del_spar) / rspar))
+	      (rspar * alog((rspar + del_spar) / rspar))
      Ssensor_ln=Sbot_ln + Stop_ln + (0.15 * Sspar_ln) ; (W/m2)
   ENDIF
 
@@ -351,39 +351,39 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   ;;BURBA CORRECTION TOO....
   E_op=(double(1) + mean_Xv) * $
        [cov_w_c_h2o + (mean_c_h2o / mean_Tair) * $
-        (H / (mean_rho * mean_cp))] ;  Units: mol/m2s
+	(H / (mean_rho * mean_cp))] ;  Units: mol/m2s
   ;; Calculate the CO2 flux, pre-WPL correction
-  noWPL_Fco2_op=cov_w_c_co2     ; Units: mol/m2
+  noWPL_Fco2_op=cov_w_c_co2	; Units: mol/m2
   ;; Calculate CO2 flux, applying the WPL correction in terms of H and E
   WPL_Fco2_op=cov_w_c_co2 + mean_c_co2 * $
-              [(E_op / mean_c) + $
-               (H / (mean_rho * mean_cp * mean_Tair))] ;  Units: mol/m2s
+	      [(E_op / mean_c) + $
+	       (H / (mean_rho * mean_cp * mean_Tair))] ;  Units: mol/m2s
   ;; Calculate contribution of WPL term to the overall flux (for interest's
   ;; sake, really)
   WPLcont=WPL_Fco2_op * double(86400000) - noWPL_Fco2_op * double(86400000)
 
   IF keyword_set(burba) THEN BEGIN
      BURBA_E_op_mt=(double(1) + mean_Xv) * $
-                   [cov_w_c_h2o + (mean_c_h2o / mean_Tair) * $
-                    ([H + Ssensor_mt] / (mean_rho * mean_cp))] ; mol/m2s
+		   [cov_w_c_h2o + (mean_c_h2o / mean_Tair) * $
+		    ([H + Ssensor_mt] / (mean_rho * mean_cp))] ; mol/m2s
      BURBA_E_op_ln=(double(1) + mean_Xv) * $
-                   [cov_w_c_h2o + (mean_c_h2o / mean_Tair) * $
-                    ([H + Ssensor_ln] / (mean_rho * mean_cp))] ; mol/m2s
+		   [cov_w_c_h2o + (mean_c_h2o / mean_Tair) * $
+		    ([H + Ssensor_ln] / (mean_rho * mean_cp))] ; mol/m2s
      H2OBurba_mt=BURBA_E_op_mt * double(86400) - E_op
      H2OBurba_ln=BURBA_E_op_ln * double(86400) - E_op
-     
+
      BURBA_Fco2_op_mt=cov_w_c_co2 + mean_c_co2 * $
-                      [(BURBA_E_op_mt / mean_c) + $
-                       ([H + Ssensor_mt] / (mean_rho*mean_cp * mean_Tair))]
+		      [(BURBA_E_op_mt / mean_c) + $
+		       ([H + Ssensor_mt] / (mean_rho*mean_cp * mean_Tair))]
      CO2Burba_mt=BURBA_Fco2_op_mt * double(86400000) - $
-                 WPL_Fco2_op * double(86400000)
-     
+		 WPL_Fco2_op * double(86400000)
+
      BURBA_Fco2_op_ln=cov_w_c_co2 + mean_c_co2 * $
-                      [(BURBA_E_op_ln / mean_c) + $
-                       ([H + Ssensor_ln] / $
-                        (mean_rho * mean_cp * mean_Tair))]
+		      [(BURBA_E_op_ln / mean_c) + $
+		       ([H + Ssensor_ln] / $
+			(mean_rho * mean_cp * mean_Tair))]
      CO2Burba_ln=BURBA_Fco2_op_ln * double(86400000) - $
-                 WPL_Fco2_op * double(86400000)
+		 WPL_Fco2_op * double(86400000)
   ENDIF ELSE BEGIN
      FINALco2_op=WPL_Fco2_op
      CO2Burba_mt=!VALUES.D_NAN & CO2Burba_ln=!VALUES.D_NAN
@@ -403,24 +403,24 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ustar=pkt
      ;; First, calculate mixing ratio of co2 on point-by-point basis, as
      ;; per Fairall et al. (2000) (doi: 10.1023/A:1002662826020) eq'n 62:
-     rhoc=c_co2 * mc            ; co2 density in g/m3
-     rhov=c_h2o * mv            ; h2o density in g/m3
+     rhoc=c_co2 * mc		; co2 density in g/m3
+     rhov=c_h2o * mv		; h2o density in g/m3
      ;; Shift the rhoc/rhov signals by the lag to make sure they line up
      ;; with T properly.
      IF lag_co2_op LT 0 THEN BEGIN
-        rhoc_shift=rhoc[0 + abs(lag_co2_op):nrecs - 1]
-        rhov_shift=rhov[0 + abs(lag_co2_op):nrecs - 1]
-        ;; calculated water vapour pressure... need for calc'n rh
-        ev_shift=ev[0 + abs(lag_co2_op):nrecs - 1]
-        w_shift=wrot[0:nrecs - 1 - abs(lag_co2_op)]
-        T_shift=Tair[0:nrecs - 1 - abs(lag_co2_op)]
+	rhoc_shift=rhoc[0 + abs(lag_co2_op):nrecs - 1]
+	rhov_shift=rhov[0 + abs(lag_co2_op):nrecs - 1]
+	;; calculated water vapour pressure... need for calc'n rh
+	ev_shift=ev[0 + abs(lag_co2_op):nrecs - 1]
+	w_shift=wrot[0:nrecs - 1 - abs(lag_co2_op)]
+	T_shift=Tair[0:nrecs - 1 - abs(lag_co2_op)]
      ENDIF
      IF lag_co2_op GE 0 THEN BEGIN
-        rhoc_shift=rhoc[0:nrecs - 1 - lag_co2_op]
-        rhov_shift=rhov[0:nrecs - 1 - lag_co2_op]
-        ev_shift=ev[0:nrecs - 1 - lag_co2_op]
-        w_shift=wrot[0 + lag_co2_op:nrecs - 1]
-        T_shift=Tair[0 + lag_co2_op:nrecs - 1]
+	rhoc_shift=rhoc[0:nrecs - 1 - lag_co2_op]
+	rhov_shift=rhov[0:nrecs - 1 - lag_co2_op]
+	ev_shift=ev[0:nrecs - 1 - lag_co2_op]
+	w_shift=wrot[0 + lag_co2_op:nrecs - 1]
+	T_shift=Tair[0 + lag_co2_op:nrecs - 1]
      ENDIF
      ;; calculate the point-by-point mixing ratio of CO2, RH for H2O and
      ;; Mixing Ratio (kg/kg) of H2O.
@@ -429,17 +429,17 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ;; Fluctuations of rhov shift
      rhov_shift_pr=rhov_shift - (mean(rhov_shift, /nan))
      T_shift_pr=T_shift - (mean(T_shift, /nan)) ; fluctuations of T shift
-     
+
      ;; High frequency dry air density (from LICOR/SONIC)
      rhod_shift=((P - ev_shift) / (R * T_shift)) * ma
      ;; calculate fluctuating term of the co2 dry air mixing ratio:
      Xc_shift_pr=(rhoc_shift_pr + $
-                  [(ma * rhov_shift_pr) / $
-                   (mv * rhod_shift) + (double(1) + $
-                                        (ma * rhov_shift) / $
-                                        (mv * rhod_shift)) * $
-                   (T_shift_pr / T_shift)] * (mean_c_co2 * mc)) / $
-                 mean_rho_d
+		  [(ma * rhov_shift_pr) / $
+		   (mv * rhod_shift) + (double(1) + $
+					(ma * rhov_shift) / $
+					(mv * rhod_shift)) * $
+		   (T_shift_pr / T_shift)] * (mean_c_co2 * mc)) / $
+		 mean_rho_d
      ;; Not sure if we should be using dry air density or "moist" air
      ;; density... shouldn't make a big difference, but Prytech and Fairall
      ;; are not very specific
@@ -450,7 +450,7 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ;; Calculate the various water vapor terms they need.
      ;; Sat'n vapour pressure (Pa)
      es_shift=[6.112 * exp((17.67 * (T_shift - 273.15)) / $
-                           ((T_shift - 273.15) + 243.5))] * double(100)
+			   ((T_shift - 273.15) + 243.5))] * double(100)
      ;; High frequency relative humidity (from LICOR)
      RH_shift=(ev_shift / es_shift) * 100
      ;; High frequency H2O mixing ratio... This does not include the
@@ -477,48 +477,48 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ;; + fitRH(0); for some reason, the Prytech code leaves off the last
      ;; coefficient... not sure why
      response=fitRH[3] * RH_hat ^ double(3) + $
-              fitRH[2] * RH_hat ^ double(2) + $
-              fitRH[1] * RH_hat
+	      fitRH[2] * RH_hat ^ double(2) + $
+	      fitRH[1] * RH_hat
      Xc_det=Xc_shift-response
      ;; Calculate CO2 flux using the detrended Xc signal
      cflux=c_covariance(w_shift, Xc_det, 0) * mean_rho_d ; flux in g/m2s
-     cflux=cflux[0] / double(1000)                       ; kg/m3s
-     cstar=cflux / ustar                                 ; kg/m3s
-     
+     cflux=cflux[0] / double(1000)			 ; kg/m3s
+     cstar=cflux / ustar				 ; kg/m3s
+
      dc_by_dq=cstar / qstar
      ;; Determine c*/RH* ratio (Eq 2, Prytherch et al, 2009)
      dc_by_drh=dc_by_dq / drh_by_dq
-     
-     cflux=cflux * double(1000) / mc ; mols/(m2.s) 
+
+     cflux=cflux * double(1000) / mc ; mols/(m2.s)
      cflux=cflux * double(60) * double(60) * $
-           double(24) * double(365)     ; mols/(m2 yr) 
-     
+	   double(24) * double(365)	; mols/(m2 yr)
+
      cflux_det=cflux * 2.737909263
      dc_by_drh_initial=dc_by_drh
      dc_by_dq_initial=dc_by_dq
-     
+
      ;;  Iterate CO2 until we get some sort of convergence.  I think this
      ;; is done so that the while loop doesn't immediately die due to the
      ;; cfluxold-cflux < 1 criteria
      cfluxold=cflux + 2
      loop=double(0)
      WHILE (abs(cflux - cfluxold) GT 1) AND $
-        (loop LT 100) AND (abs(cflux) LT 1000) DO BEGIN
-        loop=loop + 1
-        cfluxold=cflux
-        Xc_nu=Xc_det + $
-              ((RH_shift - mean(RH_shift, /nan)) * dc_by_drh) / double(2)
-        ;; Now redo the flux calculatioon
-        cflux=c_covariance(w_shift, Xc_nu, 0) * mean_rho_d ; flux in g/m2s
-        cflux=cflux[0] / double(1000)                      ; kg/m3s
-        cstar=cflux / ustar                                ; kg/m3s
-        
-        dc_by_dq=cstar / qstar 
-        dc_by_drh=dc_by_dq / drh_by_dq ; new c*/rh* ratio
-        
-        cflux=cflux * 1000 / mc  ; % mols/(m2.s) 
-        cflux=cflux * double(60) * double(60) * $
-              double(24) * double(365) ; % mols/(m2 yr)
+	(loop LT 100) AND (abs(cflux) LT 1000) DO BEGIN
+	loop=loop + 1
+	cfluxold=cflux
+	Xc_nu=Xc_det + $
+	      ((RH_shift - mean(RH_shift, /nan)) * dc_by_drh) / double(2)
+	;; Now redo the flux calculatioon
+	cflux=c_covariance(w_shift, Xc_nu, 0) * mean_rho_d ; flux in g/m2s
+	cflux=cflux[0] / double(1000)			   ; kg/m3s
+	cstar=cflux / ustar				   ; kg/m3s
+
+	dc_by_dq=cstar / qstar
+	dc_by_drh=dc_by_dq / drh_by_dq ; new c*/rh* ratio
+
+	cflux=cflux * 1000 / mc  ; % mols/(m2.s)
+	cflux=cflux * double(60) * double(60) * $
+	      double(24) * double(365) ; % mols/(m2 yr)
      ENDWHILE
 
      dc_by_drh_final=dc_by_drh
@@ -535,19 +535,19 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   ENDELSE
 
   returnvec=[cov_w_Tair, cf_wTair, H, cov_w_c_co2, cf_wco2, $
-             WPL_Fco2_op * double(86400000), cov_w_c_h2o, cf_wh2o, $
-             E_op * double(86400), Qe_op, lag_co2_op, co2ppm, mean_qh2o, $
-             WPLcont, CO2Burba_mt, CO2Burba_ln, H2OBurba_mt, H2OBurba_ln, $
-             pkt_FCO2_op, pkt_loop, cflux_det, dRH_by_dq, $
-             dc_by_drh_initial, dc_by_drh_final, dc_by_dq_initial, $
-             dc_by_dq_final, lag_h2o_op]
+	     WPL_Fco2_op * double(86400000), cov_w_c_h2o, cf_wh2o, $
+	     E_op * double(86400), Qe_op, lag_co2_op, co2ppm, mean_qh2o, $
+	     WPLcont, CO2Burba_mt, CO2Burba_ln, H2OBurba_mt, H2OBurba_ln, $
+	     pkt_FCO2_op, pkt_loop, cflux_det, dRH_by_dq, $
+	     dc_by_drh_initial, dc_by_drh_final, dc_by_dq_initial, $
+	     dc_by_dq_final, lag_h2o_op]
   ;; Return the co2/h2o/P to their originals (in case we got the input
   ;; parameter passed by reference).  Because we are now getting a
   ;; structure element for these, we no longer need it, but keeping it for
   ;; debugging.
   c_co2=c_co2 * double(1000)
   c_h2o=c_h2o * double(1000)
-  P=P / double(1000)                          ; Atmospheric pressure in Pa
+  P=P / double(1000)			      ; Atmospheric pressure in Pa
   ;; Mean dry air density (g/m3)
   mean_rho_d=mean((P - ev) / (R * Tair), /DOUBLE, /NAN) * ma
 

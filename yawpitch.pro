@@ -2,64 +2,64 @@
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T19:12:08+0000
 ;; Last-Updated: 2013-11-26T22:34:05+0000
-;;           By: Sebastian P. Luque
+;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; PURPOSE:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; CATEGORY:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; CALLING SEQUENCE:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; INPUTS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; OPTIONAL INPUTS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; KEYWORD PARAMETERS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; OUTPUTS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; COMMON BLOCKS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; SIDE EFFECTS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; RESTRICTIONS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; PROCEDURE:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; EXAMPLE:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
@@ -111,14 +111,14 @@ FUNCTION YAWPITCH, U1, V1, W1, N
   vprime=(txyz[1, 0:n - 1] - V)
   wprime=(txyz[2, 0:n - 1] - W)
   cov_vw=correlate(vprime[where(finite(vprime))], $
-                   wprime[where(finite(wprime))], /covariance, /double)
+		   wprime[where(finite(wprime))], /covariance, /double)
   var_v=variance(vprime, /double, /nan)
   var_w=variance(wprime, /double, /nan)
   bb=(2 * cov_vw) / (var_v - var_w)
   bbeta=0.5 * atan(bb)
   roll=[[1, 0, 0], $
-        [0, cos(bbeta), sin(bbeta)], $
-        [0, -1 * sin(bbeta), cos(bbeta)]]
+	[0, cos(bbeta), sin(bbeta)], $
+	[0, -1 * sin(bbeta), cos(bbeta)]]
   xyz2=roll ## xyz1
 
   RETURN, transpose(xyz2)

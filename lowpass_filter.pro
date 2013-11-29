@@ -2,57 +2,57 @@
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T22:51:27+0000
 ;; Last-Updated: 2013-11-15T16:50:33+0000
-;;           By: Sebastian Luque
+;;	     By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
-;; 
+;;
 ;; LOWPASS_FILTER
-;; 
+;;
 ;; PURPOSE:
-;; 
+;;
 ;;     Given a time series of data, a low pass filter operation is
 ;;     performed that cuts off frequencies above the user defined cut off
 ;;     frequency.  Code largely follows the low pass filter operation
 ;;     performed in Will Drennan's dif1byf.m program.
-;; 
+;;
 ;; CALLING SEQUENCE:
-;; 
+;;
 ;;     result=high_pass_filter(Signal, Fs, Hf)
-;; 
+;;
 ;; INPUTS:
-;; 
-;;     Signal:    Array with input time series signal.
-;;     Fs:        Scalar with sampling interval of the time series in Hz.
-;;     Hf:        Scalar with frequency above which frequencies will be cutoff.
-;; 
+;;
+;;     Signal:	  Array with input time series signal.
+;;     Fs:	  Scalar with sampling interval of the time series in Hz.
+;;     Hf:	  Scalar with frequency above which frequencies will be cutoff.
+;;
 ;; OUTPUTS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; OPTIONAL OUTPUTS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; COMMON BLOCKS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; SIDE EFFECTS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; RESTRICTIONS:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; PROCEDURE:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;; EXAMPLE:
-;; 
-;; 
-;; 
+;;
+;;
+;;
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
