@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-29T04:05:08+0000
+;; Last-Updated: 2013-11-29T04:15:03+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -209,12 +209,17 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   IF (~log_tpl_info.read) THEN $
      message, 'LOG_ITEMPLATE_SAV must be a string pointing to a ' + $
               'readable file'
-  IF ((n_elements(log_time_beg_idx) NE 1) OR (log_time_beg_idx LT 0)) THEN $
-     message, 'LOG_TIME_BEG_IDX must be a scalar >= zero'
-  IF ((n_elements(log_time_end_idx) NE 1) OR (log_time_end_idx LT 0)) THEN $
-     message, 'LOG_TIME_END_IDX must be a scalar >= zero'
-  IF ((n_elements(log_status_idx) NE 1) OR (log_status_idx LT 0)) THEN $
-     message, 'LOG_STATUS_IDX must be a scalar >= zero'
+  IF ((n_elements(log_time_beg_idx) NE 1) OR $
+      ((size(log_time_beg_idx, /type) NE 2) || $
+       log_time_beg_idx LT 0)) THEN $
+         message, 'LOG_TIME_BEG_IDX must be an integer scalar >= zero'
+  IF ((n_elements(log_time_end_idx) NE 1) OR $
+      ((size(log_time_end_idx, /type) NE 2) || $
+       log_time_end_idx LT 0)) THEN $
+         message, 'LOG_TIME_END_IDX must be an integer scalar >= zero'
+  IF ((n_elements(log_status_idx) NE 1) OR $
+      ((size(log_status_idx, /type) NE 2) || log_status_idx LT 0)) THEN $
+         message, 'LOG_STATUS_IDX must be an integer scalar >= zero'
   IF ((n_elements(mot_corr_odir) NE 1) OR $
       (size(mot_corr_odir, /type) NE 7)) THEN $
          message, 'MOT_CORR_ODIR must be a string scalar'

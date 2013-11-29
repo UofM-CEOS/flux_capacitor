@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-11-20T17:54:52+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-11-29T04:19:35+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
@@ -23,7 +23,7 @@
 ;;     Idir:                  Input directory (no trailing separator).
 ;;     Odir:                  Output directory (no trailing separator).
 ;;     Itemplate_Sav:         Ascii template to read input files.
-;;     Time_Beg_Idx:          Index (in template) where time is.
+;;     Time_Idx:              Index (in template) where time is.
 ;;     Isample_Rate:          Scalar indicating the frequency (s) with
 ;;                            which input data were sampled.
 ;;     Osample_Rate:          Scalar indicating the frequency (s) with
@@ -61,34 +61,33 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
-                    ISAMPLE_RATE, OSAMPLE_RATE, ANGLE_FIELDS=ANGLE_FIELDS, $
+PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
+                    OSAMPLE_RATE, ANGLE_FIELDS=ANGLE_FIELDS, $
                     MAGNITUDE_FIELDS=MAGNITUDE_FIELDS, $
                     OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 6) THEN $
      message, 'Usage: AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, ' + $
-              'TIME_BEG_IDX, ISAMPLE_RATE, OSAMPLE_RATE, ' + $
+              'TIME_IDX, ISAMPLE_RATE, OSAMPLE_RATE, ' + $
               'ANGLE_FIELDS, MAGNITUDE_FIELDS, STAMP'
-  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
-     message, 'IDIR is undefined or is empty string'
-  IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
-     message, 'ODIR is undefined or is empty string'
-  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
-     message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(time_beg_idx) NE 1) OR $
-      ((size(time_beg_idx, /type) NE 2) || time_beg_idx LT 0)) THEN $
-         message, 'TIME_BEG_IDX must be an integer scalar >= zero'
-  IF ((n_elements(isample_rate) EQ 0) OR (isample_rate EQ '')) THEN $
-     message, 'ISAMPLE_RATE is undefined or is empty string'
-  IF ((n_elements(osample_rate) EQ 0) OR (osample_rate EQ '')) THEN $
-     message, 'OSAMPLE_RATE is undefined or is empty string'
+  idir_info=file_info(idir)
+  itpl_info=file_info(itemplate_sav)
+  IF (~idir_info.directory) THEN $
+     message, 'IDIR must be a string pointing to an existing directory'
+  IF (~itpl_info.read) THEN $
+     message, 'ITEMPLATE_SAV must be a string pointing to a readable file'
+  IF ((n_elements(odir) NE 1) OR (size(odir, /type) NE 7)) THEN $
+         message, 'ODIR must be a string scalar'
+  IF ((n_elements(time_idx) NE 1) OR $
+      ((size(time_idx, /type) NE 2) || time_idx LT 0)) THEN $
+         message, 'TIME_IDX must be an integer scalar >= zero'
+  IF ((n_elements(isample_rate) NE 1) OR (isample_rate LT 0)) THEN $
+     message, 'ISAMPLE_RATE must be a scalar >= zero'
+  IF ((n_elements(osample_rate) NE 1) OR (osample_rate LT 0)) THEN $
+     message, 'OSAMPLE_RATE must be a scalar >= zero'
   IF ((osample_rate MOD isample_rate) NE 0) THEN $
      message, 'ISAMPLE_RATE must be an integer divisor of OSAMPLE_RATE'
-  ;; IF ((86400.0 MOD (osample_rate / isample_rate)) NE 0) THEN $
-  ;;    message, '(OSAMPLE_RATE / ISAMPLE_RATE must be an integer ' + $
-  ;;             'divisor of 86400.0 s'
   n_af=n_elements(angle_fields)
   n_mf=n_elements(magnitude_fields)
   IF n_af NE n_mf THEN $
@@ -111,10 +110,10 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
   restore, itemplate_sav
   field_names=strlowcase(itemplate.FIELDNAMES)
   field_types=itemplate.FIELDTYPES
-  is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
+  is_time_field=itemplate.FIELDGROUPS EQ time_idx
   ;; Ignore other groups when reading the data
   itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
-  itemplate.FIELDGROUPS[where(is_time_field)]=time_beg_idx
+  itemplate.FIELDGROUPS[where(is_time_field)]=time_idx
   non_time_fields=where(~is_time_field)
   non_time_field_names=field_names[non_time_fields]
   ;; Check which magnitude fields we have, since negative indices mean
@@ -157,7 +156,7 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
      ENDELSE
   ENDELSE
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
-  tags2remove=where(field_names EQ field_names[time_beg_idx])
+  tags2remove=where(field_names EQ field_names[time_idx])
   ;; Times
   tfields=where(is_time_field, /NULL)
   tnames=field_names[tfields]
@@ -199,7 +198,7 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, $
               ifile, /informational
      idata=read_ascii(ifile, template=itemplate)
      idata_names=strlowcase(tag_names(idata))
-     time_loc=where(idata_names EQ field_names[time_beg_idx])
+     time_loc=where(idata_names EQ field_names[time_idx])
      idata_times=idata.(time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])
