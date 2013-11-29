@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T21:32:25+0000
-;; Last-Updated: 2013-11-27T22:11:05+0000
+;; Last-Updated: 2013-11-29T15:14:04+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -114,7 +114,7 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION EC_open, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
+FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
                   CORR_MASSMAN=CMASS, OGIVE=O_OUTPUT, BURBA=BURBA, PKT=PKT
 
   ;; CONSTANTS:
@@ -534,7 +534,6 @@ FUNCTION EC_open, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      dc_by_dq_initial=!VALUES.D_NAN & dc_by_dq_final=!VALUES.D_NAN
   ENDELSE
 
-  ;;=======OUTPUT==========================
   returnvec=[cov_w_Tair, cf_wTair, H, cov_w_c_co2, cf_wco2, $
              WPL_Fco2_op * double(86400000), cov_w_c_h2o, cf_wh2o, $
              E_op * double(86400), Qe_op, lag_co2_op, co2ppm, mean_qh2o, $
@@ -542,8 +541,10 @@ FUNCTION EC_open, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
              pkt_FCO2_op, pkt_loop, cflux_det, dRH_by_dq, $
              dc_by_drh_initial, dc_by_drh_final, dc_by_dq_initial, $
              dc_by_dq_final, lag_h2o_op]
-  ;; Return the co2/h2o/P to their originals (this is to combat a problem I
-  ;; have with this script modifying the original input values.
+  ;; Return the co2/h2o/P to their originals (in case we got the input
+  ;; parameter passed by reference).  Because we are now getting a
+  ;; structure element for these, we no longer need it, but keeping it for
+  ;; debugging.
   c_co2=c_co2 * double(1000)
   c_h2o=c_h2o * double(1000)
   P=P / double(1000)                          ; Atmospheric pressure in Pa

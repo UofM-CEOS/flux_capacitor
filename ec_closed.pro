@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-18T22:20:50+0000
-;; Last-Updated: 2013-11-27T23:26:08+0000
+;; Last-Updated: 2013-11-29T16:05:14+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -200,7 +200,7 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
         cf_wXco2m_forWPL=spec_massman(w_shift_h2o_WPL[ok], $
                                       h2o_shift_WPL[ok], $
                                       horwind, 0.1, 0.145, $
-                                      GEOM=[cmass[2],cmass[3]], $
+                                      GEOM=[cmass[2], cmass[3]], $
                                       TUBEATT=[cmass[7], cmass[8], $
                                                cmass[9], $
                                                mean(IRGA_P, /NAN), met_T], $
