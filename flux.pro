@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-29T23:14:48+0000
+;; Last-Updated: 2013-12-01T06:05:04+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -1032,32 +1032,6 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                              BURBA=[sw_avg, lw_avg, raw_sonic_spd], $
                              pkt=mom.Ustar)
         ENDIF ELSE open_path=make_array(27, value=!VALUES.D_NAN)
-        meanCO2_op=open_path[11]
-        mean_H2O_op=open_path[12]
-        cov_w_Tair=open_path[0]
-        cf_wTair=open_path[1]
-        H=open_path[2]
-        cov_w_CO2_op=open_path[3]
-        cf_CO2_op=open_path[4]
-        FCO2_op=open_path[5]
-        cov_w_h2o_op=open_path[6]
-        cf_wH2O_op=open_path[7]
-        E_op=open_path[8]
-        Qe_op=open_path[9]
-        lag_op=open_path[10]
-        WPLcont=open_path[13]
-        CO2Burba_mt=open_path[14]
-        CO2Burba_ln=open_path[15]
-        H2OBurba_mt=open_path[16]
-        H2OBurba_ln=open_path[17]
-        pkt_FCO2_op=open_path[18]
-        pkt_loop=open_path[19]
-        cflux_det=open_path[20]
-        dRH_by_dq=open_path[21]
-        dc_by_drh_initial=open_path[22]
-        dc_by_drh_final=open_path[23]
-        dc_by_dq_initial=open_path[24]
-        dc_by_dq_final=open_path[25]
 
         ;; Closed-path flow rate for 2010 = 11.5 LPM.  Sample tube length
         ;; for 2010 = 8.0m.  Do closed path calculations if available.  IF
@@ -1078,17 +1052,6 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                                !VALUES.D_NAN, cl_flow, $
                                                0.005, 8.0])
         ENDIF ELSE closed_path=make_array(11, value=!VALUES.D_NAN)
-        meanCO2_cl=closed_path[9]
-        meanH2O_cl=closed_path[10]
-        cov_w_Xco2_cl=closed_path[0]
-        cf_wXco2_cl=closed_path[1]
-        lag_co2_cl=closed_path[2]
-        FCO2_cl=closed_path[3]
-        cov_w_Xh2o_cl=closed_path[4]
-        cf_wXh2o_cl=closed_path[5]
-        lag_h2o_cl=closed_path[6]
-        E_cl=closed_path[7]
-        Qe_cl=closed_path[8]
 
         ;; MICROMET CALCULATIONS
 
@@ -1100,9 +1063,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;;  - CD_10m, CH_10m, CV_10m
         
         ;; The following publications are heavily used, and I will try to
-        ;; cite them and there specific eq'ns when necessary: Andreas et
-        ;; al. 2005, BLM 114:439-460 Jordan et al. 1999, JGR 104
-        ;; No. C4:7785-7806
+        ;; cite them and specific eq'ns: Andreas et al. 2005, BLM
+        ;; 114:439-460 Jordan et al. 1999, JGR 104 No. C4:7785-7806
   
         ;; First, we need to extract the measurement height... we'll just
         ;; give it a value of 14.1m... come back to that
@@ -1231,8 +1193,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                  (alog(10.0 / zT) - psih * (10.0 / mom.MO_L)) ]
            ;; Now calculate the E coefficient, and the Q roughness
            ;; length... from that get CE at 10m
-           CEm=Qe_op / [(rhoa * 1000.0) * Lv * raw_sonic_spd * $
-                        (surf_qh2o - mean_qh2o)]
+           CEm=open_path.qe / [(rhoa * 1000.0) * Lv * raw_sonic_spd * $
+                               (surf_qh2o - mean_qh2o)]
            zQ=zm * exp(-(vonk * CDm ^ (1.0 / 2.0) * CEm ^ (-1.0) + $
                          psih * (zm / mom.MO_L))) ;Andreas (2005) eq'n 12c
            ;; Andreas (2005) eq'n 11c
@@ -1260,7 +1222,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         mom_idx=[1, 2, 3, 4, 6, 7, 0] ; same # elements as okeys_mom
         FOREACH mom_fld, indgen(n_elements(okeys_mom)) DO BEGIN
            fluxes[okeys_mom[mom_fld]]=[fluxes[okeys_mom[mom_fld]], $
-                                       mom[mom_idx[mom_fld]]]
+                                       mom.(mom_idx[mom_fld])]
         ENDFOREACH
         ;; Next we have open path output.  We need to (be careful these
         ;; indices match) find out which elements from open_path object
@@ -1270,7 +1232,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                 10, 18, 19, 20, 21, 22, 23, 24, 25]
         FOREACH op_fld, indgen(n_elements(okeys_op)) DO BEGIN
            fluxes[okeys_op[op_fld]]=[fluxes[okeys_op[op_fld]], $
-                                     open_path[op_idx[op_fld]]]
+                                     open_path.(op_idx[op_fld])]
         ENDFOREACH
         ;; The mean diagnostic value for the open path flux data.  Not sure
         ;; what the meaning of such a value would be.
@@ -1281,7 +1243,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         cl_idx=[9, 10, 0, 1, 3, 2, 4, 5, 7, 8, 6]
         FOREACH cl_fld, indgen(n_elements(okeys_cl)) DO BEGIN
            fluxes[okeys_cl[cl_fld]]=[fluxes[okeys_cl[cl_fld]], $
-                                     closed_path[cl_idx[cl_fld]]]
+                                     closed_path.(cl_idx[cl_fld])]
         ENDFOREACH
         ;; For the calculated fields, we'll have to do it pseudo-manually,
         ;; since they are (so far) just strewn across the workspace
