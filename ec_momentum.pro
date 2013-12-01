@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T18:01:54+0000
-;; Last-Updated: 2013-12-01T03:45:51+0000
+;; Last-Updated: 2013-12-01T06:26:11+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -422,7 +422,7 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, EC_PERIOD, $
   RETURN, create_struct('cov_w_u', cov_w_u, 'cf_wu', cf_wu, $
                         'Ustar', Ustar, 'Tau', Tau, 'MO_L', L, $
                         'cov_w_Ts', cov_w_Ts, $
-                        'cov_w_psAirT', cov_w_ps_Tair, 'psH', psH)
+                        'cov_w_psAirT', cov_w_psTair, 'psH', psH)
 
 END
 
