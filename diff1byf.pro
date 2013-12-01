@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Will Drennan, Brent Else, Sebastian Luque
 ;; Created: 2013-11-14T21:45:39+0000
-;; Last-Updated: 2013-11-14T22:35:18+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-12-01T02:21:46+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -100,10 +100,8 @@ FUNCTION DIFF1BYF, si, fs,lf
   ;; % Energy elimination at frequencies smaller than 1 / cutoff, i.e. it
   ;; is a
   iter=n_elements(SI)
-
   FOR i=0, (iter - 1) DO $
      IF (f(i) LT -lf OR f[i] GT lf) THEN SI[i]=0
-
   ;; Signal transformation back to the temporal domain.
   si=shift(si, clsi)
   si=complex(real_part(si), -imaginary(si))

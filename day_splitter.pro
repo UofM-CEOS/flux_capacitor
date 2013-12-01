@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-10-30T21:30:31+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-12-01T02:30:39+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
@@ -27,7 +27,7 @@
 ;;     Idir:            Input directory (no trailing separator).
 ;;     Odir:            Output directory (no trailing separator).
 ;;     Itemplate_Sav:   Ascii template to read input files.
-;;     Time_Beg_Idx:    Index (in template) where time is.
+;;     Time_Idx:        Index (in template) where time is.
 ;;     Step_Time:       Scalar for step time in seconds.
 ;;     Stamp:           Scalar for string to preprend to output file name.
 ;;
@@ -47,30 +47,32 @@
 ;;; Code:
 
 PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
-                  TIME_BEG_IDX, STEP_TIME, STAMP, OVERWRITE=OVERWRITE
+                  TIME_IDX, STEP_TIME, STAMP, OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 8) THEN $
      message, 'Usage: DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ' + $
-              'ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, STEP_TIME, ' + $
+              'ODIR, ITEMPLATE_SAV, TIME_IDX, STEP_TIME, ' + $
               'STAMP, [/OVERWRITE]'
+  idir_info=file_info(idir)
+  itpl_info=file_info(itemplate_sav)
   IF ((n_elements(startdate) EQ 0) OR (idir EQ '')) THEN $
      message, 'STARTDATE is undefined or is empty string'
   IF ((n_elements(enddate) EQ 0) OR (idir EQ '')) THEN $
      message, 'ENDDATE is undefined or is empty string'
   IF (long(enddate) LT long(startdate)) THEN $
      message, 'ENDDATE must be greater than or equal to STARTDATE'
-  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
-     message, 'IDIR is undefined or is empty string'
-  IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
-     message, 'ODIR is undefined or is empty string'
-  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
-     message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(time_beg_idx) NE 1) OR $
-      ((size(time_beg_idx, /type) NE 2) || time_beg_idx LT 0)) THEN $
-         message, 'TIME_BEG_IDX must be an integer scalar >= zero'
-  IF (n_elements(step_time) EQ 0) THEN $
-     message, 'STEP_TIME is undefined'
+  IF (~idir_info.directory) THEN $
+     message, 'IDIR must be a string pointing to an existing directory'
+  IF (~itpl_info.read) THEN $
+     message, 'ITEMPLATE_SAV must be a string pointing to a readable file'
+  IF ((n_elements(time_idx) NE 1) OR $
+      ((size(time_idx, /type) NE 2) || time_idx LT 0)) THEN $
+         message, 'TIME_IDX must be an integer scalar >= zero'
+  IF ((n_elements(odir) NE 1) OR (size(odir, /type) NE 7)) THEN $
+         message, 'ODIR must be a string scalar'
+  IF ((n_elements(step_time) EQ 0) OR (step_time LT 0)) THEN $
+     message, 'STEP_TIME must be a scalar >= zero'
   IF ((n_elements(stamp) EQ 0) OR (stamp EQ '')) THEN $
      message, 'STAMP is undefined or is empty string'
 
@@ -99,10 +101,10 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
   field_names=strlowcase(itemplate.FIELDNAMES)
   field_groups=itemplate.FIELDGROUPS
   ;; Times
-  is_time_field=field_groups EQ time_beg_idx
+  is_time_field=field_groups EQ time_idx
   ;; Ignore other groups when reading the data
   itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
-  itemplate.FIELDGROUPS[where(is_time_field)]=time_beg_idx
+  itemplate.FIELDGROUPS[where(is_time_field)]=time_idx
   non_time_fields=where(~is_time_field)
   non_time_field_names=field_names[non_time_fields]
   tfields=where(is_time_field, /NULL)
@@ -205,8 +207,8 @@ PRO DAY_SPLITTER, STARTDATE, ENDDATE, IDIR, ODIR, ITEMPLATE_SAV, $
      message, 'Processing ' + ifile, /informational
      idata=read_ascii(ifile, count=n_inputfile, template=itemplate)
      ;; Extract times and remove quotes or spaces from strings
-     idata_times=idata.(time_beg_idx)
-     idata=remove_structure_tags(idata, (tag_names(idata))[time_beg_idx])
+     idata_times=idata.(time_idx)
+     idata=remove_structure_tags(idata, (tag_names(idata))[time_idx])
      idata_names=strlowcase(tag_names(idata))
      IF size(idata_times, /type) EQ 7 THEN BEGIN
         FOREACH fld, indgen((size(idata_times, /dimensions))[0]) DO BEGIN

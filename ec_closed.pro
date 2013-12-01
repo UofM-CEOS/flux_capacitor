@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-18T22:20:50+0000
-;; Last-Updated: 2013-11-29T16:05:14+0000
+;; Last-Updated: 2013-12-01T03:10:23+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -18,32 +18,32 @@
 ;;
 ;; INPUTS:
 ;;
-;;	Wind:	     3xn element array of unrotated wind [u,v,w].
-;;	XCO2_m:      1xn array of mole fraction of CO2 (umol co2 / mol
-;;		     moist air).
-;;	XH2O_m:      1xn array of mole fraction of H2O (mmol h2o / mol
-;;		     moist air).
-;;	IRGA_P:      1xn array of pressure (kPa) in the IRGA cell.
-;;	IRGA_T:      If /PSEUDO_WPL is set: a 1xn array of temperature (C)
-;;		     in the IRGA cell. If /PSEUDO_WPL is not set: a single
-;;		     floating point value giving the average IRGA cell
-;;		     temperature for the period.
-;;	MET_T:	     Scalar float variable of the mean air temperature
-;;		     measured by the MET logger (C).
-;;	MET_P:	     Scalar float variable of the mean pressure measured by
-;;		     the MET logger (KpA).
-;;	MET_RH:      Scalar float variable of the mean relative humidity
-;;		     measured by the MET logger (percentage).
-;;	MAXC:	     Scalar integer variable indicating the maximum number
-;;		     of records that can be lagged for digital time
-;;		     shifting.
-;;	Flow:	     A variable indicating the gas flow through the tube in
-;;		     LPM.
-;;	Avg_Period:  Scalar float variable of the averaging period under
-;;		     consideration (in minutes) (e.g. 30min flux runs,
-;;		     20min flux runs, 10min flux runs, etc.).
-;;	Data_Freq:   Scalar float variable of the data frequency in Hz
-;;		     (e.g. 10 Hz).
+;;	Wind:	       3xn element array of unrotated wind [u,v,w].
+;;	XCO2_m:        1xn array of mole fraction of CO2 (umol co2 / mol
+;;		       moist air).
+;;	XH2O_m:        1xn array of mole fraction of H2O (mmol h2o / mol
+;;		       moist air).
+;;	IRGA_P:        1xn array of pressure (kPa) in the IRGA cell.
+;;      IRGA_T:        If /PSEUDO_WPL is set: a 1xn array of temperature
+;;                     (C) in the IRGA cell. If /PSEUDO_WPL is not set: a
+;;                     single floating point value giving the average IRGA
+;;                     cell temperature for the period.
+;;	MET_T:	       Scalar float variable of the mean air temperature
+;;		       measured by the MET logger (C).
+;;      MET_P:         Scalar float variable of the mean pressure measured
+;;                     by the MET logger (KpA).
+;;	MET_RH:        Scalar float variable of the mean relative humidity
+;;		       measured by the MET logger (percentage).
+;;	MAXC:	       Scalar integer variable indicating the maximum number
+;;		       of records that can be lagged for digital time
+;;		       shifting.
+;;	Flow:	       A variable indicating the gas flow through the tube in
+;;		       LPM.
+;;      EC_Period:     Scalar float variable of the averaging period under
+;;                     consideration (seconds) (e.g. 30min=1200 s flux
+;;                     runs).
+;;      Isample_Freq:  Scalar float variable of the data sampling frequency
+;;                     in Hz (e.g. 10 Hz).
 ;;
 ;; KEYWORD PARAMETERS:
 ;;
@@ -68,10 +68,10 @@
 ;;		       length of scalar sensor with volume averaging (m),
 ;;		       7: tube flow (LPM), 8: tube diameter (m), 9: tube
 ;;		       length (m)].
-;;     OGIVE:	       Set this key word to produce an ogvie plot for all
+;;     OGIVE_OFILE:    Set this key word to produce an ogive plot for all
 ;;		       fluxes which are calculated using this routine.
-;;		       this keyword must be set to a string which indicates
-;;		       the directory where the ogvie should be placed.
+;;		       This keyword must be set to a string which indicates
+;;		       the path where the ogive plot file should be placed.
 ;;
 ;; OUTPUTS:
 ;;
@@ -103,9 +103,9 @@
 ;;; Code:
 
 FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
-		    MET_P, MAXC_C, AVG_PERIOD, DATA_FREQ, $
-		    PSEUDO_WPL=PSEUDO_WPL, CORR_MASSMAN=CMASS, $
-		    OGIVE=O_OUTPUT
+		    MET_P, MAXC_C, EC_PERIOD, ISAMPLE_FREQ, $
+		    PSEUDO_WPL=PSEUDO_WPL, CORR_MASSMAN=CORR_MASSMAN, $
+		    OGIVE_OFILE=OGIVE_OFILE
 
   ;; CONSTANTS:
   r=8.31451		 ; j/mol/k universal gas constant
@@ -163,16 +163,16 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      cov_w_Xh2o_m_forWPL=w_Xh2o_m[ii_co2[0]]
      cov_w_Xh2o_m=w_Xco2_m[ii_h2o[0]] ;covariance of water vapour
 
-     IF keyword_set(o_output) THEN BEGIN
-	ogive, 'wco2_cl', wrot, Xco2_m, avg_period, data_freq, maxc_c, $
-	       o_output
-	ogive, 'wh2o_cl', wrot, Xh2o_m, avg_period, data_freq, maxc_c, $
-	       o_output
+     IF keyword_set(ogive_ofile) THEN BEGIN
+	ogive, 'wco2_cl', wrot, Xco2_m, ec_period, isample_freq, maxc_c, $
+	       ogive_ofile
+	ogive, 'wh2o_cl', wrot, Xh2o_m, ec_period, isample_freq, maxc_c, $
+	       ogive_ofile
      ENDIF
      cf_wXco2m=!VALUES.D_NAN
      cf_wXh2om=!VALUES.D_NAN
      ;; Now do spectral correction for the CO2 and H2O
-     IF keyword_set(cmass) THEN BEGIN
+     IF keyword_set(corr_massman) THEN BEGIN
 	;; First, do CO2 and H2O, then do H2O lagged by CO2 time constant.
 	;; First, shift the CO2 and H2O signals appropriately
 	co2_shift=Xco2_m[0 + abs(lag_co2_cl):nrecs - 1]
@@ -184,25 +184,29 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
 	;; Then, run the spectral correction
 	cf_wXco2m=spec_massman(w_shift_co2[where(finite(w_shift_co2))], $
 			       co2_shift[where(finite(w_shift_co2))], $
-			       horwind, cmass[0], cmass[1], $
-			       GEOM=[cmass[2], cmass[3]], $
-			       TUBEATT=[cmass[7], cmass[8], cmass[9], $
+			       horwind, corr_massman[0], corr_massman[1], $
+			       GEOM=[corr_massman[2], corr_massman[3]], $
+                               TUBEATT=[corr_massman[7], corr_massman[8], $
+                                        corr_massman[9], $
 					mean(IRGA_P, /NAN), met_T], $
 			       GAS='CO2')
 	cf_wXh2om=spec_massman(w_shift_h2o[where(finite(w_shift_h2o))], $
 			       h2o_shift[where(finite(w_shift_h2o))], $
-			       horwind, cmass[0], cmass[1], $
-			       GEOM=[cmass[2], cmass[3]], $
-			       TUBEATT=[cmass[7], cmass[8], cmass[9], $
+			       horwind, corr_massman[0], corr_massman[1], $
+			       GEOM=[corr_massman[2], corr_massman[3]], $
+                               TUBEATT=[corr_massman[7], corr_massman[8], $
+                                        corr_massman[9], $
 					mean(IRGA_P, /NAN), met_T], $
 			       GAS='H2O')
 	ok=where(finite(w_shift_h2o_WPL))
 	cf_wXco2m_forWPL=spec_massman(w_shift_h2o_WPL[ok], $
 				      h2o_shift_WPL[ok], $
 				      horwind, 0.1, 0.145, $
-				      GEOM=[cmass[2], cmass[3]], $
-				      TUBEATT=[cmass[7], cmass[8], $
-					       cmass[9], $
+                                      GEOM=[corr_massman[2], $
+                                            corr_massman[3]], $
+                                      TUBEATT=[corr_massman[7], $
+                                               corr_massman[8], $
+					       corr_massman[9], $
 					       mean(IRGA_P, /NAN), met_T], $
 				      GAS='H2O')
 	cov_w_Xco2_m=cov_w_Xco2_m * cf_wXco2m
@@ -283,17 +287,17 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      cov_w_Xco2_d=w_Xco2_d[ii_co2[0]]
      cov_w_Xh2o_d=w_Xh2o_d[ii_h2o[0]]
 
-     IF keyword_set(o_output) THEN BEGIN
-	ogive, 'wco2_cl', wrot, Xco2_d, avg_period, data_freq, maxc_c, $
-	       o_output
-	ogive, 'wh2o_cl', wrot, Xh2o_d, avg_period, data_freq, maxc_c, $
-	       o_output
+     IF keyword_set(ogive_ofile) THEN BEGIN
+	ogive, 'wco2_cl', wrot, Xco2_d, ec_period, isample_freq, maxc_c, $
+	       ogive_ofile
+	ogive, 'wh2o_cl', wrot, Xh2o_d, ec_period, isample_freq, maxc_c, $
+	       ogive_ofile
      ENDIF
 
      cf_wXco2d=!VALUES.D_NAN
      cf_wXh2od=!VALUES.D_NAN
      ;; Now do spectral correction for the CO2 and H2O
-     IF keyword_set(cmass) THEN BEGIN
+     IF keyword_set(corr_massman) THEN BEGIN
 	;; First, do CO2 and H2O, then do H2O lagged by CO2 time constant.
 	;; First, shift the CO2 and H2O signals appropriately.
 	co2_shift=Xco2_m[0 + abs(lag_co2_cl):nrecs - 1]
@@ -303,16 +307,18 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
 	;; Then, run the spectral correction
 	cf_wXco2d=spec_massman(w_shift_co2[where(finite(w_shift_co2))], $
 			       co2_shift[where(finite(w_shift_co2))], $
-			       horwind, cmass[0], cmass[1], $
-			       GEOM=[cmass[2], cmass[3]], $
-			       TUBEATT=[cmass[7], cmass[8], cmass[9], $
+			       horwind, corr_massman[0], corr_massman[1], $
+			       GEOM=[corr_massman[2], corr_massman[3]], $
+                               TUBEATT=[corr_massman[7], corr_massman[8], $
+                                        corr_massman[9], $
 					mean(IRGA_P, /NAN), met_T], $
 			       GAS='CO2')
 	cf_wXh2od=spec_massman(w_shift_h2o[where(finite(w_shift_h2o))], $
 			       h2o_shift[where(finite(w_shift_h2o))], $
-			       horwind, cmass[0], cmass[1], $
-			       GEOM=[cmass[2], cmass[3]], $
-			       TUBEATT=[cmass[7], cmass[8], cmass[9], $
+			       horwind, corr_massman[0], corr_massman[1], $
+			       GEOM=[corr_massman[2], corr_massman[3]], $
+                               TUBEATT=[corr_massman[7], corr_massman[8], $
+                                        corr_massman[9], $
 					mean(IRGA_P, /NAN), met_T], $
 			       GAS='H2O')
 	cov_w_Xco2_d=cov_w_Xco2_d * cf_wXco2d
