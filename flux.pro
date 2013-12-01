@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-11-29T04:15:03+0000
+;; Last-Updated: 2013-11-29T23:14:48+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -1017,13 +1017,6 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                         diag.pressure[fperiod], $
                         float(ec_period) / 60, $ ; in minutes
                         sf_hz, CORR_MASSMAN=[isample_rate, 0.145])
-        cov_w_u=mom[0]
-        cf_wu=mom[1]
-        Ustar=mom[2]
-        Tau=mom[3]
-        MO_L=mom[4]
-        cov_w_psTair=mom[6]
-        psH=mom[7]
 
         ;; Open path calculations.  IF TEST FAILS, THEN WE CREATE AN ARRAY
         ;; WITH THE SAME DIMENSIONS AS THAT RETURNED BY EC_OPEN, for
@@ -1037,7 +1030,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                            0.38, !VALUES.D_NAN, 0.01, $
                                            0.125], $
                              BURBA=[sw_avg, lw_avg, raw_sonic_spd], $
-                             pkt=Ustar)
+                             pkt=mom.Ustar)
         ENDIF ELSE open_path=make_array(27, value=!VALUES.D_NAN)
         meanCO2_op=open_path[11]
         mean_H2O_op=open_path[12]
@@ -1138,28 +1131,28 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
         ;; Calculate CD at measurement height.  CD at measurement height,
         ;; Andreas (2005), eqn, 10a)
-        CDm=Tau / (rhoa * true_sonic_spd ^ double(2))
+        CDm=Mom.Tau / (rhoa * true_sonic_spd ^ double(2))
         
         ;; Drag coefficient should be positive... if not, do no more calcs
         IF CDm GT 0 THEN BEGIN
            ;; Calculate the wind profile modifiers.  Calculate the profile
            ;; modifier for stable conditions (Jordan, 1999, eq 33)
-           IF zm / MO_L GT 0.5 THEN BEGIN    
-              psim=-[((0.70 * zm) / MO_L) + 0.75 * $
+           IF zm / mom.MO_L GT 0.5 THEN BEGIN    
+              psim=-[((0.70 * zm) / mom.MO_L) + 0.75 * $
                      ((zm / motpak_offset) - 14.3) * $
-                     exp((-0.35 * zm) / MO_L ) + 10.7]
+                     exp((-0.35 * zm) / mom.MO_L ) + 10.7]
               psih=psim
            ENDIF
            ;; Calculate the profile modifier for neutral/slightly stable
            ;; (Jordan, 1999, eq 32)
-           IF zm / MO_L GE 0 AND zm / MO_L LE 0.5 THEN BEGIN
-              psim=-6.0 * (zm / MO_L)
+           IF zm / mom.MO_L GE 0 AND zm / mom.MO_L LE 0.5 THEN BEGIN
+              psim=-6.0 * (zm / mom.MO_L)
               psih=psim
            ENDIF
            ;; Calculate the profile modifier for unstable conditions
            ;; (Jordan, 1999, eq 30)
-           IF zm/MO_L LT 0 THEN BEGIN
-              xval=(1.0 - 16.0 * (zm / MO_L)) ^ (1.0 / 4.0)
+           IF zm/mom.MO_L LT 0 THEN BEGIN
+              xval=(1.0 - 16.0 * (zm / mom.MO_L)) ^ (1.0 / 4.0)
               psim=alog((1.0 + xval ^ 2.0) / 2.0) + 2.0 * $
                    alog((1.0 + xval) / 2.0) - 2.0 * atan(xval) + $
                    (!PI / 2.0)
@@ -1167,24 +1160,24 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
               psih=2.0 * alog((1.0 + xval ^ 2.0) / 2.0)
            ENDIF
            ;; Calculate the roughness length (Andreas, 2005, eq 12a)
-           z0=zm * EXP( -[vonk * CDm ^ (-0.5) + psim * (zm / MO_L)])
+           z0=zm * EXP( -[vonk * CDm ^ (-0.5) + psim * (zm / mom.MO_L)])
            ;; Calculate the Drag coefficient at 10m (Andreas, 2005, eq 11a)
            CD10=vonk ^ 2.0 / $
-                (alog(10.0 / z0) - psim * (10.0 / MO_L)) ^ 2.0
+                (alog(10.0 / z0) - psim * (10.0 / mom.MO_L)) ^ 2.0
            ;; Calculate wind speed at 10m & for interest sake, we'll see
            ;; what our profile gives us for the measurement height wind
            ;; speed...  Stull (1988), eq'n 9.7.5g
            U10=[(1.0 / vonk) * $
-                (alog(10.0 / z0) + psim * (10.0 / MO_L))] * ustar
+                (alog(10.0 / z0) + psim * (10.0 / mom.MO_L))] * mom.Ustar
            Um=[(1.0 / vonk) * $
-               (alog(zm / z0) + psim * (zm / MO_L))] * ustar
+               (alog(zm / z0) + psim * (zm / mom.MO_L))] * mom.Ustar
            ;; Calculate the wind speed at 10m assuming neutral stability
-           U10N=[(double(1) / vonk) * (alog(zm / z0))] * ustar
+           U10N=[(double(1) / vonk) * (alog(zm / z0))] * mom.Ustar
            ;; Calculate the wind speed at 10m assuming neutral stability
            ;; AND that we're over the ocean
-           z0charnock=(0.016 * ustar ^ 2) / 9.81 ; Stull 9.7.2c
+           z0charnock=(0.016 * mom.Ustar ^ 2) / 9.81 ; Stull 9.7.2c
            U10Nocean=[(double(1) / vonk) * $
-                      (alog(zm / z0charnock))] * ustar
+                      (alog(zm / z0charnock))] * mom.Ustar
            ;; ;; Make call to the footprint routine, which follows Hsieh et
            ;; ;; al. 2000, Advances in Water Resources 23 (2000) 765-777.
            ;; ;; [SPL: Turning this off; it is taking way too much, stuck on
@@ -1193,7 +1186,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            ;;                             iname_prefix + '_' + 'spec.ps', $
            ;;                             /remove_all)
            ;; IF finite(z0) EQ 1 THEN BEGIN
-           ;;    foot=hkt_footprint(MO_L, z0, zm, 1.0, 100.0, 0.99, $
+           ;;    foot=hkt_footprint(mom.MO_L, z0, zm, 1.0, 100.0, 0.99, $
            ;;                       plot_file=foot_ofile_name)
            ;; ENDIF
            ;; peakF=foot[0]
@@ -1231,21 +1224,21 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                      diag.air_temperature[fperiod]) ) ; Andreas (2005) eq'n 10b
            ;; Andreas (2005) eq'n 12b
            zT=zm * EXP( -(vonk * CDm ^ (1.0 / 2.0) * $
-                          CHm ^ (-1.0) + psih * (zm / MO_L)))
+                          CHm ^ (-1.0) + psih * (zm / mom.MO_L)))
            ;; Andreas (2005) eq'n 11b
            CH10=vonk ^ 2.0 / $
-                [(alog(10.0 / z0) - psim * (10.0 / MO_L)) * $
-                 (alog(10.0 / zT) - psih * (10.0 / MO_L)) ]
+                [(alog(10.0 / z0) - psim * (10.0 / mom.MO_L)) * $
+                 (alog(10.0 / zT) - psih * (10.0 / mom.MO_L)) ]
            ;; Now calculate the E coefficient, and the Q roughness
            ;; length... from that get CE at 10m
            CEm=Qe_op / [(rhoa * 1000.0) * Lv * raw_sonic_spd * $
                         (surf_qh2o - mean_qh2o)]
            zQ=zm * exp(-(vonk * CDm ^ (1.0 / 2.0) * CEm ^ (-1.0) + $
-                         psih * (zm / MO_L))) ;Andreas (2005) eq'n 12c
+                         psih * (zm / mom.MO_L))) ;Andreas (2005) eq'n 12c
            ;; Andreas (2005) eq'n 11c
            CE10=vonk ^ 2.0 / $
-                [(alog(10.0 / z0) - psim * (10.0 / MO_L)) * $
-                 (alog(10.0 / zQ) - psih * (10.0 / MO_L))]
+                [(alog(10.0 / z0) - psim * (10.0 / mom.MO_L)) * $
+                 (alog(10.0 / zQ) - psih * (10.0 / mom.MO_L))]
         ENDIF
 
         ;; Time to append data to output hash.  Start with MET summary

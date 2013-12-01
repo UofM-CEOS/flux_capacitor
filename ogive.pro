@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian P. Luque
 ;; Created: 2013-11-29T14:57:17+0000
-;; Last-Updated: 2013-11-29T19:47:10+0000
+;; Last-Updated: 2013-11-29T22:27:58+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -61,11 +61,7 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO OGIVE, STAMP, WROT, SCALAR, PERIOD, FREQ, MAXC, OUTPUT
-
-  ;; extract output data
-  fluxrun=output[0]
-  odir=output[1]
+PRO OGIVE, STAMP, WROT, SCALAR, PERIOD, FREQ, MAXC, OFILE_NOSUFFIX
 
   ;; Calculate the number of iterations we will do at 10 sec intervals,
   ;; starting from 1 minute
@@ -75,7 +71,7 @@ PRO OGIVE, STAMP, WROT, SCALAR, PERIOD, FREQ, MAXC, OUTPUT
 
   ;; Here is how we do it for ones which do not need to be digitally
   ;; shifted (mom, heat flux)
-  IF stamp EQ 'wu' OR 'wTair' THEN BEGIN
+  IF stamp EQ 'wu' OR stamp EQ 'wTair' THEN BEGIN
      FOR x=0, iters DO BEGIN
         ;; Extract the chunk of w data we will use for this
         use_w=wrot[0:ini + (x * (10.0 * freq)) - 3]
@@ -91,7 +87,7 @@ PRO OGIVE, STAMP, WROT, SCALAR, PERIOD, FREQ, MAXC, OUTPUT
      ENDFOR
   ENDIF
   ;; Here is how we do it for the open path sensors
-  IF stamp EQ 'wco2_op' OR 'wh2o_op' THEN BEGIN
+  IF stamp EQ 'wco2_op' OR stamp EQ 'wh2o_op' THEN BEGIN
      FOR x=0, iters DO BEGIN
         ;; Extract the chunk of w data we will use for this
         use_w=wrot[0:ini + (x * (10.0 * freq)) - 3]
@@ -111,7 +107,7 @@ PRO OGIVE, STAMP, WROT, SCALAR, PERIOD, FREQ, MAXC, OUTPUT
      ENDFOR
   ENDIF 
   ;; Here is how we do it for the closed path sensors
-  IF stamp EQ 'wco2_cl' OR 'wh2o_cl' THEN BEGIN
+  IF stamp EQ 'wco2_cl' OR stamp EQ 'wh2o_cl' THEN BEGIN
      FOR x=0, iters DO BEGIN
         ;; Extract the chunk of w data we will use for this
         use_w=wrot[0:ini + (x * (10.0 * freq)) - 3]
@@ -133,18 +129,11 @@ PRO OGIVE, STAMP, WROT, SCALAR, PERIOD, FREQ, MAXC, OUTPUT
      ENDFOR
   ENDIF 
 
-  ;; Now we do the plotting
-  !P.MULTI=[0, 0, 0, 0]         ; set up a page for a single plot
-  set_plot, 'ps'                ; set up the postscript file 
-  plot_file=strcompress(output[1] + 'Ogive_' + stamp + $
-                        strmid(output[0], 7, 26) + '.ps', /REMOVE_ALL)
-  device, file=plot_file
-  device, /inches, xsize=11.0, ysize=8.
-  device, /times
-  device, /landscape
-  plot, datarr[0, *], datarr[1, *], xtitle='f(H!Dz!N)', $
-        ytitle='Covariance', title='Ogive Plot', /XLOG
-  device, /close
+  ;; Bare essentials for now; we'll polish this later
+  ogplot=plot(datarr[0, *], datarr[1, *], /buffer, $
+              xtitle='f(H!Dz!N)', ytitle='Covariance', $
+              title='Ogive Plot', /xlog)
+  ogplot.save, ofile_nosuffix, /landscape
 
 END
 
