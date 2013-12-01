@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T21:32:25+0000
-;; Last-Updated: 2013-12-01T03:57:45+0000
+;; Last-Updated: 2013-12-01T05:43:33+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -538,14 +538,6 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
      dc_by_drh_initial=!VALUES.D_NAN & dc_by_drh_final=!VALUES.D_NAN
      dc_by_dq_initial=!VALUES.D_NAN & dc_by_dq_final=!VALUES.D_NAN
   ENDELSE
-
-  returnvec=[cov_w_Tair, cf_wTair, H, cov_w_c_co2, cf_wco2, $
-	     WPL_Fco2_op * double(86400000), cov_w_c_h2o, cf_wh2o, $
-	     E_op * double(86400), Qe_op, lag_co2_op, co2ppm, mean_qh2o, $
-	     WPLcont, CO2Burba_mt, CO2Burba_ln, H2OBurba_mt, H2OBurba_ln, $
-	     pkt_FCO2_op, pkt_loop, cflux_det, dRH_by_dq, $
-	     dc_by_drh_initial, dc_by_drh_final, dc_by_dq_initial, $
-	     dc_by_dq_final, lag_h2o_op]
   ;; Return the co2/h2o/P to their originals (in case we got the input
   ;; parameter passed by reference).  Because we are now getting a
   ;; structure element for these, we no longer need it, but keeping it for
@@ -562,7 +554,19 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
                         'FCO2', WPL_Fco2_op * double(86400000), $
                         'cov_w_H2O', cov_w_c_h2o, 'cf_wH2O', cf_wh2o, $
                         'E', E_op * double(86400), 'Qe', Qe_op, $
-                        'lag', lag_co2_op)
+                        'lag_CO2', lag_co2_op, 'CO2', co2ppm, $
+                        'H2O', mean_qh2o, 'WPLcont', WPLcont, $
+                        'CO2Burba_mt', CO2Burba_mt, $
+                        'CO2Burba_ln', CO2Burba_ln, $
+                        'H2OBurba_mt', H2OBurba_mt, $
+                        'H2OBurba_ln', H2OBurba_ln, $
+                        'pkt_FCO2', pkt_FCO2_op, 'pkt_loop', pkt_loop, $
+                        'cflux_det', cflux_det, 'dRH_by_dq', dRH_by_dq, $
+                        'dc_by_dRH_initial', dc_by_drh_initial, $
+                        'dc_by_dRH_final', dc_by_drh_final, $
+                        'dc_by_dq_inital', dc_by_dq_initial, $
+                        'dc_by_dq_final', dc_by_dq_final, $
+                        'lag_H2O', lag_h2o_op)
 END
 
 

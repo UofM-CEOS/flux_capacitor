@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-18T22:20:50+0000
-;; Last-Updated: 2013-12-01T03:10:23+0000
+;; Last-Updated: 2013-12-01T05:33:20+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -135,6 +135,8 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
   WINDrot=yawpitch(WIND[0, *], WIND[1, *], WIND[2, *], $
 		   n_elements(WIND[0, *]))
   urot=WINDrot[0, *] & vrot=WINDrot[1, *] & wrot=WINDrot[2, *]
+  onames=['cov_w_XCO2', 'cf_wXCO2', 'lag_CO2', 'FCO2', 'cov_w_XH2O', $
+          'cf_wXH2O', 'lag_H2O', 'E', 'Qe', 'CO2', 'H2O']
 
   IF keyword_set(pseudo_wpl) THEN BEGIN
      ;; CALCULATE FLUXES FROM MOIST AIR MIXING RATIOS (REQUIRES A
@@ -148,9 +150,8 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      n_lag_cl=(maxc_c[1] - maxc_c[0]) + 1
      lag_cl=findgen(n_lag_cl)
 
-     FOR lagpop=maxc_c[0], maxc_c[1] DO BEGIN
+     FOR lagpop=maxc_c[0], maxc_c[1] DO $
 	lag_cl[lagpop-maxc_c[0]]=-lagpop
-     ENDFOR
 
      w_Xco2_m=c_covariance(Xco2_m, wrot, lag_cl)
      w_Xh2o_m=c_covariance(Xh2o_m, wrot, lag_cl)
@@ -238,21 +239,18 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      ;; Sublimation
      IF ((met_T) LT 0)	THEN Lv=(2.83539 - 0.000135713 * (met_T)) * 1000.0
      Qe_cl=double(E_cl * mv * Lv)
-     ;; ;; Write out the lags and covariances to a temporary file
-     ;; lag_arr=fltarr(3,n_lag_cl)
-     ;; lag_arr(0,*)=lag_cl
-     ;; lag_arr(1,*)=w_Xco2_m
-     ;; lag_arr(2,*)=w_Xh2o_m
-     ;; openw, 7, 'lag_cl.txt'
-     ;; printf, 7, lag_arr, format='(3A)'
-     ;; close, 7
 
-     returnvec=[cov_w_Xco2_m, cf_wXco2m, lag_co2_cl, $
-		Fco2_cl * 86400000.0, cov_w_Xh2o_m, cf_wXh2om, $
-		lag_h2o_cl, E_cl * 86400.0, Qe_cl, $
-		mean_Xco2_d * 1000000.0, mean_c_v / mean_c_m]
-
-     RETURN, returnvec
+     RETURN, create_struct(onames, cov_w_Xco2_m, $
+                           cf_wXco2m, $
+                           lag_co2_cl, $
+                           Fco2_cl * 86400000.0, $
+                           cov_w_Xh2o_m, $
+                           cf_wXh2om, $
+                           lag_h2o_cl, $
+                           E_cl * 86400.0, $
+                           Qe_cl, $
+                           mean_Xco2_m * 1000000.0, $
+                           mean(c_v, /nan) / mean(c_m, /nan))
 
   ENDIF ELSE BEGIN
 
@@ -332,15 +330,6 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      Fco2_cl=c_d_atm * cov_w_Xco2_d ;mol/m2s
      E_cl=c_d_atm * cov_w_Xh2o_d    ;mol/m2s
 
-     ;; ;; Write out the lags and covariances to a temporary file
-     ;; lag_arr=fltarr(3, n_lag_cl)
-     ;; lag_arr(0,*)=lag_cl
-     ;; lag_arr(1,*)=w_Xco2_d
-     ;; lag_arr(2,*)=w_Xh2o_d
-     ;; openw, 7, 'lag_cl.txt'
-     ;; printf, 7, lag_arr, format='(3A)'
-     ;; close, 7
-
      ;; Calculate latent heat flux
      IF keyword_set(open) THEN $
 	checkT=mean_Tair - 273.15 $
@@ -351,13 +340,17 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
 	Lv=(2.83539 - 0.000135713 * (checkT)) * 1000.0 ; sublimation
      Qe_cl=double(E_cl * mv * Lv)
 
-     returnvec=[cov_w_Xco2_d, cf_wXco2d, lag_co2_cl, $
-		Fco2_cl * 86400000.0, cov_w_Xh2o_d, cf_wXh2od, $
-		lag_h2o_cl, E_cl * 86400.0, Qe_cl, $
-		mean_Xco2_d * 1000000.0, $
-		mean(c_v, /nan) / mean(c_m, /nan)]
-
-     RETURN, returnvec
+     RETURN, create_struct(onames, cov_w_Xco2_d, $
+                           cf_wXco2d, $
+                           lag_co2_cl, $
+                           Fco2_cl * 86400000.0, $
+                           cov_w_Xh2o_d, $
+                           cf_wXh2od, $
+                           lag_h2o_cl, $
+                           E_cl * 86400.0, $
+                           Qe_cl, $
+                           mean_Xco2_d * 1000000.0, $
+                           mean(c_v, /nan) / mean(c_m, /nan))
 
   ENDELSE
 
