@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T21:32:25+0000
-;; Last-Updated: 2013-11-29T15:14:04+0000
+;; Last-Updated: 2013-12-01T03:57:45+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -19,20 +19,20 @@
 ;;
 ;; INPUTS:
 ;;
-;;	 Wind:	       3xn element array of unrotated wind [u,v,w].
-;;	 Ts:	       1xn array of sonic temperature (C).
-;;	 CO2:	       1xn array of co2 values in units of mass
-;;		       concentration (mmol/m3).
-;;	 H2O:	       1xn array of h2o values in units of mass
-;;		       concentration (mmol/m3).
-;;	 P:	       1xn array of atmospheric pressure (kPa).
-;;	 MaxC:	       Scalar integer indicating maximum number of records
-;;		       that can be lagged for digital time shifting.
-;;	 Avg_Period:   Scalar float with the averaging period under
-;;		       consideration (minutes) (e.g. 30min flux runs, 20min
-;;		       flux runs, 10min flux runs, etc).
-;;	 Data_Freq:    Scalar float variable of the data frequency in Hz
-;;		       (e.g. 10Hz).
+;;	 Wind:	        3xn element array of unrotated wind [u,v,w].
+;;	 Ts:	        1xn array of sonic temperature (C).
+;;	 CO2:	        1xn array of co2 values in units of mass
+;;		        concentration (mmol/m3).
+;;	 H2O:	        1xn array of h2o values in units of mass
+;;		        concentration (mmol/m3).
+;;	 P:	        1xn array of atmospheric pressure (kPa).
+;;	 MaxC:	        Scalar integer indicating maximum number of records
+;;                      that can be lagged for digital time shifting.
+;;       EC_Period:     Scalar float with the averaging period under
+;;                      consideration (seconds) (e.g. 30min=1200 s flux
+;;                      runs).
+;;       Isample_Freq:  Scalar float variable of the data frequency in Hz
+;;                      (e.g. 10Hz).
 ;;
 ;; KEYWORD PARAMETERS:
 ;;
@@ -49,11 +49,11 @@
 ;;			 line averaging (in m), 5-diameter of scalar sensor
 ;;			 with volume averaging (in m), 6-length of scalar
 ;;			 sensor with volume averaging (in m)].
-;;     OGIVE:		 Set this key word to produce an ogvie plot for all
-;;			 fluxes which are calculated using this routine.
-;;			 this keyword must be set to a string which
-;;			 indicates the directory where the ogvie should be
-;;			 placed.
+;;     OGIVE_OFILE:	 Set this key word to produce an ogive plot for all
+;;                       fluxes which are calculated using this routine.
+;;                       This keyword must be set to a string which
+;;                       indicates the path where the ogive plot should be
+;;                       saved.
 ;;     BURBA:		 Set this keyword to perform the Burba correction
 ;;			 (Burba et al. 2008, Glob. Ch. Biol.)  this keyword
 ;;			 must be used to set a number of parameters for the
@@ -114,8 +114,9 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
-		  CORR_MASSMAN=CMASS, OGIVE=O_OUTPUT, BURBA=BURBA, PKT=PKT
+FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
+                  CORR_MASSMAN=CORR_MASSMAN, OGIVE_OFILE=OGIVE_OFILE, $
+                  BURBA=BURBA, PKT=PKT
 
   ;; CONSTANTS:
   r=8.31451		 ; j/mol/k universal gas constant
@@ -178,15 +179,17 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   ;;calculate w/Tair covariance
   cov_w_Tair=correlate(wrot, Tair, /COVARIANCE, /DOUBLE)
 
-  IF keyword_set(o_output) THEN $
-     ogive, 'wTair', wrot, Tair, avg_period, data_freq, emaxc,o_output
+  IF keyword_set(ogive_ofile) THEN $
+     ogive, 'wTair', wrot, Tair, ec_period, isample_freq, maxc, $
+            ogive_ofile
   ;; Do spectral corrrection
   cf_wTair=!VALUES.D_NAN
-  IF keyword_set(cmass) THEN BEGIN
+  IF keyword_set(corr_massman) THEN BEGIN
      cf_wTair=spec_Massman(wrot[where(finite(wrot))], $
 			   Tair[where(finite(wrot))], horwind, $
-			   cmass[0], cmass[1], $
-			   GEOM=[cmass[2], cmass[3]], SCALARLINE=cmass[1])
+			   corr_massman[0], corr_massman[1], $
+                           GEOM=[corr_massman[2], corr_massman[3]], $
+                           SCALARLINE=corr_massman[1])
      cov_w_Tair=cf_wTair * cov_w_Tair
   ENDIF
 
@@ -220,13 +223,15 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   lag_h2o_op=lag_op[lag_h2o_op_use]
 
   ;;==========CALL OGIVE==========================================
-  IF keyword_set(o_output) THEN BEGIN
-     ogive, 'wco2_op', wrot, c_co2, avg_period, data_freq, maxc, eo_output
-     ogive, 'wh2o_op', wrot, c_h2o, avg_period, data_freq, maxc, o_output
+  IF keyword_set(ogive_ofile) THEN BEGIN
+     ogive, 'wco2_op', wrot, c_co2, ec_period, isample_freq, maxc, $
+            ogive_ofile
+     ogive, 'wh2o_op', wrot, c_h2o, ec_period, isample_freq, maxc, $
+            ogive_ofile
   ENDIF
 
   ;;==============SPECTRAL CORRECTION=============================
-  IF keyword_set(cmass) THEN BEGIN
+  IF keyword_set(corr_massman) THEN BEGIN
      ;; first, the signals need to be digitally shifted by the lags
      ;; calculated above.
      IF lag_co2_op LT 0 THEN BEGIN
@@ -248,14 +253,14 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
      ;; now do the spectral correction on the shifted signals
      cf_wco2=spec_massman(w_shift_co2[where(finite(w_shift_co2))], $
 			  co2_shift[where(finite(co2_shift))], horwind, $
-			  cmass[0], cmass[1], $
-			  GEOM=[cmass[2], cmass[3]], $
-			  SCALARVOL=[cmass[5], cmass[6]])
+			  corr_massman[0], corr_massman[1], $
+			  GEOM=[corr_massman[2], corr_massman[3]], $
+			  SCALARVOL=[corr_massman[5], corr_massman[6]])
      cf_wh2o=spec_massman(w_shift_h2o[where(finite(w_shift_h2o))], $
 			  h2o_shift[where(finite(w_shift_h2o))], $
-			  horwind, cmass[0], cmass[1], $
-			  GEOM=[cmass[2], cmass[3]], $
-			  SCALARVOL=[cmass[5], cmass[6]])
+			  horwind, corr_massman[0], corr_massman[1], $
+			  GEOM=[corr_massman[2], corr_massman[3]], $
+			  SCALARVOL=[corr_massman[5], corr_massman[6]])
      cov_w_c_co2=cov_w_c_co2 * cf_wco2
      cov_w_c_h2o=cov_w_c_h2o * cf_wh2o
   ENDIF ELSE BEGIN
@@ -551,8 +556,13 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, AVG_PERIOD, DATA_FREQ, $
   ;; Mean dry air density (g/m3)
   mean_rho_d=mean((P - ev) / (R * Tair), /DOUBLE, /NAN) * ma
 
-  RETURN, returnvec
-
+  RETURN, create_struct('cov_w_AirT', cov_w_Tair, 'cf_wAirT', cf_wTair, $
+                        'H', H, 'cov_w_CO2', cov_w_c_co2, $
+                        'cf_w_CO2', cf_wco2, $
+                        'FCO2', WPL_Fco2_op * double(86400000), $
+                        'cov_w_H2O', cov_w_c_h2o, 'cf_wH2O', cf_wh2o, $
+                        'E', E_op * double(86400), 'Qe', Qe_op, $
+                        'lag', lag_co2_op)
 END
 
 

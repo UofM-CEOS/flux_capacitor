@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T18:01:54+0000
-;; Last-Updated: 2013-11-27T22:09:28+0000
+;; Last-Updated: 2013-12-01T03:45:51+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -253,19 +253,19 @@ END
 ;; 
 ;; INPUTS:
 ;; 
-;;     Wind:         3-column array of unrotated wind [u,v,w].
-;;     Ts:           Vector of sonic temperature (in deg C).
-;;     Met_T:        Scalar float with mean air temperature measured by the
-;;                   MET logger (C).
-;;     Met_P:        Scalar float with mean pressure measured by the MET
-;;                   logger (KpA).
-;;     Met_RH:       Scalar float with mean relative humidity measured by
-;;                   the MET logger (%).
-;;     Avg_Period:   Scalar float with the averaging period under
-;;                   consideration (minutes) (e.g. 30min flux runs, 20min
-;;                   flux runs, 10min flux runs, etc.)
-;;     Data_Freq:    Scalar float with the sampling frequency in Hz
-;;                   (e.g. 10Hz).
+;;     Wind:          3-column array of unrotated wind [u,v,w].
+;;     Ts:            Vector of sonic temperature (in deg C).
+;;     Met_T:         Scalar float with mean air temperature measured by
+;;                    the MET logger (C).
+;;     Met_P:         Scalar float with mean pressure measured by the MET
+;;                    logger (KpA).
+;;     Met_RH:        Scalar float with mean relative humidity measured by
+;;                    the MET logger (%).
+;;     EC_Period:     Scalar float with the averaging period under
+;;                    consideration (seconds) (e.g. 30min=1200 s flux
+;;                    runs).
+;;     Isample_Freq:  Scalar float with the sampling frequency in Hz
+;;                    (e.g. 10Hz).
 ;; 
 ;; KEYWORD PARAMETERS:
 ;; 
@@ -276,10 +276,10 @@ END
 ;;                   the specific application, set them to the string value
 ;;                   'NAN' (for not applicable).  CORR_MASSMAN=[sample rate
 ;;                   (in seconds), sonic path length (in m)].
-;;     OGIVE:        Set this keyword to produce an ogive plot for all
-;;                   fluxes which are calculated using this routine.  this
+;;     OGIVE_OFILE:  Set this keyword to produce an ogive plot for all
+;;                   fluxes which are calculated using this routine.  This
 ;;                   keyword must be set to a string which indicates the
-;;                   directory where the ogive should be placed.
+;;                   path where the ogive plot should be saved.
 ;; 
 ;; OUTPUTS:
 ;; 
@@ -305,8 +305,9 @@ END
 ;; 
 ;;- -----------------------------------------------------------------------
 
-FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
-                      DATA_FREQ, CORR_MASSMAN=CMASS, OGIVE=O_OUTPUT
+FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, EC_PERIOD, $
+                      ISAMPLE_FREQ, CORR_MASSMAN=CORR_MASSMAN, $
+                      OGIVE_OFILE=OGIVE_OFILE
 
   ;; Constants
   r=8.31451                ; j/mol/k universal gas constant
@@ -327,18 +328,16 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
   cov_w_u=c_covariance(wrot, urot, 0)
   cf_wu=!VALUES.D_NAN          ; default in case no spectral correction run
 
-  IF keyword_set(o_output) THEN BEGIN
-     maxc=0.
-     ogive,'wu', wrot, urot, avg_period, data_freq, maxc, o_output
-  ENDIF
+  IF keyword_set(ogive_ofile) THEN $
+     ogive,'wu', wrot, urot, ec_period, isample_freq, 0.0, ogive_ofile
 
   ;; Run spectral correction to calculate correction factor --> sensor
   ;; geometry, specifications are currently hardcoded for the 2007/08
   ;; Amundsen cruises
-  IF keyword_set(cmass) THEN BEGIN
+  IF keyword_set(corr_massman) THEN BEGIN
      cf_wu=spec_massman(wrot[where(finite(wrot))], $
                         urot[where(finite(urot))], horwind, $
-                        cmass[0], cmass[1], /MOMENTUM)
+                        corr_massman[0], corr_massman[1], /MOMENTUM)
      cov_w_u=cov_w_u * cf_wu    ; calculate the corrected covariance
   ENDIF
 
@@ -374,11 +373,12 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
 
   ;; Run the spectral correction to calculate the correction factor for
   ;; this covariance
-  IF keyword_set(cmass) THEN BEGIN
+  IF keyword_set(corr_massman) THEN BEGIN
      cf_wT=spec_massman(wrot[where(finite(wrot))], $
                         Ts_Pot[where(finite(wrot))], horwind, $
-                        cmass[0], cmass[1], $
-                        GEOM=[double(0), double(0)], SCALARLINE=cmass[1])
+                        corr_massman[0], corr_massman[1], $
+                        GEOM=[double(0), double(0)], $
+                        SCALARLINE=corr_massman[1])
      cov_w_Ts_Pot=cov_w_Ts_Pot * cf_wT
   ENDIF
 
@@ -391,11 +391,12 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
   ;; We will also calculate the sonic temperature flux, which we will
   ;; output here just as an additional parameter
   cov_w_Ts=c_covariance(wrot, Ts_K, 0)
-  IF keyword_set(cmass) THEN BEGIN
+  IF keyword_set(corr_massman) THEN BEGIN
      cf_wTs=spec_massman(wrot[where(finite(wrot))], $
                          Ts_K[where(finite(wrot))], horwind, $
-                         cmass[0], cmass[1], $
-                         GEOM=[double(0), double(0)], SCALARLINE=cmass[1])
+                         corr_massman[0], corr_massman[1], $
+                         GEOM=[double(0), double(0)], $
+                         SCALARLINE=corr_massman[1])
      cov_w_Ts=cov_w_Ts * cf_wTs
   ENDIF
 
@@ -408,21 +409,20 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, AVG_PERIOD, $
   psTair=sonicT2airT(Ts, c_h2o_arr, P_arr)
   psTair=psTair + 273.15        ; Air temperature into K 
   cov_w_psTair=c_covariance(wrot, psTair, 0)
-  IF keyword_set(cmass) THEN BEGIN
+  IF keyword_set(corr_massman) THEN BEGIN
      cf_psTair=spec_massman(wrot[where(finite(wrot))], $
                             psTair[where(finite(wrot))], horwind, $
-                            cmass[0], cmass[1], $
+                            corr_massman[0], corr_massman[1], $
                             GEOM=[double(0), double(0)], $
-                            SCALARLINE=cmass[1])
+                            SCALARLINE=corr_massman[1])
      cov_w_psTair=cov_w_psTair * cf_psTair
   ENDIF
   psH=rho_met * mean_cp * cov_w_psTair ;  Units: W/m2
 
-
-  returnvec=[cov_w_u, cf_wu, Ustar, Tau, L, cov_w_Ts, cov_w_psTair, psH]
-  ;;         0        1      2      3    4  5         6             7
-
-  RETURN, returnvec
+  RETURN, create_struct('cov_w_u', cov_w_u, 'cf_wu', cf_wu, $
+                        'Ustar', Ustar, 'Tau', Tau, 'MO_L', L, $
+                        'cov_w_Ts', cov_w_Ts, $
+                        'cov_w_psAirT', cov_w_ps_Tair, 'psH', psH)
 
 END
 
