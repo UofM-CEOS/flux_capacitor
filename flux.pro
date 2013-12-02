@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-12-01T06:05:04+0000
+;; Last-Updated: 2013-12-02T00:41:14+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -1030,7 +1030,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                            0.38, !VALUES.D_NAN, 0.01, $
                                            0.125], $
                              BURBA=[sw_avg, lw_avg, raw_sonic_spd], $
-                             pkt=mom.Ustar)
+                             pkt=mom[2])
         ENDIF ELSE open_path=make_array(27, value=!VALUES.D_NAN)
 
         ;; Closed-path flow rate for 2010 = 11.5 LPM.  Sample tube length
@@ -1093,28 +1093,28 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
         ;; Calculate CD at measurement height.  CD at measurement height,
         ;; Andreas (2005), eqn, 10a)
-        CDm=Mom.Tau / (rhoa * true_sonic_spd ^ double(2))
+        CDm=mom[3] / (rhoa * true_sonic_spd ^ double(2))
         
         ;; Drag coefficient should be positive... if not, do no more calcs
         IF CDm GT 0 THEN BEGIN
            ;; Calculate the wind profile modifiers.  Calculate the profile
            ;; modifier for stable conditions (Jordan, 1999, eq 33)
-           IF zm / mom.MO_L GT 0.5 THEN BEGIN    
-              psim=-[((0.70 * zm) / mom.MO_L) + 0.75 * $
+           IF zm / mom[4] GT 0.5 THEN BEGIN    
+              psim=-[((0.70 * zm) / mom[4]) + 0.75 * $
                      ((zm / motpak_offset) - 14.3) * $
-                     exp((-0.35 * zm) / mom.MO_L ) + 10.7]
+                     exp((-0.35 * zm) / mom[4] ) + 10.7]
               psih=psim
            ENDIF
            ;; Calculate the profile modifier for neutral/slightly stable
            ;; (Jordan, 1999, eq 32)
-           IF zm / mom.MO_L GE 0 AND zm / mom.MO_L LE 0.5 THEN BEGIN
-              psim=-6.0 * (zm / mom.MO_L)
+           IF zm / mom[4] GE 0 AND zm / mom[4] LE 0.5 THEN BEGIN
+              psim=-6.0 * (zm / mom[4])
               psih=psim
            ENDIF
            ;; Calculate the profile modifier for unstable conditions
            ;; (Jordan, 1999, eq 30)
-           IF zm/mom.MO_L LT 0 THEN BEGIN
-              xval=(1.0 - 16.0 * (zm / mom.MO_L)) ^ (1.0 / 4.0)
+           IF zm/mom[4] LT 0 THEN BEGIN
+              xval=(1.0 - 16.0 * (zm / mom[4])) ^ (1.0 / 4.0)
               psim=alog((1.0 + xval ^ 2.0) / 2.0) + 2.0 * $
                    alog((1.0 + xval) / 2.0) - 2.0 * atan(xval) + $
                    (!PI / 2.0)
@@ -1122,24 +1122,24 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
               psih=2.0 * alog((1.0 + xval ^ 2.0) / 2.0)
            ENDIF
            ;; Calculate the roughness length (Andreas, 2005, eq 12a)
-           z0=zm * EXP( -[vonk * CDm ^ (-0.5) + psim * (zm / mom.MO_L)])
+           z0=zm * EXP( -[vonk * CDm ^ (-0.5) + psim * (zm / mom[4])])
            ;; Calculate the Drag coefficient at 10m (Andreas, 2005, eq 11a)
            CD10=vonk ^ 2.0 / $
-                (alog(10.0 / z0) - psim * (10.0 / mom.MO_L)) ^ 2.0
+                (alog(10.0 / z0) - psim * (10.0 / mom[4])) ^ 2.0
            ;; Calculate wind speed at 10m & for interest sake, we'll see
            ;; what our profile gives us for the measurement height wind
            ;; speed...  Stull (1988), eq'n 9.7.5g
            U10=[(1.0 / vonk) * $
-                (alog(10.0 / z0) + psim * (10.0 / mom.MO_L))] * mom.Ustar
+                (alog(10.0 / z0) + psim * (10.0 / mom[4]))] * mom[2]
            Um=[(1.0 / vonk) * $
-               (alog(zm / z0) + psim * (zm / mom.MO_L))] * mom.Ustar
+               (alog(zm / z0) + psim * (zm / mom[4]))] * mom[2]
            ;; Calculate the wind speed at 10m assuming neutral stability
-           U10N=[(double(1) / vonk) * (alog(zm / z0))] * mom.Ustar
+           U10N=[(double(1) / vonk) * (alog(zm / z0))] * mom[2]
            ;; Calculate the wind speed at 10m assuming neutral stability
            ;; AND that we're over the ocean
-           z0charnock=(0.016 * mom.Ustar ^ 2) / 9.81 ; Stull 9.7.2c
+           z0charnock=(0.016 * mom[2] ^ 2) / 9.81 ; Stull 9.7.2c
            U10Nocean=[(double(1) / vonk) * $
-                      (alog(zm / z0charnock))] * mom.Ustar
+                      (alog(zm / z0charnock))] * mom[2]
            ;; ;; Make call to the footprint routine, which follows Hsieh et
            ;; ;; al. 2000, Advances in Water Resources 23 (2000) 765-777.
            ;; ;; [SPL: Turning this off; it is taking way too much, stuck on
@@ -1148,7 +1148,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            ;;                             iname_prefix + '_' + 'spec.ps', $
            ;;                             /remove_all)
            ;; IF finite(z0) EQ 1 THEN BEGIN
-           ;;    foot=hkt_footprint(mom.MO_L, z0, zm, 1.0, 100.0, 0.99, $
+           ;;    foot=hkt_footprint(mom[4], z0, zm, 1.0, 100.0, 0.99, $
            ;;                       plot_file=foot_ofile_name)
            ;; ENDIF
            ;; peakF=foot[0]
@@ -1186,21 +1186,21 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                      diag.air_temperature[fperiod]) ) ; Andreas (2005) eq'n 10b
            ;; Andreas (2005) eq'n 12b
            zT=zm * EXP( -(vonk * CDm ^ (1.0 / 2.0) * $
-                          CHm ^ (-1.0) + psih * (zm / mom.MO_L)))
+                          CHm ^ (-1.0) + psih * (zm / mom[4])))
            ;; Andreas (2005) eq'n 11b
            CH10=vonk ^ 2.0 / $
-                [(alog(10.0 / z0) - psim * (10.0 / mom.MO_L)) * $
-                 (alog(10.0 / zT) - psih * (10.0 / mom.MO_L)) ]
+                [(alog(10.0 / z0) - psim * (10.0 / mom[4])) * $
+                 (alog(10.0 / zT) - psih * (10.0 / mom[4])) ]
            ;; Now calculate the E coefficient, and the Q roughness
            ;; length... from that get CE at 10m
            CEm=open_path.qe / [(rhoa * 1000.0) * Lv * raw_sonic_spd * $
                                (surf_qh2o - mean_qh2o)]
            zQ=zm * exp(-(vonk * CDm ^ (1.0 / 2.0) * CEm ^ (-1.0) + $
-                         psih * (zm / mom.MO_L))) ;Andreas (2005) eq'n 12c
+                         psih * (zm / mom[4]))) ;Andreas (2005) eq'n 12c
            ;; Andreas (2005) eq'n 11c
            CE10=vonk ^ 2.0 / $
-                [(alog(10.0 / z0) - psim * (10.0 / mom.MO_L)) * $
-                 (alog(10.0 / zQ) - psih * (10.0 / mom.MO_L))]
+                [(alog(10.0 / z0) - psim * (10.0 / mom[4])) * $
+                 (alog(10.0 / zQ) - psih * (10.0 / mom[4]))]
         ENDIF
 
         ;; Time to append data to output hash.  Start with MET summary
@@ -1222,7 +1222,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         mom_idx=[1, 2, 3, 4, 6, 7, 0] ; same # elements as okeys_mom
         FOREACH mom_fld, indgen(n_elements(okeys_mom)) DO BEGIN
            fluxes[okeys_mom[mom_fld]]=[fluxes[okeys_mom[mom_fld]], $
-                                       mom.(mom_idx[mom_fld])]
+                                       mom[mom_idx[mom_fld]]]
         ENDFOREACH
         ;; Next we have open path output.  We need to (be careful these
         ;; indices match) find out which elements from open_path object
@@ -1232,7 +1232,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                 10, 18, 19, 20, 21, 22, 23, 24, 25]
         FOREACH op_fld, indgen(n_elements(okeys_op)) DO BEGIN
            fluxes[okeys_op[op_fld]]=[fluxes[okeys_op[op_fld]], $
-                                     open_path.(op_idx[op_fld])]
+                                     open_path[op_idx[op_fld]]]
         ENDFOREACH
         ;; The mean diagnostic value for the open path flux data.  Not sure
         ;; what the meaning of such a value would be.
@@ -1243,7 +1243,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         cl_idx=[9, 10, 0, 1, 3, 2, 4, 5, 7, 8, 6]
         FOREACH cl_fld, indgen(n_elements(okeys_cl)) DO BEGIN
            fluxes[okeys_cl[cl_fld]]=[fluxes[okeys_cl[cl_fld]], $
-                                     closed_path.(cl_idx[cl_fld])]
+                                     closed_path[cl_idx[cl_fld]]]
         ENDFOREACH
         ;; For the calculated fields, we'll have to do it pseudo-manually,
         ;; since they are (so far) just strewn across the workspace

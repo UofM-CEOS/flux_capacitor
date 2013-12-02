@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T21:32:25+0000
-;; Last-Updated: 2013-12-01T05:43:33+0000
+;; Last-Updated: 2013-12-02T00:36:36+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -548,25 +548,12 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
   ;; Mean dry air density (g/m3)
   mean_rho_d=mean((P - ev) / (R * Tair), /DOUBLE, /NAN) * ma
 
-  RETURN, create_struct('cov_w_AirT', cov_w_Tair, 'cf_wAirT', cf_wTair, $
-                        'H', H, 'cov_w_CO2', cov_w_c_co2, $
-                        'cf_w_CO2', cf_wco2, $
-                        'FCO2', WPL_Fco2_op * double(86400000), $
-                        'cov_w_H2O', cov_w_c_h2o, 'cf_wH2O', cf_wh2o, $
-                        'E', E_op * double(86400), 'Qe', Qe_op, $
-                        'lag_CO2', lag_co2_op, 'CO2', co2ppm, $
-                        'H2O', mean_qh2o, 'WPLcont', WPLcont, $
-                        'CO2Burba_mt', CO2Burba_mt, $
-                        'CO2Burba_ln', CO2Burba_ln, $
-                        'H2OBurba_mt', H2OBurba_mt, $
-                        'H2OBurba_ln', H2OBurba_ln, $
-                        'pkt_FCO2', pkt_FCO2_op, 'pkt_loop', pkt_loop, $
-                        'cflux_det', cflux_det, 'dRH_by_dq', dRH_by_dq, $
-                        'dc_by_dRH_initial', dc_by_drh_initial, $
-                        'dc_by_dRH_final', dc_by_drh_final, $
-                        'dc_by_dq_inital', dc_by_dq_initial, $
-                        'dc_by_dq_final', dc_by_dq_final, $
-                        'lag_H2O', lag_h2o_op)
+  RETURN, [cov_w_Tair, cf_wTair, H, cov_w_c_co2, cf_wco2, $
+           WPL_Fco2_op * double(86400000), cov_w_c_h2o, cf_wh2o, $
+           E_op * double(86400), Qe_op, lag_co2_op, co2ppm, mean_qh2o, $
+           WPLcont, CO2Burba_mt, CO2Burba_ln, H2OBurba_mt, H2OBurba_ln, $
+           pkt_FCO2_op, pkt_loop, cflux_det, dRH_by_dq, dc_by_drh_initial, $
+           dc_by_drh_final, dc_by_dq_initial, dc_by_dq_final, lag_h2o_op]
 END
 
 

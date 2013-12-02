@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-18T22:20:50+0000
-;; Last-Updated: 2013-12-01T05:33:20+0000
+;; Last-Updated: 2013-12-02T00:34:23+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -135,8 +135,6 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
   WINDrot=yawpitch(WIND[0, *], WIND[1, *], WIND[2, *], $
 		   n_elements(WIND[0, *]))
   urot=WINDrot[0, *] & vrot=WINDrot[1, *] & wrot=WINDrot[2, *]
-  onames=['cov_w_XCO2', 'cf_wXCO2', 'lag_CO2', 'FCO2', 'cov_w_XH2O', $
-          'cf_wXH2O', 'lag_H2O', 'E', 'Qe', 'CO2', 'H2O']
 
   IF keyword_set(pseudo_wpl) THEN BEGIN
      ;; CALCULATE FLUXES FROM MOIST AIR MIXING RATIOS (REQUIRES A
@@ -240,17 +238,9 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      IF ((met_T) LT 0)	THEN Lv=(2.83539 - 0.000135713 * (met_T)) * 1000.0
      Qe_cl=double(E_cl * mv * Lv)
 
-     RETURN, create_struct(onames, cov_w_Xco2_m, $
-                           cf_wXco2m, $
-                           lag_co2_cl, $
-                           Fco2_cl * 86400000.0, $
-                           cov_w_Xh2o_m, $
-                           cf_wXh2om, $
-                           lag_h2o_cl, $
-                           E_cl * 86400.0, $
-                           Qe_cl, $
-                           mean_Xco2_m * 1000000.0, $
-                           mean(c_v, /nan) / mean(c_m, /nan))
+     RETURN, [cov_w_Xco2_m, cf_wXco2m, lag_co2_cl, Fco2_cl * 86400000.0, $
+              cov_w_Xh2o_m, cf_wXh2om, lag_h2o_cl, E_cl * 86400.0, Qe_cl, $
+              mean_Xco2_m * 1000000.0, mean(c_v, /nan) / mean(c_m, /nan)]
 
   ENDIF ELSE BEGIN
 
@@ -340,17 +330,9 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
 	Lv=(2.83539 - 0.000135713 * (checkT)) * 1000.0 ; sublimation
      Qe_cl=double(E_cl * mv * Lv)
 
-     RETURN, create_struct(onames, cov_w_Xco2_d, $
-                           cf_wXco2d, $
-                           lag_co2_cl, $
-                           Fco2_cl * 86400000.0, $
-                           cov_w_Xh2o_d, $
-                           cf_wXh2od, $
-                           lag_h2o_cl, $
-                           E_cl * 86400.0, $
-                           Qe_cl, $
-                           mean_Xco2_d * 1000000.0, $
-                           mean(c_v, /nan) / mean(c_m, /nan))
+     RETURN, [cov_w_Xco2_d, cf_wXco2d, lag_co2_cl, Fco2_cl * 86400000.0, $
+              cov_w_Xh2o_d, cf_wXh2od, lag_h2o_cl, E_cl * 86400.0, Qe_cl, $
+              mean_Xco2_d * 1000000.0, mean(c_v, /nan) / mean(c_m, /nan)]
 
   ENDELSE
 
