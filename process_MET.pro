@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-15T15:43:56+0000
-;; Last-Updated: 2013-10-28T22:00:20+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-12-02T02:02:31+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -82,7 +82,7 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, RMC_DIR, $
+PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, RMC_DIR, $
                  RMC_ITEMPLATE_SAV, RMC_TIME_IDX, RMC_PULL_IDX, $
                  GYRO_DIR, GYRO_ITEMPLATE_SAV, GYRO_TIME_IDX, $
                  GYRO_PULL_IDX, LOG_FILE, LOG_ITEMPLATE_SAV, $
@@ -92,26 +92,36 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, RMC_DIR, $
   ;; Check parameters
   IF (n_params() NE 17) THEN $
      message, 'Usage: PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, ' + $
-              'TIME_BEG_IDX, RMC_DIR, RMC_ITEMPLATE_SAV, ' + $
+              'TIME_IDX, RMC_DIR, RMC_ITEMPLATE_SAV, ' + $
               'RMC_TIME_IDX, RMC_PULL_IDX, GYRO_DIR, ' + $
               'GYRO_ITEMPLATE_SAV, GYRO_TIME_IDX, GYRO_PULL_IDX, ' + $
               'LOG_FILE, LOG_ITEMPLATE_SAV, LOG_TIME_BEG_IDX, ' + $
               'LOG_TIME_END_IDX, LOG_STATUS_IDX'
-  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
-     message, 'IDIR is undefined or is empty string'
+  idir_info=file_info(idir)
+  itpl_info=file_info(itemplate_sav)
+  rmc_dir_info=file_info(rmc_dir)
+  rmc_tpl_info=file_info(rmc_itemplate_sav)
+  gyro_dir_info=file_info(gyro_dir)
+  gyro_tpl_info=file_info(gyro_itemplate_sav)
+  log_file_info=file_info(log_file)
+  log_tpl_info=file_info(log_itemplate_sav)
+  IF (~idir_info.directory) THEN $
+     message, 'IDIR must be a string pointing to an existing directory'
+  IF (~itpl_info.read) THEN $
+     message, 'ITEMPLATE_SAV must be a string pointing to a readable file'
+  IF ((n_elements(time_idx) NE 1) OR $
+      ((size(time_idx, /type) NE 2) || time_idx LT 0)) THEN $
+         message, 'TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
      message, 'ODIR is undefined or is empty string'
-  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
-     message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
-     message, 'TIME_BEG_IDX must be a scalar >= zero'
-  IF ((n_elements(rmc_dir) EQ 0) OR (rmc_dir EQ '')) THEN $
-     message, 'RMC_DIR is undefined or is empty string'
-  IF ((n_elements(rmc_itemplate_sav) EQ 0) OR $
-      (rmc_itemplate_sav EQ '')) THEN $
-     message, 'RMC_ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(rmc_time_idx) NE 1) OR (rmc_time_idx LT 0)) THEN $
-     message, 'RMC_TIME_IDX must be a scalar >= zero'
+  IF (~rmc_dir_info.directory) THEN $
+     message, 'RMC_DIR must be a string pointing to an existing directory'
+  IF (~rmc_tpl_info.read) THEN $
+     message, 'RMC_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(rmc_time_idx) NE 1) OR $
+      ((size(rmc_time_idx, /type) NE 2) || rmc_time_idx LT 0)) THEN $
+         message, 'RMC_TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(rmc_pull_idx) LT 1) OR $
       (size(rmc_pull_idx, /type) NE 2)) THEN BEGIN
      message, 'RMC_PULL_IDX must be an integer array'
@@ -120,13 +130,14 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, RMC_DIR, $
      IF nrpineg GT 0 THEN $
         message, 'RMC_PULL_IDX cannot have negative indices'
   ENDELSE
-  IF ((n_elements(gyro_dir) EQ 0) OR (gyro_dir EQ '')) THEN $
-     message, 'GYRO_DIR is undefined or is empty string'
-  IF ((n_elements(gyro_itemplate_sav) EQ 0) OR $
-      (gyro_itemplate_sav EQ '')) THEN $
-     message, 'GYRO_ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(gyro_time_idx) NE 1) OR (gyro_time_idx LT 0)) THEN $
-     message, 'GYRO_TIME_IDX must be a scalar >= zero'
+  IF (~gyro_dir_info.directory) THEN $
+     message, 'GYRO_DIR must be a string pointing to an existing directory'
+  IF (~gyro_tpl_info.read) THEN $
+     message, 'GYRO_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(gyro_time_idx) NE 1) OR $
+      ((size(gyro_time_idx, /type) NE 2) || gyro_time_idx LT 0)) THEN $
+         message, 'GYRO_TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(gyro_pull_idx) LT 1) OR $
       (size(gyro_pull_idx, /type) NE 2)) THEN BEGIN
      message, 'GYRO_PULL_IDX must be an integer array'
@@ -135,15 +146,22 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, RMC_DIR, $
      IF ngpineg GT 0 THEN $
         message, 'GYRO_PULL_IDX cannot have negative indices'
   ENDELSE
-  log_file_info=file_info(log_file)
-  IF log_file_info.regular NE 1 THEN $
-     message, 'Log file is not a regular file.  Exiting'
-  IF ((n_elements(log_time_beg_idx) NE 1) OR (log_time_beg_idx LT 0)) THEN $
-     message, 'LOG_TIME_BEG_IDX must be a scalar >= zero'
-  IF ((n_elements(log_time_end_idx) NE 1) OR (log_time_end_idx LT 0)) THEN $
-     message, 'LOG_TIME_END_IDX must be a scalar >= zero'
-  IF ((n_elements(log_status_idx) NE 1) OR (log_status_idx LT 0)) THEN $
-     message, 'LOG_STATUS_IDX must be a scalar >= zero'
+  IF (~log_file_info.read) THEN $
+     message, 'LOG_FILE must be a string pointing to a readable file'
+  IF (~log_tpl_info.read) THEN $
+     message, 'LOG_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(log_time_beg_idx) NE 1) OR $
+      ((size(log_time_beg_idx, /type) NE 2) || $
+       log_time_beg_idx LT 0)) THEN $
+         message, 'LOG_TIME_BEG_IDX must be an integer scalar >= zero'
+  IF ((n_elements(log_time_end_idx) NE 1) OR $
+      ((size(log_time_end_idx, /type) NE 2) || $
+       log_time_end_idx LT 0)) THEN $
+         message, 'LOG_TIME_END_IDX must be an integer scalar >= zero'
+  IF ((n_elements(log_status_idx) NE 1) OR $
+      ((size(log_status_idx, /type) NE 2) || log_status_idx LT 0)) THEN $
+         message, 'LOG_STATUS_IDX must be an integer scalar >= zero'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
   IF nidir_files LT 1 THEN message, 'No input files found'
@@ -168,13 +186,13 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, RMC_DIR, $
   met_template=itemplate
   field_names=strlowcase(met_template.FIELDNAMES)
   field_types=met_template.FIELDTYPES
-  is_time_field=met_template.FIELDGROUPS EQ time_beg_idx
+  is_time_field=met_template.FIELDGROUPS EQ time_idx
   ;; Ignore other groups when reading the data
   met_template.FIELDGROUPS=indgen(met_template.FIELDCOUNT)
-  met_template.FIELDGROUPS[where(is_time_field)]=time_beg_idx
+  met_template.FIELDGROUPS[where(is_time_field)]=time_idx
   non_time_fields=where(~is_time_field)
   non_time_field_names=field_names[non_time_fields]
-  tags2remove=where(field_names EQ field_names[time_beg_idx])
+  tags2remove=where(field_names EQ field_names[time_idx])
   ;; Times
   tfields=where(is_time_field, /NULL)
   tnames=field_names[tfields]
@@ -364,7 +382,7 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, RMC_DIR, $
      ;; Read input file
      idata=read_ascii(ifile, template=met_template)
      idata_names=strlowcase(tag_names(idata))
-     time_loc=where(idata_names EQ field_names[time_beg_idx])
+     time_loc=where(idata_names EQ field_names[time_idx])
      idata_times=idata.(time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])

@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-10-29T12:36:32+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-12-02T02:28:18+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -99,14 +99,17 @@ PRO STD_EC, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
   IF (n_params() NE 7) THEN $
      message, 'Usage: STD_EC, IDIR, ODIR, ITEMPLATE_SAV, ' + $
               'TIME_BEG_IDX, KEEP_FIELDS, STD_FIELDS, STD_TYPES'
-  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
-     message, 'IDIR is undefined or is empty string'
+  idir_info=file_info(idir)
+  itpl_info=file_info(itemplate_sav)
+  IF (~idir_info.directory) THEN $
+     message, 'IDIR must be a string pointing to an existing directory'
+  IF (~itpl_info.read) THEN $
+     message, 'ITEMPLATE_SAV must be a string pointing to a readable file'
+  IF ((n_elements(time_beg_idx) NE 1) OR $
+      ((size(time_beg_idx, /type) NE 2) || time_beg_idx LT 0)) THEN $
+         message, 'TIME_BEG_IDX must be an integer scalar >= zero'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
      message, 'ODIR is undefined or is empty string'
-  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
-     message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
-     message, 'TIME_BEG_IDX must be a scalar >= zero'
   n_kf=n_elements(keep_fields)
   IF n_kf EQ 0 THEN message, 'KEEP_FIELDS is undefined'
   n_kt=n_elements(keep_types)

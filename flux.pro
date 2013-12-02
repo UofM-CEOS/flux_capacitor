@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-12-02T00:41:14+0000
+;; Last-Updated: 2013-12-02T01:51:02+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -155,8 +155,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   IF ((n_elements(time_idx) NE 1) OR $
       ((size(time_idx, /type) NE 2) || time_idx LT 0)) THEN $
          message, 'TIME_IDX must be an integer scalar >= zero'
-  IF ((n_elements(isample_rate) EQ 0) OR (isample_rate EQ '')) THEN $
-     message, 'ISAMPLE_RATE is undefined or is empty string'
+  IF ((n_elements(isample_rate) NE 1) OR (isample_rate LT 0)) THEN $
+     message, 'ISAMPLE_RATE must be a scalar >= zero'
   IF (~diag_dir_info.directory) THEN $
      message, 'DIAG_DIR must be a string pointing to an existing directory'
   IF (~diag_tpl_info.read) THEN $

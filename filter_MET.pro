@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-29T14:29:43+0000
-;; Last-Updated: 2013-11-04T04:05:36+0000
+;; Last-Updated: 2013-12-02T01:42:21+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -87,22 +87,28 @@ PRO FILTER_MET, AVG_DIR, FULL_DIR, AVG_ITEMPLATE_SAV, AVG_TIME_IDX, $
               'AVG_ITEMPLATE_SAV, AVG_TIME_IDX, AVG_PERIOD, ' + $
               'FULL_ITEMPLATE_SAV, FULL_TIME_IDX, FULL_SAMPLE_RATE, ' + $
               'FILTER_IDX, FILTER_THR'
-  IF ((n_elements(avg_dir) EQ 0) OR (avg_dir EQ '')) THEN $
-     message, 'AVG_DIR is undefined or is empty string'
-  IF ((n_elements(full_dir) EQ 0) OR (full_dir EQ '')) THEN $
-     message, 'FULL_DIR is undefined or is empty string'
-  IF ((n_elements(avg_itemplate_sav) EQ 0) OR $
-      (avg_itemplate_sav EQ '')) THEN $
-         message, 'AVG_ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(avg_time_idx) NE 1) OR (avg_time_idx LT 0)) THEN $
-     message, 'AVG_TIME_IDX must be a scalar >= zero'
+  avg_dir_info=file_info(avg_dir)
+  avg_tpl_info=file_info(avg_itemplate_sav)
+  full_dir_info=file_info(full_dir)
+  full_tpl_info=file_info(full_itemplate_sav)
+  IF (~avg_dir_info.directory) THEN $
+     message, 'AVG_DIR must be a string pointing to an existing directory'
+  IF (~avg_tpl_info.read) THEN $
+     message, 'AVG_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(avg_time_idx) NE 1) OR $
+      ((size(avg_time_idx, /type) NE 2) || avg_time_idx LT 0)) THEN $
+         message, 'AVG_TIME_IDX must be an integer scalar >= zero'
+  IF (~full_dir_info.directory) THEN $
+     message, 'FULL_DIR must be a string pointing to an existing directory'
+  IF (~full_tpl_info.read) THEN $
+     message, 'FULL_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(full_time_idx) NE 1) OR $
+      ((size(full_time_idx, /type) NE 2) || full_time_idx LT 0)) THEN $
+         message, 'FULL_TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(avg_period) NE 1) OR (avg_period LT 0)) THEN $
      message, 'AVG_PERIOD must be a scalar >= zero'
-  IF ((n_elements(full_itemplate_sav) EQ 0) OR $
-      (full_itemplate_sav EQ '')) THEN $
-         message, 'FULL_ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(full_time_idx) NE 1) OR (full_time_idx LT 0)) THEN $
-     message, 'FULL_TIME_IDX must be a scalar >= zero'
   IF ((n_elements(full_sample_rate) NE 1) OR $
       (full_sample_rate LT 0)) THEN $
          message, 'FULL_SAMPLE_RATE must be a scalar >= zero'

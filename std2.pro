@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-26T21:14:01+0000
-;; Last-Updated: 2013-10-28T21:03:57+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-12-02T02:26:58+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -71,16 +71,20 @@ PRO STD2, IDIR, ODIR, ITEMPLATE_SAV, UTC_TIME_IDX, SERVER_TIME_IDX, $
   IF (n_params() NE 6) THEN $
      message, 'Usage: STD2, IDIR, ODIR, ITEMPLATE_SAV, ' + $
               'UTC_TIME_IDX, SERVER_TIME_IDX, KEEP_FIELDS'
-  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
-     message, 'IDIR is undefined or is empty string'
+  idir_info=file_info(idir)
+  itpl_info=file_info(itemplate_sav)
+  IF (~idir_info.directory) THEN $
+     message, 'IDIR must be a string pointing to an existing directory'
+  IF (~itpl_info.read) THEN $
+     message, 'ITEMPLATE_SAV must be a string pointing to a readable file'
+  IF ((n_elements(utc_time_idx) NE 1) OR $
+      ((size(utc_time_idx, /type) NE 2) || utc_time_idx LT 0)) THEN $
+         message, 'UTC_TIME_IDX must be an integer scalar >= zero'
+  IF ((n_elements(server_time_idx) NE 1) OR $
+      ((size(server_time_idx, /type) NE 2) || server_time_idx LT 0)) THEN $
+         message, 'SERVER_TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
      message, 'ODIR is undefined or is empty string'
-  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
-     message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(utc_time_idx) NE 1) OR (utc_time_idx LT 0)) THEN $
-     message, 'UTC_TIME_IDX must be a scalar >= zero'
-  IF ((n_elements(server_time_idx) NE 1) OR (server_time_idx LT 0)) THEN $
-     message, 'SERVER_TIME_IDX must be a scalar  >= zero'
   n_kf=n_elements(keep_fields)
   IF (n_kf EQ 0) THEN message, 'KEEP_FIELDS is undefined'
   n_kt=n_elements(keep_types)

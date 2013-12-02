@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-11-14T03:14:22+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-12-02T01:44:47+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -54,21 +54,24 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
+PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, ANGLE_FIELDS, $
                    SAMPLE_RATE, OVERWRITE=OVERWRITE
 
   ;; Check parameters
   IF (n_params() NE 6) THEN $
      message, 'Usage: FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, ' + $
-              'TIME_BEG_IDX, ANGLE_FIELDS, SAMPLE_RATE'
-  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
-     message, 'IDIR is undefined or is empty string'
+              'TIME_IDX, ANGLE_FIELDS, SAMPLE_RATE'
+  idir_info=file_info(idir)
+  itpl_info=file_info(itemplate_sav)
+  IF (~idir_info.directory) THEN $
+     message, 'IDIR must be a string pointing to an existing directory'
+  IF (~itpl_info.read) THEN $
+     message, 'ITEMPLATE_SAV must be a string pointing to a readable file'
+  IF ((n_elements(time_idx) NE 1) OR $
+      ((size(time_idx, /type) NE 2) || time_idx LT 0)) THEN $
+         message, 'TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
      message, 'ODIR is undefined or is empty string'
-  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
-     message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
-     message, 'TIME_BEG_IDX must be a scalar >= zero'
   IF (n_elements(angle_fields) EQ 0) THEN $
      message, 'ANGLE_FIELDS is undefined'
   IF ((n_elements(sample_rate) NE 1) OR (sample_rate LT 0)) THEN $
@@ -80,7 +83,7 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
   restore, itemplate_sav
   field_names=strlowcase(itemplate.FIELDNAMES)
   field_types=itemplate.FIELDTYPES
-  is_time_field=itemplate.FIELDGROUPS EQ time_beg_idx
+  is_time_field=itemplate.FIELDGROUPS EQ time_idx
   non_time_fields=where(~is_time_field)
   non_time_field_names=field_names[non_time_fields]
   ;; Locate non-angular fields; check if any via nnoang
@@ -89,7 +92,7 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
   ;; Only interpolate those fields that are not strings (BECAREFUL HERE)
   noang_cols=noang_cols_maybe[where(field_types[noang_cols_maybe] NE 7)]
   n_ifields=itemplate.FIELDCOUNT ; N fields in template
-  tags2remove=where(field_names EQ field_names[time_beg_idx])
+  tags2remove=where(field_names EQ field_names[time_idx])
   ;; Times
   tfields=where(is_time_field, /NULL)
   tnames=field_names[tfields]
@@ -132,7 +135,7 @@ PRO FILTER_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, ANGLE_FIELDS, $
      ;; Read input file
      idata=read_ascii(ifile, template=itemplate)
      idata_names=strlowcase(tag_names(idata))
-     time_loc=where(idata_names EQ field_names[time_beg_idx])
+     time_loc=where(idata_names EQ field_names[time_idx])
      idata_times=idata.(time_loc)
      ;; Number of lines in input
      lines=n_elements(idata_times[0, *])

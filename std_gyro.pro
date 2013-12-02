@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-10-28T20:43:36+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2013-12-02T02:46:42+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
@@ -61,24 +61,32 @@ PRO STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, SERVER_TIME_IDX, RMC_STD_DIR, $
      message, 'Usage: STD_GYRO, IDIR, ODIR, ITEMPLATE_SAV, ' + $
               'SERVER_TIME_IDX, RMC_STD_DIR, RMC_STD_ITEMPLATE_SAV, ' + $
               'RMC_UTC_TIME_IDX, RMC_SERVER_TIME_IDX, KEEP_FIELDS'
-  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
-     message, 'IDIR is undefined or is empty string'
+  idir_info=file_info(idir)
+  itpl_info=file_info(itemplate_sav)
+  rmc_dir_info=file_info(rmc_std_dir)
+  rmc_tpl_info=file_info(rmc_std_itemplate_sav)
+  IF (~idir_info.directory) THEN $
+     message, 'IDIR must be a string pointing to an existing directory'
+  IF (~itpl_info.read) THEN $
+     message, 'ITEMPLATE_SAV must be a string pointing to a readable file'
+  IF ((n_elements(server_time_idx) NE 1) OR $
+      ((size(server_time_idx, /type) NE 2) || server_time_idx LT 0)) THEN $
+         message, 'SERVER_TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(odir) EQ 0) OR (odir EQ '')) THEN $
      message, 'ODIR is undefined or is empty string'
-  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
-     message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(server_time_idx) NE 1) OR (server_time_idx LT 0)) THEN $
-     message, 'SERVER_TIME_IDX must be a scalar >= zero'
-  IF ((n_elements(rmc_std_dir) EQ 0) OR (rmc_std_dir EQ '')) THEN $
-     message, 'RMC_STD_DIR is undefined or is empty string'
-  IF ((n_elements(rmc_std_itemplate_sav) EQ 0) OR $
-      (rmc_std_itemplate_sav EQ '')) THEN $
-         message, 'RMC_STD_ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(rmc_utc_time_idx) NE 1) OR (rmc_utc_time_idx LT 0)) THEN $
-     message, 'RMC_UTC_TIME_IDX must be a scalar >= zero'
+  IF (~rmc_dir_info.directory) THEN $
+     message, 'RMC_STD_DIR must be a string pointing to an existing directory'
+  IF (~rmc_tpl_info.read) THEN $
+     message, 'RMC_STD_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(rmc_utc_time_idx) NE 1) OR $
+      ((size(rmc_utc_time_idx, /type) NE 2) || $
+       rmc_utc_time_idx LT 0)) THEN $
+         message, 'RMC_UTC_TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(rmc_server_time_idx) NE 1) OR $
-      (rmc_server_time_idx LT 0)) THEN $
-     message, 'RMC_SERVER_TIME_IDX must be a scalar  >= zero'
+      ((size(rmc_server_time_idx, /type) NE 2) || $
+       rmc_server_time_idx LT 0)) THEN $
+         message, 'RMC_SERVER_TIME_IDX must be an integer scalar >= zero'
   IF (n_elements(keep_fields) EQ 0) THEN $
      message, 'KEEP_FIELDS is undefined'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
