@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-18T22:20:50+0000
-;; Last-Updated: 2013-12-02T00:34:23+0000
+;; Last-Updated: 2013-12-02T01:22:50+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -68,10 +68,12 @@
 ;;		       length of scalar sensor with volume averaging (m),
 ;;		       7: tube flow (LPM), 8: tube diameter (m), 9: tube
 ;;		       length (m)].
-;;     OGIVE_OFILE:    Set this key word to produce an ogive plot for all
-;;		       fluxes which are calculated using this routine.
-;;		       This keyword must be set to a string which indicates
-;;		       the path where the ogive plot file should be placed.
+;;     OGIVE_OFILES:   Set this key word to produce an ogive plot for all
+;;                     fluxes which are calculated using this routine.
+;;                     This keyword must be set to a 2-element string
+;;                     array, indicating the directory where the ogive plot
+;;                     files for CO2 and H2O (in that order) will be
+;;                     placed.
 ;;
 ;; OUTPUTS:
 ;;
@@ -105,7 +107,7 @@
 FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
 		    MET_P, MAXC_C, EC_PERIOD, ISAMPLE_FREQ, $
 		    PSEUDO_WPL=PSEUDO_WPL, CORR_MASSMAN=CORR_MASSMAN, $
-		    OGIVE_OFILE=OGIVE_OFILE
+		    OGIVE_OFILES=OGIVE_OFILES
 
   ;; CONSTANTS:
   r=8.31451		 ; j/mol/k universal gas constant
@@ -162,11 +164,11 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
      cov_w_Xh2o_m_forWPL=w_Xh2o_m[ii_co2[0]]
      cov_w_Xh2o_m=w_Xco2_m[ii_h2o[0]] ;covariance of water vapour
 
-     IF keyword_set(ogive_ofile) THEN BEGIN
+     IF keyword_set(ogive_ofiles) THEN BEGIN
 	ogive, 'wco2_cl', wrot, Xco2_m, ec_period, isample_freq, maxc_c, $
-	       ogive_ofile
+	       ogive_ofiles[0]
 	ogive, 'wh2o_cl', wrot, Xh2o_m, ec_period, isample_freq, maxc_c, $
-	       ogive_ofile
+	       ogive_ofiles[1]
      ENDIF
      cf_wXco2m=!VALUES.D_NAN
      cf_wXh2om=!VALUES.D_NAN

@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T21:32:25+0000
-;; Last-Updated: 2013-12-02T00:36:36+0000
+;; Last-Updated: 2013-12-02T01:25:34+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -49,11 +49,12 @@
 ;;			 line averaging (in m), 5-diameter of scalar sensor
 ;;			 with volume averaging (in m), 6-length of scalar
 ;;			 sensor with volume averaging (in m)].
-;;     OGIVE_OFILE:	 Set this key word to produce an ogive plot for all
+;;     OGIVE_OFILES:	 Set this key word to produce an ogive plot for all
 ;;                       fluxes which are calculated using this routine.
-;;                       This keyword must be set to a string which
-;;                       indicates the path where the ogive plot should be
-;;                       saved.
+;;                       This keyword must be set to a 3-element string
+;;                       array indicating the paths where the ogive plot
+;;                       files for air temperature, CO2, and H2O (in thar
+;;                       order) will be saved.
 ;;     BURBA:		 Set this keyword to perform the Burba correction
 ;;			 (Burba et al. 2008, Glob. Ch. Biol.)  this keyword
 ;;			 must be used to set a number of parameters for the
@@ -179,9 +180,9 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
   ;;calculate w/Tair covariance
   cov_w_Tair=correlate(wrot, Tair, /COVARIANCE, /DOUBLE)
 
-  IF keyword_set(ogive_ofile) THEN $
+  IF keyword_set(ogive_ofiles) THEN $
      ogive, 'wTair', wrot, Tair, ec_period, isample_freq, maxc, $
-            ogive_ofile
+            ogive_ofiles[0]
   ;; Do spectral corrrection
   cf_wTair=!VALUES.D_NAN
   IF keyword_set(corr_massman) THEN BEGIN
@@ -223,11 +224,11 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
   lag_h2o_op=lag_op[lag_h2o_op_use]
 
   ;;==========CALL OGIVE==========================================
-  IF keyword_set(ogive_ofile) THEN BEGIN
+  IF keyword_set(ogive_ofiles) THEN BEGIN
      ogive, 'wco2_op', wrot, c_co2, ec_period, isample_freq, maxc, $
-            ogive_ofile
+            ogive_ofiles[1]
      ogive, 'wh2o_op', wrot, c_h2o, ec_period, isample_freq, maxc, $
-            ogive_ofile
+            ogive_ofiles[2]
   ENDIF
 
   ;;==============SPECTRAL CORRECTION=============================
