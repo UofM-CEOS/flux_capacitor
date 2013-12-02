@@ -1,18 +1,14 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T19:12:08+0000
-;; Last-Updated: 2013-11-26T22:34:05+0000
+;; Last-Updated: 2013-12-02T02:48:15+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
-;;
+;;     YAWPITCH
 ;;
 ;; PURPOSE:
-;;
-;;
-;;
-;; CATEGORY:
 ;;
 ;;
 ;;
@@ -24,23 +20,11 @@
 ;;
 ;;
 ;;
-;; OPTIONAL INPUTS:
-;;
-;;
-;;
 ;; KEYWORD PARAMETERS:
 ;;
 ;;
 ;;
 ;; OUTPUTS:
-;;
-;;
-;;
-;; OPTIONAL OUTPUTS:
-;;
-;;
-;;
-;; COMMON BLOCKS:
 ;;
 ;;
 ;;
