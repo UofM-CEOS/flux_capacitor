@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-03T18:49:19+0000
-;; Last-Updated: 2013-11-26T18:53:49+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-02T18:28:15+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -187,7 +187,7 @@ END
 ;; 
 ;;- -----------------------------------------------------------------------
 
-PRO SUBSET_FLUX, IDIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
+PRO SUBSET_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                  DIAG_DIR, DIAG_ITEMPLATE_SAV, DIAG_TIME_IDX, DIAG_IDX, $
                  EC_PERIOD, RMC_DIR, RMC_ITEMPLATE_SAV, RMC_TIME_IDX, $
                  GYRO_DIR, GYRO_ITEMPLATE_SAV, GYRO_TIME_IDX, $
@@ -196,54 +196,70 @@ PRO SUBSET_FLUX, IDIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
 
   ;; Check parameters
   IF (n_params() NE 18) THEN $
-     message, 'Usage: SUBSET_FLUX, IDIR, ITEMPLATE_SAV, TIME_BEG_IDX, ' + $
+     message, 'Usage: SUBSET_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ' + $
               'ISAMPLE_RATE, DIAG_DIR, DIAG_ITEMPLATE_SAV, ' + $
               'DIAG_TIME_IDX, DIAG_IDX, EC_PERIOD, RMC_DIR, ' + $
               'RMC_ITEMPLATE_SAV, RMC_TIME_IDX, GYRO_DIR, ' + $
               'GYRO_ITEMPLATE_SAV, GYRO_TIME_IDX, ' + $
               'RAD_DIR, RAD_ITEMPLATE_SAV, RAD_TIME_IDX'
-  IF ((n_elements(idir) EQ 0) OR (idir EQ '')) THEN $
-     message, 'IDIR is undefined or is empty string'
-  IF ((n_elements(itemplate_sav) EQ 0) OR (itemplate_sav EQ '')) THEN $
-     message, 'ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(time_beg_idx) NE 1) OR (time_beg_idx LT 0)) THEN $
-     message, 'TIME_BEG_IDX must be a scalar >= zero'
+  idir_info=file_info(idir)
+  itpl_info=file_info(itemplate_sav)
+  diag_dir_info=file_info(diag_dir)
+  diag_tpl_info=file_info(diag_itemplate_sav)
+  rmc_dir_info=file_info(rmc_dir)
+  rmc_tpl_info=file_info(rmc_itemplate_sav)
+  gyro_dir_info=file_info(gyro_dir)
+  gyro_tpl_info=file_info(gyro_itemplate_sav)
+  rad_dir_info=file_info(rad_dir)
+  rad_tpl_info=file_info(rad_itemplate_sav)
+  IF (~idir_info.directory) THEN $
+     message, 'IDIR must be a string pointing to an existing directory'
+  IF (~itpl_info.read) THEN $
+     message, 'ITEMPLATE_SAV must be a string pointing to a readable file'
+  IF ((n_elements(time_idx) NE 1) OR $
+      ((size(time_idx, /type) NE 2) || time_idx LT 0)) THEN $
+         message, 'TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(isample_rate) NE 1) OR (isample_rate LT 0)) THEN $
      message, 'ISAMPLE_RATE must be a scalar >= zero'
-  IF ((n_elements(diag_dir) EQ 0) OR (diag_dir EQ '')) THEN $
-     message, 'DIAG_DIR is undefined or is empty string'
-  IF ((n_elements(diag_itemplate_sav) EQ 0) OR $
-      (diag_itemplate_sav EQ '')) THEN $
-         message, 'DIAG_ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(diag_time_idx) NE 1) OR (diag_time_idx LT 0)) THEN $
-     message, 'DIAG_TIME_IDX must be a scalar >= zero'
-  IF ((n_elements(diag_idx) NE 1) OR (diag_idx LT 0)) THEN $
-     message, 'DIAG_IDX must be a scalar >= zero'
+  IF (~diag_dir_info.directory) THEN $
+     message, 'DIAG_DIR must be a string pointing to an existing directory'
+  IF (~diag_tpl_info.read) THEN $
+     message, 'DIAG_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(diag_time_idx) NE 1) OR $
+      ((size(diag_time_idx, /type) NE 2) || diag_time_idx LT 0)) THEN $
+         message, 'DIAG_TIME_IDX must be an integer scalar >= zero'
+  IF ((n_elements(diag_idx) NE 1) OR $
+      ((size(diag_idx, /type) NE 2) || diag_idx LT 0)) THEN $
+         message, 'DIAG_IDX must be an integer scalar >= zero'
   IF ((n_elements(ec_period) NE 1) OR (ec_period LT 0)) THEN $
      message, 'EC_PERIOD must be a scalar >= zero'
   IF ((86400 MOD float(ec_period)) NE 0) THEN $
      message, 'EC_PERIOD must be an integer divisor of 86400 s'
-  IF ((n_elements(rmc_dir) EQ 0) OR (rmc_dir EQ '')) THEN $
-     message, 'RMC_DIR is undefined or is empty string'
-  IF ((n_elements(rmc_itemplate_sav) EQ 0) OR $
-      (rmc_itemplate_sav EQ '')) THEN $
-         message, 'RMC_ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(rmc_time_idx) NE 1) OR (rmc_time_idx LT 0)) THEN $
-     message, 'RMC_TIME_IDX must be a scalar >= zero'
-  IF ((n_elements(gyro_dir) EQ 0) OR (gyro_dir EQ '')) THEN $
-     message, 'GYRO_DIR is undefined or is empty string'
-  IF ((n_elements(gyro_itemplate_sav) EQ 0) OR $
-      (gyro_itemplate_sav EQ '')) THEN $
-         message, 'GYRO_ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(gyro_time_idx) NE 1) OR (gyro_time_idx LT 0)) THEN $
-     message, 'GYRO_TIME_IDX must be a scalar >= zero'
-  IF ((n_elements(rad_dir) EQ 0) OR (rad_dir EQ '')) THEN $
-     message, 'RAD_DIR is undefined or is empty string'
-  IF ((n_elements(rad_itemplate_sav) EQ 0) OR $
-      (rad_itemplate_sav EQ '')) THEN $
-         message, 'RAD_ITEMPLATE_SAV is undefined or is empty string'
-  IF ((n_elements(rad_time_idx) NE 1) OR (rad_time_idx LT 0)) THEN $
-     message, 'RAD_TIME_IDX must be a scalar >= zero'
+  IF (~rmc_dir_info.directory) THEN $
+     message, 'RMC_DIR must be a string pointing to an existing directory'
+  IF (~rmc_tpl_info.read) THEN $
+     message, 'RMC_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(rmc_time_idx) NE 1) OR $
+      ((size(rmc_time_idx, /type) NE 2) || rmc_time_idx LT 0)) THEN $
+         message, 'RMC_TIME_IDX must be an integer scalar >= zero'
+  IF (~gyro_dir_info.directory) THEN $
+     message, 'GYRO_DIR must be a string pointing to an existing directory'
+  IF (~gyro_tpl_info.read) THEN $
+     message, 'GYRO_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(gyro_time_idx) NE 1) OR $
+      ((size(gyro_time_idx, /type) NE 2) || gyro_time_idx LT 0)) THEN $
+         message, 'GYRO_TIME_IDX must be an integer scalar >= zero'
+  IF (~rad_dir_info.directory) THEN $
+     message, 'RAD_DIR must be a string pointing to an existing directory'
+  IF (~rad_tpl_info.read) THEN $
+     message, 'RAD_ITEMPLATE_SAV must be a string pointing to a ' + $
+              'readable file'
+  IF ((n_elements(rad_time_idx) NE 1) OR $
+      ((size(rad_time_idx, /type) NE 2) || rad_time_idx LT 0)) THEN $
+         message, 'RAD_TIME_IDX must be an integer scalar >= zero'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
   diag_files=file_search(diag_dir + path_sep() + '*', count=ndiag_files, $
@@ -543,7 +559,7 @@ PRO SUBSET_FLUX, IDIR, ITEMPLATE_SAV, TIME_BEG_IDX, ISAMPLE_RATE, $
            ENDELSE
         ENDIF
         flux_period=subset_std_file(idir_files[flux_pair], itemplate, $
-                                    time_beg_idx, isample_rate, bounds, $
+                                    time_idx, isample_rate, bounds, $
                                     status=status)
         IF status NE 0 THEN BEGIN
            message, 'No records found within bounds. Skipping file.', $

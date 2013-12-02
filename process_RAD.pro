@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-11T14:48:45+0000
-;; Last-Updated: 2013-12-02T02:13:16+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-02T18:17:23+0000
+;;           By: Sebastian Luque
 ;; 
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -114,7 +114,7 @@ PRO PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, $
       ((size(met_time_idx, /type) NE 2) || met_time_idx LT 0)) THEN $
          message, 'MET_TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(met_par_idx) NE 1) OR $
-      ((size(met_par_idx, /type) NE 2) || met_par_idx LT 0)) THEN BEGIN
+      ((size(met_par_idx, /type) NE 2) || met_par_idx LT 0)) THEN $
      message, 'MET_PAR_IDX must be an integer scalar >= zero'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)

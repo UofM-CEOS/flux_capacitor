@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-11-27T18:49:58+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-02T18:12:53+0000
+;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
@@ -106,7 +106,7 @@ gyro_omg_period_dir=gyro_omg_daily_dir + path_sep() + 'Periods'
 
 gyro_ship_raw_template=templates_dir + path_sep() + 'gyro_ship_raw.sav'
 gyro_omg_raw_template=templates_dir + path_sep() + 'gyro_omg_raw.sav'
-gyro_ship_std_template=templates_dir + path_sep() + 'gyro_std_template.sav'
+gyro_ship_std_template=templates_dir + path_sep() + 'gyro_ship_std.sav'
 gyro_omg_std_template=templates_dir + path_sep() + 'gyro_omg_std.sav'
 ;; gyro_ship_avg_template=templates_dir + path_sep() + 'gyro_avg_template.sav'
 gyro_omg_avg_template=templates_dir + path_sep() + 'gyro_omg_avg.sav'
