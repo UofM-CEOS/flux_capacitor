@@ -1,4 +1,66 @@
+2013-12-02  spluque@gmail.com
+
+	* control.inc, process_RAD.pro, subset_flux.pro:
+	  Implement proper argument checking mechanism. Renaming
+	  'time_beg_index'. Fixing template file name.
+
+	* std.pro, std2.pro, std_ec.pro, std_gyro.pro, process_MET.pro,
+	  process_RAD.pro, filter_MET.pro, filter_series.pro, flux.pro:
+	  Improve argument-checking mechanism.
+
+	* ec_closed.pro, ec_momentum.pro, ec_open.pro, flux.pro:
+	  Revert to returning a vector from eddy covariance routines. It's
+	  too much hassle to use a structure. IDL likes making life hard.
+
+2013-12-01  spluque@gmail.com
+
+	* flux.pro:
+	  Accomodate new structure output from eddy covariance routines. We
+	  still need to work on OGIVE.
+
+	* ec_closed.pro, ec_open.pro:
+	  We're now returning structures so that we know what we're dealing
+	  with.
+
+	* flux.pro, ogive.pro:
+	  Updating flux procedure to handle new structure output from
+	  EC_MOMENTUM and EC_OPEN. First steps to get OGIVE up and running.
+
+	* ec_momentum.pro, ec_open.pro:
+	  Argument check update and returning a structure.
+
+	* day_splitter.pro, diff1byf.pro, ec_closed.pro:
+	  Argument check update.
+
+2013-11-29  spluque@gmail.com
+
+	* ogive.pro:
+	  Standardize data type casting.
+
+	* detrend.pro, ec_closed.pro, ec_open.pro, hkt_footprint.pro,
+	  int1byf.pro, level_motionpak.pro, lowpass_filter.pro,
+	  sonict2airt.pro, yawpitch.pro:
+	  Fix EOL throughout.
+
+	* ec_closed.pro, ec_open.pro, ogive.pro:
+	  Adding OGIVE procedure. Currently not used much, but needed if we
+	  want to create a save file.
+
+	* average_series.pro, flux.pro:
+	  Correcting argument checks.
+
+	* flux.pro:
+	  Streamlining argument checks, documentations, and aesthetics.
+
 2013-11-28  spluque@gmail.com
+
+	* flux.pro:
+	  Adding extensive argument checks (can be used as model for checks
+	  in the rest of the library). Also output proper capitalization of
+	  field names.
+
+	* match2.pro, valid_num.pro:
+	  Removing Astrolib utilities; we will set preferences instead.
 
 	* flux.pro:
 	  Return NaNs for the open and closed path computations, if the
