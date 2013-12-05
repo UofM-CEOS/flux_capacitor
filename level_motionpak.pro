@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T20:41:26+0000
-;; Last-Updated: 2013-11-27T23:31:13+0000
+;; Last-Updated: 2013-12-05T20:10:14+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -34,6 +34,12 @@
 ;;	P_Range:  Range (degrees) that you wish to attempt to pitch the
 ;;		  Motion Pak by (i.e. +/- 5 deg).
 ;;
+;; KEYWORD PARAMETERS:
+;; 
+;;     STATUS:        A variable that, on output, will indicate whether the
+;;                    subset operation was successful (0), or no records
+;;                    where found within the time bounds.
+;; 
 ;; OUTPUTS:
 ;;
 ;;	Nx6 array with the following rows: levelled x acceleration,

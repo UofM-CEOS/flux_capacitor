@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-10-11T22:38:01+0000
-;; Last-Updated: 2013-12-05T19:10:00+0000
+;; Last-Updated: 2013-12-05T20:12:38+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -17,7 +17,7 @@
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;     truew=truewind(0, 45, 5.0, 30, 250, 10)
+;;     truew=truewind(Zref, Cog, Sog, Head, Wdir, Wspd)
 ;; 
 ;; INPUTS:
 ;; 

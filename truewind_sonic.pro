@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-14T22:43:46+0000
-;; Last-Updated: 2013-11-28T15:59:46+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-05T20:08:04+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -10,30 +10,29 @@
 ;; 
 ;; PURPOSE:
 ;;
-;;     Original comments: The coordinate definitons for a sonic anemometer
+;;     Original comment: The coordinate definitons for a sonic anemometer
 ;;     are a bit strange compared to what you would normally consider for
 ;;     converting it into a compass direction... So, we do a bit of
 ;;     modification here to get it right.
+;;
+;;     This essentially the same as 
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;; 
+;;     truew=truewind_sonic(U, V, Cog, Sog, Heading, Zref)
 ;; 
 ;; INPUTS:
 ;; 
-;; 
-;; 
-;; KEYWORD PARAMETERS:
-;; 
-;; 
+;;     U:        Vector array with x-horizontal wind component.
+;;     V:        Vector array with y-horizontal wind component.
+;;     Cog:      Vector array with course over ground.
+;;     Sog:      Vector array with speed over ground.
+;;     Heading:  Vector array with heading.
+;;     Zref:     Scalar with zero reference of sonic anemometer.
 ;; 
 ;; OUTPUTS:
 ;; 
-;; 
-;; 
-;; SIDE EFFECTS:
-;; 
-;; 
+;;     5-column array.
 ;; 
 ;; RESTRICTIONS:
 ;; 
@@ -64,7 +63,7 @@ FUNCTION TRUEWIND_SONIC, U, V, COG, SOG, HEADING, ZREF
   IF nq2 GT 0 THEN deg[q2]=360.0 - deg[q2]
   IF nq3 GT 0 THEN deg[q3]=0.0 - deg[q3]
   IF nq4 GT 0 THEN deg[q4]=180.0 - deg[q4]
-  ;; Call TRUEWIND to calculate truewind. Note: I realize this is a bit
+  ;; Call TRUEWIND to calculate true wind. Note: I realize this is a bit
   ;; redundant... We could just modify the true wind program... But this
   ;; way I'll be sure it's right
   utrue=truewind(zref, cog, sog, heading, deg, T)
