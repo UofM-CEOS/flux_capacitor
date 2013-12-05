@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-12-02T18:12:53+0000
+;; Last-Updated: 2013-12-05T21:10:24+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -12,7 +12,7 @@
 ;;; Code:
 
 ;; Temporarily setting these here; they will be set from main GUI program.
-root_dir=expand_path('~/tmp/ArcticNet2011')
+root_dir=expand_path('~/Data/ArcticNet/2011')
 templates_dir=expand_path('~/Scripts/Projects/Flux_Capacitor/Templates')
 
 ;;;_ : RMC
