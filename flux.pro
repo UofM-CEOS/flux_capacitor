@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-12-02T01:51:02+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-05T17:48:50+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -1113,7 +1113,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            ENDIF
            ;; Calculate the profile modifier for unstable conditions
            ;; (Jordan, 1999, eq 30)
-           IF zm/mom[4] LT 0 THEN BEGIN
+           IF zm / mom[4] LT 0 THEN BEGIN
               xval=(1.0 - 16.0 * (zm / mom[4])) ^ (1.0 / 4.0)
               psim=alog((1.0 + xval ^ 2.0) / 2.0) + 2.0 * $
                    alog((1.0 + xval) / 2.0) - 2.0 * atan(xval) + $
@@ -1180,10 +1180,11 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            rho_v_surf=c_h2o_surf * mv                         ; g/m3
            surf_qh2o=rho_v_surf / (rhoa * 1000.0) 
            ;; Calculate the H coeficient and the T roughness length... from
-           ;; that get CH at 10m
-           CHm=H / ((rhoa * 1000.0) * mean_cp * true_sonic_spd * $
-                    (diag.surface_temperature[fperiod] - $
-                     diag.air_temperature[fperiod]) ) ; Andreas (2005) eq'n 10b
+           ;; that get CH at 10m. Andreas (2005) eq'n 10b
+           CHm=open_path[2] / $
+               ((rhoa * 1000.0) * mean_cp * true_sonic_spd * $
+                (diag.surface_temperature[fperiod] - $
+                 diag.air_temperature[fperiod]) )
            ;; Andreas (2005) eq'n 12b
            zT=zm * EXP( -(vonk * CDm ^ (1.0 / 2.0) * $
                           CHm ^ (-1.0) + psih * (zm / mom[4])))
@@ -1193,7 +1194,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                  (alog(10.0 / zT) - psih * (10.0 / mom[4])) ]
            ;; Now calculate the E coefficient, and the Q roughness
            ;; length... from that get CE at 10m
-           CEm=open_path.qe / [(rhoa * 1000.0) * Lv * raw_sonic_spd * $
+           CEm=open_path[9] / [(rhoa * 1000.0) * Lv * raw_sonic_spd * $
                                (surf_qh2o - mean_qh2o)]
            zQ=zm * exp(-(vonk * CDm ^ (1.0 / 2.0) * CEm ^ (-1.0) + $
                          psih * (zm / mom[4]))) ;Andreas (2005) eq'n 12c
