@@ -1,16 +1,16 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T21:32:25+0000
-;; Last-Updated: 2013-12-02T01:25:34+0000
+;; Last-Updated: 2013-12-05T19:29:18+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;;
-;;
+;;     EC_OPEN
 ;;
 ;; PURPOSE:
 ;;
-;;     This program calculates heat flux, latent heat flux and co2 flux
+;;     This program calculates heat flux, latent heat flux and CO2 flux
 ;;     from an open path EC system.
 ;;
 ;; CALLING SEQUENCE:
@@ -63,7 +63,7 @@
 ;;			 application, set them to the string value 'NAn'
 ;;			 (for not applicable).	[0 - Incoming shortwave
 ;;			 radiation (w/m2), 1 - Incoming LW radiation
-;;			 (w/m2), 2 - Mean raw sonic wind velocity (NO
+;;			 (w/m2), 2 - Mean raw sonic wind speed (NO
 ;;			 MOTION CORRECTION) (m/s)].
 ;;     PKT:		 Set this keyword to run a correction as per
 ;;			 Prytherch et al. 2010 (doi: 10.1029/2009GL041482)
@@ -115,7 +115,7 @@
 ;;- -----------------------------------------------------------------------
 ;;; Code:
 
-FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
+FUNCTION EC_OPEN, WIND, TS, CO2, H2O, P_ATM, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
                   CORR_MASSMAN=CORR_MASSMAN, OGIVE_OFILE=OGIVE_OFILE, $
                   BURBA=BURBA, PKT=PKT
 
@@ -134,9 +134,9 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
   ;; ratio of molar mass c to molar mass co2.  Multiplier to convert from
   ;; mass flux co2 to mass flux c
   conv=0.2729
-  nrecs=n_elements(c_co2)
+  nrecs=n_elements(co2)
 
-  ;; Calculate the mean horizontal wind velocities (unrotated)... this is
+  ;; Calculate the mean horizontal wind speed (unrotated)... this is
   ;; required in the spectral correction
   horwind=[mean(WIND[0, *], /nan), mean(WIND[1, *], /nan)]
   ;; do the wind rotations
@@ -147,13 +147,13 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
   ;;========CALCULATE NECESSARY TERMS=================
 
   ;; Get units of co2 and h2o in mol/m3
-  c_co2=c_co2 / double(1000)
-  c_h2o=c_h2o / double(1000)
+  c_co2=co2 / double(1000)
+  c_h2o=h2o / double(1000)
   mean_c_h2o=mean(c_h2o, /DOUBLE, /NAN)
   mean_c_co2=mean(c_co2, /DOUBLE, /NAN)
 
   ;; Get Ts into Tair
-  P=P * double(1000)		  ; Atmospheric pressure in Pa
+  P=P_atm * double(1000)		  ; Atmospheric pressure in Pa
   Tair=sonicT2airT(Ts, c_h2o, P)
   Tair=Tair + 273.15		; Air temperature into K
   mean_Tair=mean(Tair, /nan)
@@ -539,13 +539,6 @@ FUNCTION EC_OPEN, WIND, TS, C_CO2, C_H2O, P, MAXC, EC_PERIOD, ISAMPLE_FREQ, $
      dc_by_drh_initial=!VALUES.D_NAN & dc_by_drh_final=!VALUES.D_NAN
      dc_by_dq_initial=!VALUES.D_NAN & dc_by_dq_final=!VALUES.D_NAN
   ENDELSE
-  ;; Return the co2/h2o/P to their originals (in case we got the input
-  ;; parameter passed by reference).  Because we are now getting a
-  ;; structure element for these, we no longer need it, but keeping it for
-  ;; debugging.
-  c_co2=c_co2 * double(1000)
-  c_h2o=c_h2o * double(1000)
-  P=P / double(1000)			      ; Atmospheric pressure in Pa
   ;; Mean dry air density (g/m3)
   mean_rho_d=mean((P - ev) / (R * Tair), /DOUBLE, /NAN) * ma
 
