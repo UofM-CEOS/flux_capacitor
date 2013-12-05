@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-29T14:29:43+0000
-;; Last-Updated: 2013-12-02T01:42:21+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-05T19:29:37+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -21,9 +21,9 @@
 ;;     indicates the period is suitable for flux analyses, and integers > 0
 ;;     indicate the failure reason: 1 - bad quadrant, 2 - some wind
 ;;     directions are too far (given threshold) from the mean, 3 - some
-;;     ship velocities (SOG) are too far (given threshold) from the mean, 4
-;;     - some headings are too far (given threshold) from the mean, 5 -
-;;     some true wind speeds not available.
+;;     ship speeds (SOG) are too far (given threshold) from the mean, 4 -
+;;     some headings are too far (given threshold) from the mean, 5 - some
+;;     true wind speeds not available.
 ;; 
 ;; CALLING SEQUENCE:
 ;; 

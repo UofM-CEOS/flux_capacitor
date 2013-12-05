@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-18T22:20:50+0000
-;; Last-Updated: 2013-12-02T01:22:50+0000
+;; Last-Updated: 2013-12-05T19:28:31+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -130,7 +130,7 @@ FUNCTION EC_CLOSED, WIND, XCO2_M, XH2O_M, IRGA_P, IRGA_T, MET_T, MET_RH, $
   Xco2_m=Xco2_m / 1000000.0
   Xh2o_m=Xh2o_m / 1000.0
 
-  ;; Calculate the mean horizontal wind velocities (unrotated)... this is
+  ;; Calculate the mean horizontal wind speeds (unrotated)... this is
   ;; required in the spectral correction
   horwind=[mean(WIND[0, *], /nan), mean(WIND[1, *], /nan)]
   ;; do the wind rotations

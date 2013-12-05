@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-10-11T22:38:01+0000
-;; Last-Updated: 2013-11-28T15:42:23+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-05T19:10:00+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -21,20 +21,18 @@
 ;; 
 ;; INPUTS:
 ;; 
-;;     Zref:   Zero reference of anemometer (ususally 0)
-;;     Cog:    Course over ground
-;;     Sog:    Speed over ground
-;;     Head:   Vessel heading
-;;     Wdir:   Platform wind direction (meteorological conventions used)
-;;     Wspd:   Platform / apparent wind speed
-;; 
-;; KEYWORD PARAMETERS:
-;; 
-;; 
+;;     Zref:   Zero reference of anemometer (ususally 0).
+;;     Cog:    Vector array with course over ground.
+;;     Sog:    Vector array with speed over ground.
+;;     Head:   Vector array with Vessel heading.
+;;     Wdir:   Vector array with platform wind direction (meteorological
+;;             conventions used).
+;;     Wspd:   Vector array with platform (apparent) wind speed
 ;; 
 ;; OUTPUTS:
 ;; 
-;; 
+;;     A two-row array with true wind direction in the first row and
+;;     true wind speed in the second.
 ;; 
 ;; RESTRICTIONS:
 ;; 

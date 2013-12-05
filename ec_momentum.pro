@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T18:01:54+0000
-;; Last-Updated: 2013-12-02T00:28:06+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-05T19:29:05+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -21,8 +21,7 @@
 ;; 
 ;; INPUTS:
 ;; 
-;;     VertWind:   Vector of rotated vertical wind velocity.
-;; 
+;;     VertWind:   Vector of rotated vertical wind speed.
 ;;     Scalar:     Vector with scalar to perform eddy covariance with (CAN
 ;;                 ALSO BE THE HORIZONTAL WIND FOR MOM. FLUX).
 ;;     HorWind:    2-element vector [mean_u,mean_v] with average of u and v
@@ -86,7 +85,7 @@ FUNCTION SPEC_MASSMAN, VERTWIND, SCALAR, HORWIND, RATE, SONICLINE, $
                        GEOM=GEOM, MOMENTUM=MOMENTUM, SCALARLINE=SCALARLINE, $
                        SCALARVOL=SCALARVOL, TUBEATT=TUBEATT, GAS=GAS
 
-  ;; Mean wind velocity from sonic anemometer
+  ;; Mean wind speed from sonic anemometer
   meanu=sqrt(horwind[0] ^ 2 + horwind[1] ^ 2)
   ;; Frequency range we're dealing with. Check if number of samples is even
   ;; or odd (if n is even, ev_odd=0, otherwise ev_odd=1)
@@ -316,7 +315,7 @@ FUNCTION EC_MOMENTUM, WIND, TS, MET_T, MET_RH, MET_P, EC_PERIOD, $
   ;; J/g/K specific heat for dry air at constant pressure Stull(1995)
   cpd=1004.67 / 1000.0
 
-  ;; Calculate the mean horizontal wind velocities (unrotated)... this is
+  ;; Calculate the mean horizontal wind speed (unrotated)... this is
   ;; required in the spectral correction
   horwind=[mean(WIND[0, *], /nan), mean(WIND[1, *], /nan)]
   ;; do the wind rotations

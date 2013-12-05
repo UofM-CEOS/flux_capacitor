@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-15T15:43:56+0000
-;; Last-Updated: 2013-12-02T02:02:31+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-05T19:33:17+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -529,11 +529,10 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, RMC_DIR, $
      ;; This is the bit about "beware of the COG when SOG is 0"
      cog_flag=finite(cog, /nan, sign=-1)
      cog0=where(cog_flag, ncog0)
-     IF ncog0 GT 0 THEN $
-        cog[cog0]=0
+     IF ncog0 GT 0 THEN cog[cog0]=0
      twinds=truewind(0, cog, sog, idata.heading, idata.wind_direction, $
                      idata.wind_speed)
-     tw_names=['true_wind_direction', 'true_wind_velocity']
+     tw_names=['true_wind_direction', 'true_wind_speed']
      FOREACH fld, tw_names DO BEGIN
         idata=create_struct(idata, fld, twinds[*, where(tw_names EQ fld)])
      ENDFOREACH
@@ -563,7 +562,7 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, RMC_DIR, $
                   (idata.wind_direction LT 260), nbaddir)
      IF nbaddir GT 0 THEN BEGIN
         idata.true_wind_direction[baddir]=!VALUES.F_NAN
-        idata.true_wind_velocity[baddir]=!VALUES.F_NAN
+        idata.true_wind_speed[baddir]=!VALUES.F_NAN
      ENDIF
      ;; For "very" bad wind direction, also remove T/RH data. NOTE: what we
      ;; are really filtering out here is from 170 to 190 deg (due to
@@ -583,7 +582,7 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, RMC_DIR, $
      badice=where((idata.sog_sd GT 2) OR (idata.cog_sd GT 10), nbadice)
      IF nbadice GT 0 THEN BEGIN
         idata.true_wind_direction[badice]=!VALUES.F_NAN
-        idata.true_wind_velocity[badice]=!VALUES.F_NAN
+        idata.true_wind_speed[badice]=!VALUES.F_NAN
      ENDIF
 
      ;; Filter out of range Patm
@@ -605,7 +604,7 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, RMC_DIR, $
         idata.wind_direction[badroll]=!VALUES.F_NAN
         ;; Not doing anything to standard deviations, as per note above
         idata.true_wind_direction[badroll]=!VALUES.F_NAN
-        idata.true_wind_velocity[badroll]=!VALUES.F_NAN
+        idata.true_wind_speed[badroll]=!VALUES.F_NAN
         status_flag[badroll]=1
      endif
 
@@ -616,13 +615,13 @@ PRO PROCESS_MET, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, RMC_DIR, $
         idata.wind_direction[flag1]=!VALUES.F_NAN
         idata.wind_speed[flag1]=!VALUES.F_NAN
         idata.true_wind_direction[flag1]=!VALUES.F_NAN
-        idata.true_wind_velocity[flag1]=!VALUES.F_NAN
+        idata.true_wind_speed[flag1]=!VALUES.F_NAN
      ENDIF
      flag2=where(status_flag EQ 2, nflag2)
      IF nflag2 GT 0 THEN BEGIN
         idata.wind_speed[flag2]=!VALUES.F_NAN
         idata.true_wind_direction[flag1]=!VALUES.F_NAN
-        idata.true_wind_velocity[flag1]=!VALUES.F_NAN
+        idata.true_wind_speed[flag1]=!VALUES.F_NAN
      ENDIF
      flag3=where(status_flag EQ 3, nflag3)
      IF nflag3 GT 0 THEN BEGIN

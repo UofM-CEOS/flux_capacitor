@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian P. Luque
 ;; Created: 2013-11-29T14:57:17+0000
-;; Last-Updated: 2013-11-29T22:27:58+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2013-12-05T19:27:23+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -23,7 +23,7 @@
 ;;     X:              Vector of the scalar of interest.
 ;;     XName:          String which can have a value of: 'wco2_op',
 ;;                     'wh2o_op', 'wco2_cl', 'wh2o_cl', 'wu', or 'wTair'.
-;;     Wrot:           Vector of rotated vertical wind velocity.
+;;     Wrot:           Vector of rotated vertical wind speed.
 ;;     Period:         Scalar float indicating the averaging period of
 ;;                     input data (in minutes, eg. 30 minute flux run).
 ;;     Isample_Rate:   Scalar float which describes the sampling frequency of
