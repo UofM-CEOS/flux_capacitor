@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-11-29T04:19:35+0000
+;; Last-Updated: 2013-12-16T21:03:40+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -86,7 +86,7 @@ PRO AVERAGE_SERIES, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      message, 'ISAMPLE_RATE must be a scalar >= zero'
   IF ((n_elements(osample_rate) NE 1) OR (osample_rate LT 0)) THEN $
      message, 'OSAMPLE_RATE must be a scalar >= zero'
-  IF ((osample_rate MOD isample_rate) NE 0) THEN $
+  IF (((osample_rate * 10) MOD (isample_rate * 10)) NE 0) THEN $
      message, 'ISAMPLE_RATE must be an integer divisor of OSAMPLE_RATE'
   n_af=n_elements(angle_fields)
   n_mf=n_elements(magnitude_fields)
