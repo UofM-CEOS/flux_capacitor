@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T22:51:27+0000
-;; Last-Updated: 2013-11-15T16:50:33+0000
+;; Last-Updated: 2014-05-03T17:50:04+0000
 ;;	     By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -63,7 +63,7 @@ FUNCTION LOWPASS_FILTER, SIGNAL, FS, HF
 
   ;; Frequency range estimation.
   lsi=float(n_elements(signal))
-  IF (lsi MOD 2) EQ 1 THEN signal=[signal, signal(lsi - 1)]
+  IF (lsi MOD 2) EQ 1 THEN signal=[signal, signal[lsi - 1]]
   corrsi=signal - detrend(signal)
   clsi=ceil(lsi / double(2), /L64)
   f=findgen(1, clsi * 2)
