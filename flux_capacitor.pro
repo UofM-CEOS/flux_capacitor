@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-11-26T23:41:42+0000
-;; Last-Updated: 2013-11-28T17:38:05+0000
+;; Last-Updated: 2013-12-16T21:24:01+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Code:
@@ -135,14 +135,14 @@ AVERAGE_SERIES, rmc_ship_daily_dir, rmc_ship_avg_dir, $
                 magnitude_fields=rmc_ship_sog_fld, /overwrite
 AVERAGE_SERIES, gyro_ship_daily_dir, gyro_ship_avg_dir, $
                 gyro_ship_std_template, 0, gyro_daily_rate, 60, $
-                angle_fields=gyro_hdg_fld, magnitude_fields=-1, /overwrite
+                angle_fields=gyro_hdg_fld, magnitude_fields=[-1], /overwrite
 AVERAGE_SERIES, rmc_omg_daily_dir, rmc_omg_avg_dir, $
                 rmc_omg_std_template, 0, rmc_daily_rate, 60, $
                 angle_fields=rmc_omg_cog_fld, $
                 magnitude_fields=rmc_omg_sog_fld, /overwrite
 AVERAGE_SERIES, gyro_omg_daily_dir, gyro_omg_avg_dir, $
                 gyro_omg_std_template, 0, gyro_daily_rate, 60, $
-                angle_fields=gyro_hdg_fld, magnitude_fields=-1, /overwrite
+                angle_fields=gyro_hdg_fld, magnitude_fields=[-1], /overwrite
 
 ;; RAD
 STD, rad_idir, rad_std_dir, rad_raw_template, 1, rad_raw_keep_fields, $
