@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T19:18:12+0000
-;; Last-Updated: 2013-11-22T15:56:22+0000
+;; Last-Updated: 2014-05-02T21:44:54+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -223,6 +223,53 @@ FUNCTION READ_STD2_FILE, IFILE, ITEMPLATE, TIME1_IDX, TIME2_IDX
 
   ostruct=create_struct(tnames1[0], times1_std)
   ostruct=create_struct(ostruct, tnames2[0], times2_std)
+  ;; Add the rest of the data
+  FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
+     ostruct=create_struct(ostruct, idata_names[fld], idata.(fld))
+  ENDFOREACH
+
+  RETURN, OSTRUCT
+
+END
+
+
+FUNCTION READ_ISO_FILE, IFILE, ITEMPLATE, TIME_IDX
+
+  ;; Parse input template
+  field_names=strlowcase(itemplate.FIELDNAMES)
+  field_types=itemplate.FIELDTYPES
+  is_time_field=itemplate.FIELDGROUPS EQ time_idx
+  ;; Ignore other groups when reading the data
+  itemplate.FIELDGROUPS=indgen(itemplate.FIELDCOUNT)
+  itemplate.FIELDGROUPS[where(is_time_field)]=time_idx
+  tags2remove=where(field_names EQ field_names[time_idx])
+  ;; Times
+  tfields=where(is_time_field, /NULL)
+  tnames=field_names[tfields]
+  
+  idata=read_ascii(ifile, template=itemplate)
+  idata_names=strlowcase(tag_names(idata))
+  ;; Obtain times and convert to Julian
+  idata_time_loc=where(idata_names EQ field_names[time_idx])
+  times=idata.(idata_time_loc)
+  times_dims=size(times, /dimensions)
+  ;; Obtain full time info
+  yyyy=strmid(times, 0, 4)
+  mo=strmid(times, 5, 2)
+  dd=strmid(times, 8, 2)
+  hh=strmid(times, 11, 2)
+  mm=strmid(times, 14, 2)
+  ss=strmid(times, 17, 2)
+  ds=strmid(times, 20, 1)
+  ;; Concatenate fractional seconds
+  ss=string(temporary(ss), format='(i02)') + '.' + $
+     string(temporary(ds), format='(i03)')
+  otimes=[reform(yyyy, 1, times_dims), reform(mo, 1, times_dims), $
+            reform(dd, 1, times_dims), reform(hh, 1, times_dims), $
+            reform(mm, 1, times_dims), reform(ss, 1, times_dims)]
+  match2, idata_names, field_names[tags2remove], is_time
+
+  ostruct=create_struct(tnames[0], otimes)
   ;; Add the rest of the data
   FOREACH fld, (indgen(n_tags(idata)))[where(is_time LT 0)] DO BEGIN
      ostruct=create_struct(ostruct, idata_names[fld], idata.(fld))
