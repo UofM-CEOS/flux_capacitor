@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Will Drennan, Brent Else, Sebastian Luque
 ;; Created: 2013-11-14T21:10:00+0000
-;; Last-Updated: 2013-11-27T22:12:38+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2014-05-03T18:03:25+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -69,9 +69,9 @@ FUNCTION MOTCORR, WIND, ACC, ANGLE, L, FS, LF, HF, G
 
   ;; BE: filter the computed ANGLES before going any further.  This removes
   ;; some of the hf noise.
-  ANGLE[0, *]=lowpass_filter(ANGLE[0, *], fs, hf)
-  ANGLE[1, *]=lowpass_filter(ANGLE[1, *], fs, hf)
-  ANGLE[2, *]=lowpass_filter(ANGLE[2, *], fs, hf)
+  ANGLE[0, *]=lowpass_filter(reform(ANGLE[0, *]), fs, hf)
+  ANGLE[1, *]=lowpass_filter(reform(ANGLE[1, *]), fs, hf)
+  ANGLE[2, *]=lowpass_filter(reform(ANGLE[2, *]), fs, hf)
 
   ;; Calculate global variables
   cr=cos(ANGLE[1, *])           ; cosine of roll (phi)
