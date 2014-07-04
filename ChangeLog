@@ -1,3 +1,58 @@
+2014-07-04  spluque@gmail.com
+
+	* read_std_file.pro:
+	  New function to read standard ISO files.
+
+	* process_RAD.pro:
+	  Doc string fix.
+
+	* motcorr.pro:
+	  Reform the elements going into array to avoid dimension
+	  conflicts.
+
+	* lowpass_filter.pro:
+	  Removing the transposing at the beginning since this is already
+	  done in the input.
+
+	* Templates/ec_from_db.sav, control_db.inc, flux_capacitor_db.pro:
+	  New template, new control file and control script for processing
+	  output from database.
+
+	* Templates/motcorr.sav, db_flux.pro, flux_capacitor.pro:
+	  New template, new script for processing files output from
+	  database, and fixing property on flux_capacitor.pro.
+
+2014-05-03  spluque@gmail.com
+
+	* lowpass_filter.pro:
+	  Fix old confusing parenthesis array reference, missed previously.
+
+2014-02-19  spluque@gmail.com
+
+	* average_series.pro:
+	  Guard against floating point arithmetic problems.
+
+	* Templates/flux_summary.sav:
+	  Adding template.
+
+2013-12-05  spluque@gmail.com
+
+	* control.inc:
+	  Moving root directory.
+
+	* level_motionpak.pro, truewind.pro, truewind_sonic.pro:
+	  Improve documentation.
+
+	* flux.pro:
+	  Fix reference to EC_OPEN output in micrometeorology calculations.
+
+	* ec_open.pro:
+	  Avoid modification of input parameters, so renaming arguments.
+
+	* ec_closed.pro, ec_momentum.pro, filter_MET.pro, ogive.pro,
+	  process_MET.pro, truewind.pro:
+	  We're dealing with wind speed, not velocity, so fixing names.
+
 2013-12-02  spluque@gmail.com
 
 	* control.inc, process_RAD.pro, subset_flux.pro:
