@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-11T14:48:45+0000
-;; Last-Updated: 2013-12-02T18:17:23+0000
+;; Last-Updated: 2013-12-06T21:35:05+0000
 ;;           By: Sebastian Luque
 ;; 
 ;;+ -----------------------------------------------------------------------
@@ -380,7 +380,7 @@ PRO PROCESS_RAD, IDIR, ODIR, ITEMPLATE_SAV, TIME_IDX, $
      ENDFOREACH
 
      ;; Deal with out of range values.  [SPL: Note that we rely on field
-     ;; names here, so be WATCH the names in the template.]
+     ;; names here, so WATCH the names in the template.]
      ;; For shortwave -- < 0 or > 800
      ;; For longwave  -- < 0 or > 550
      ;; For PAR       -- < 0 or > 2000
