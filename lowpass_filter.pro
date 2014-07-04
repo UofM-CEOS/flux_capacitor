@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T22:51:27+0000
-;; Last-Updated: 2014-05-03T17:50:04+0000
+;; Last-Updated: 2014-05-03T17:59:08+0000
 ;;	     By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -59,7 +59,6 @@
 FUNCTION LOWPASS_FILTER, SIGNAL, FS, HF
 
   dt=double(1) / fs
-  signal=transpose(signal)
 
   ;; Frequency range estimation.
   lsi=float(n_elements(signal))
