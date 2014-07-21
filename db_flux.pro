@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2014-05-04T13:55:27+0000
+;; Last-Updated: 2014-07-16T21:33:14+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -408,24 +408,6 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         CONTINUE
      ENDIF
 
-     ;; Level sonic anemometer
-
-     ;; [Original comment: here we level the sonic anemometer, as long
-     ;; as we know the MEAN roll/pitch angles from an inclinometer, and
-     ;; as long as those are in a L.H.S.] [SPL: WATCH LEVEL_SONIC
-     ;; FUNCTION].  For 2013, we get 1 s records from OMG, so we need to
-     ;; average those (CHECK WHETHER THEY ARE LHS as in previous note).
-     pitch_avg=mean(flux.pitch, /nan)
-     roll_avg=mean(flux.roll, /nan)
-     IF finite(roll_avg) AND finite(pitch_avg) THEN $
-        wind=level_sonic(wind, roll_avg * !DTOR, $
-                           -pitch_avg * !DTOR)
-     ;; [Original comment: now let's calculate the raw mean w
-     ;; value... this is going to be important for sort of tracking flow
-     ;; distortion... We could do something more in depth, but we'll
-     ;; keep it like this for now]
-     wind_v_mean=mean(wind[2, *], /nan)
-
      ;; High frequency motion correction -> [SPL: but the low frequency
      ;; correction uses the same test, so what is the difference? Also,
      ;; note that some variables created here are used after this block.
@@ -524,12 +506,28 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; lf_yaw by -1 to convert to L.H. system
         yaw=reform(-flux_lf_yaw + hf_yaw)
         angle=transpose([[pitch], [roll], [yaw]])
-        
+
+        ;; Level sonic anemometer
+
+        ;; [Original comment: here we level the sonic anemometer, as
+        ;; long as we know the MEAN roll/pitch angles from an
+        ;; inclinometer, and as long as those are in a L.H.S.] [SPL:
+        ;; WATCH LEVEL_SONIC FUNCTION]
+        IF finite(diag.roll[fperiod]) AND $
+           finite(diag.pitch[fperiod]) THEN $
+              wind_lev=level_sonic(wind, diag.roll[fperiod] * !DTOR, $
+                                     -diag.pitch[fperiod] * !DTOR)
+        ;; [Original comment: now let's calculate the raw mean w
+        ;; value... this is going to be important for sort of tracking flow
+        ;; distortion... We could do something more in depth, but we'll
+        ;; keep it like this for now]
+        wind_v_mean=mean(wind_lev[2, *], /nan)
+
         ;; Call motion correction routine
-        u_true=motcorr(wind, accel, angle, motpak_offset, $
+        u_true=motcorr(wind_lev, accel, angle, motpak_offset, $
                          double(isample_rate) / 10, lfreq_thr, $
                          hfreq_thr, g)
-        wind=u_true
+        wind_corr=u_true
 
         ;; Low frequency motion correction
 
@@ -537,10 +535,10 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; truewind.pro code.  See note above regarding these variables
         ;; needed later; what to do if the test in this block (e.g. SOG
         ;; is too low) fails?]
-        U_TRUE_2=truewind_sonic(wind[0, *], wind[1, *], cog, $
+        U_TRUE_2=truewind_sonic(wind_corr[0, *], wind_corr[1, *], cog, $
                                   sog / 1.9438449, heading, 337.0)
-        wind[0, *]=U_TRUE_2[0, *]
-        wind[1, *]=U_TRUE_2[1, *]
+        wind_corr[0, *]=U_TRUE_2[0, *]
+        wind_corr[1, *]=U_TRUE_2[1, *]
         true_son=bearing_avg(U_TRUE_2[3, *], U_TRUE_2[2, *])
         true_sonic_spd=true_son[0, 1]
         true_sonic_dir=true_son[0, 0]
@@ -548,13 +546,19 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         raw_sonic_spd=raw_son[0, 1]
         raw_sonic_dir=raw_son[0, 0]
 
-     ENDIF
+     ENDIF ELSE BEGIN
+        wind_lev=wind
+        wind_corr=wind
+     ENDELSE
 
      ;; Output motion corrected (if it was needed) data
      omc_tags=[stdtime_names, $
                  'wind_speed_u', $
                  'wind_speed_v', $
                  'wind_speed_w', $
+                 'wind_speed_lev_u', $
+                 'wind_speed_lev_v', $
+                 'wind_speed_lev_w', $
                  'wind_speed_u_corr', $
                  'wind_speed_v_corr', $
                  'wind_speed_w_corr', $
@@ -591,9 +595,12 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                reform(wind_raw[0, *]), $
                                reform(wind_raw[1, *]), $
                                reform(wind_raw[2, *]), $
-                               reform(wind[0, *]), $
-                               reform(wind[1, *]), $
-                               reform(wind[2, *]), $
+                               reform(wind_lev[0, *]), $
+                               reform(wind_lev[1, *]), $
+                               reform(wind_lev[2, *]), $
+                               reform(wind_corr[0, *]), $
+                               reform(wind_corr[1, *]), $
+                               reform(wind_corr[2, *]), $
                                sonic_temperature, $
                                flux.op_co2_density, $
                                flux.op_h2o_density, $
