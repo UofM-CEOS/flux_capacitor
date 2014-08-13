@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2013-12-05T17:48:50+0000
+;; Last-Updated: 2014-08-13T18:29:11+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -318,7 +318,7 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   ;; [Original comment: Temporarily set g for filtering purposes... true g
   ;; will be calculated later... we'll set this low to make sure we filter
   ;; properly].  CHECK
-  g=8.0
+  g_thr=8.0
 
   ;; Read log file and obtain beginning and end times
   log=read_std2_file(log_file, log_template, $
@@ -614,7 +614,8 @@ PRO FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
             flux_times_dims[1] * 100.0 GT 0.5) THEN sonic_flag=1
 
         ;; Check for Motion Pak data that are out of range
-        bad_motionpak=where((accel_x GT g) OR (accel_y GT g), nbad_motionpak)
+        bad_motionpak=where((accel_x GT g_thr) OR (accel_y GT g_thr), $
+                              nbad_motionpak)
         IF nbad_motionpak GT 0 THEN motion_flag=1
 
         ;; if sonic data are bad, skip this period
