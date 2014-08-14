@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2014-07-16T21:33:14+0000
+;; Last-Updated: 2014-08-13T21:54:05+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -130,8 +130,8 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
   ;; Break file names and extract the piece to match
   ;; [Original comment: Temporarily set g for filtering purposes... true g
   ;; will be calculated later... we'll set this low to make sure we filter
-  ;; properly].  CHECK
-  g=8.0
+  ;; properly].  CHECK. [SPL: I've renamed this to avoid confusion.]
+  g_thr=8.0
 
   ;; Set up a hash (or structure) to hold output data from all valid flux
   ;; runs at this point, before starting outermost loop.
@@ -341,7 +341,8 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            flux_times_dims[1] * 100.0 GT 0.5) THEN sonic_flag=1
 
      ;; Check for Motion Pak data that are out of range
-     bad_motionpak=where((accel_x GT g) OR (accel_y GT g), nbad_motionpak)
+     bad_motionpak=where((accel_x GT g_thr) OR (accel_y GT g_thr), $
+                           nbad_motionpak)
      IF nbad_motionpak GT 0 THEN motion_flag=1
 
      ;; if sonic data are bad, skip this period
@@ -408,15 +409,10 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         CONTINUE
      ENDIF
 
-     ;; High frequency motion correction -> [SPL: but the low frequency
-     ;; correction uses the same test, so what is the difference? Also,
-     ;; note that some variables created here are used after this block.
-     ;; If the test fails, then everything using these variables later
-     ;; will fail, so an ELSE statement is needed here.  What?]
      IF sog_avg GT sog_thr THEN BEGIN
-        ;; [Original comment: shot filter the motion channels... this
-        ;; helps with a problem where unreasonably high accelerations
-        ;; cause a 'NaN' calculation]
+        ;; [Original comment: shot filter the motion channels... this helps
+        ;; with a problem where unreasonably high accelerations cause a
+        ;; 'NaN' calculation]
         accel[0, *]=shot_filter(accel[0, *])
         accel[1, *]=shot_filter(accel[1, *])
         accel[2, *]=shot_filter(accel[2, *])
@@ -425,13 +421,19 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         rate[2, *]=shot_filter(rate[2, *])
 
         ;; [Original comment: synthetically level the Motion Pak] [SPL:
-        ;; WATCH LEVEL_MOTIONPAK FUNCTION]
+        ;; WATCH LEVEL_MOTIONPAK FUNCTION.  Note how this calls the
+        ;; function with the fixed value of 4 for R_RANGE and P_RANGE
+        ;; arguments.  Why?]
         level=level_motionpak(accel, rate, 4, 4, status=status)
         IF status NE 0 THEN BEGIN
            message, 'Levelling Motion Pak data failed. Skipping.', $
                     /CONTINUE
            CONTINUE
         ENDIF
+        ;; What is the condition below trying to test?  BE had this to
+        ;; catch if something went wrong during LEVEL_MOTIONPAK, beyond the
+        ;; status variable above.  I guess this simply flags the data, as
+        ;; opposed to simply rejecting the entire period.
         IF ~finite(level[0]) THEN BEGIN
            motion_flag=1
            message, 'Motion-flagged', /informational
@@ -442,20 +444,19 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         rate[0, *]=level[3, *]
         rate[1, *]=level[4, *]
         rate[2, *]=level[5, *]
-
+     
         ;; [Original comment: demean the rates by extracting the
         ;; fluctuating component and setting the mean to 0]
         rate[0, *]=(rate[0, *] - mean(rate[0, *], /NAN, /DOUBLE)) + 0
         rate[1, *]=(rate[1, *] - mean(rate[1, *], /NAN, /DOUBLE)) + 0
         rate[2, *]=(rate[2, *] - mean(rate[2, *], /NAN, /DOUBLE)) + 0
-        
-        ;; Gravity (what was the purpose of the g variables at the
-        ;; beginning of the procedure?)
+     
+        ;; Gravity calculation
         g=(mean(accel[2, *], /NAN, /DOUBLE))
 
         ;; Check to make sure the x/y accelerations are not greater than
-        ;; g... this is indicative of a problem w/ the Motion Pak, and
-        ;; the run needs to be skipped
+        ;; g... this is indicative of a problem w/ the Motion Pak, and the
+        ;; run needs to be skipped
         bad_mp=where((accel[0, *] GT g) OR $
                        (accel[1, *] GT g), nbad_mp)
         IF nbad_mp GT 0 THEN BEGIN
@@ -466,28 +467,30 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ENDIF
 
         ;; Integrate angular rates to give angles.  This also performs a
-        ;; high pass filter, cutting off all frequencies below the
-        ;; cutoff period (in this case, the cutoff period is set to 20s
-        ;; (or 0.05Hz)). [SPL: WATCH INT1BYF FUNCTION]
+        ;; high pass filter, cutting off all frequencies below the cutoff
+        ;; period (in this case, the cutoff period is set to 20s (or
+        ;; 0.05Hz)). [SPL: WATCH INT1BYF FUNCTION]
         hf_pitch=int1byf(rate[0, *], 10, xover_freq_thr)
         hf_roll=int1byf(rate[1, *], 10, xover_freq_thr)
         hf_yaw=int1byf(rate[2, *], 10, xover_freq_thr)
 
         ;; Use the accelerometer data to calculate low frequency angle
-        ;; information, then add that to the high frequency angles Low
-        ;; pass filter cuts off frequencies abve the cutoff period (in
-        ;; this case 20s or 0.05Hz).
+        ;; information, then add that to the high frequency angles Low pass
+        ;; filter cuts off frequencies abve the cutoff period (in this case
+        ;; 20s or 0.05Hz).
         lf_pitch=lowpass_filter(reform(asin(accel[0, *] / g)), 10, $
                                   xover_freq_thr)
         lf_roll=lowpass_filter(reform(asin(accel[1, *] / g)), 10, $
                                  xover_freq_thr)
         pitch=detrend(hf_pitch) - lf_pitch
         roll=detrend(hf_roll) + lf_roll
+        pitch_avg=(bearing_avg(pitch, 1))[0]
+        roll_avg=(bearing_avg(roll, 1))[0]
 
         ;; Here, we are getting the low frequency part of the compass
         ;; heading out.  Convert compass heading of ship gyro to radians
-        ;; and redefine coordinate system as: north=0, east=PI/2,
-        ;; south=PI, west=-PI/2
+        ;; and redefine coordinate system as: north=0, east=PI/2, south=PI,
+        ;; west=-PI/2
         heading_rad=atan(sin(heading * !DTOR), cos(heading * !DTOR))
         
         ;; Demean and low pass filter
@@ -502,21 +505,20 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                     /CONTINUE
            CONTINUE
         ENDIF
-        ;; Add the lowfreq and highfreq components --> BUT multiply
-        ;; lf_yaw by -1 to convert to L.H. system
+        ;; Add the lowfreq and highfreq components --> BUT multiply lf_yaw
+        ;; by -1 to convert to L.H. system
         yaw=reform(-flux_lf_yaw + hf_yaw)
         angle=transpose([[pitch], [roll], [yaw]])
 
         ;; Level sonic anemometer
 
-        ;; [Original comment: here we level the sonic anemometer, as
-        ;; long as we know the MEAN roll/pitch angles from an
-        ;; inclinometer, and as long as those are in a L.H.S.] [SPL:
-        ;; WATCH LEVEL_SONIC FUNCTION]
-        IF finite(diag.roll[fperiod]) AND $
-           finite(diag.pitch[fperiod]) THEN $
-              wind_lev=level_sonic(wind, diag.roll[fperiod] * !DTOR, $
-                                     -diag.pitch[fperiod] * !DTOR)
+        ;; [Original comment: here we level the sonic anemometer, as long
+        ;; as we know the MEAN roll/pitch angles from an inclinometer, and
+        ;; as long as those are in a L.H.S.] [SPL: WATCH LEVEL_SONIC
+        ;; FUNCTION]
+        IF finite(roll_avg) AND finite(pitch_avg) THEN $
+              wind_lev=level_sonic(wind, roll_avg * !DTOR, $
+                                     -pitch_avg * !DTOR)
         ;; [Original comment: now let's calculate the raw mean w
         ;; value... this is going to be important for sort of tracking flow
         ;; distortion... We could do something more in depth, but we'll
@@ -524,25 +526,24 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         wind_v_mean=mean(wind_lev[2, *], /nan)
 
         ;; Call motion correction routine
-        u_true=motcorr(wind_lev, accel, angle, motpak_offset, $
-                         double(isample_rate) / 10, lfreq_thr, $
-                         hfreq_thr, g)
-        wind_corr=u_true
-
+        wind_corr=motcorr(wind_lev, accel, angle, motpak_offset, $
+                            double(isample_rate) / 10, lfreq_thr, $
+                            hfreq_thr, g)
+     
         ;; Low frequency motion correction
-
+     
         ;; [SPL: Watch TRUEWIND_SONIC function, which redundantly uses
         ;; truewind.pro code.  See note above regarding these variables
-        ;; needed later; what to do if the test in this block (e.g. SOG
-        ;; is too low) fails?]
-        U_TRUE_2=truewind_sonic(wind_corr[0, *], wind_corr[1, *], cog, $
-                                  sog / 1.9438449, heading, 337.0)
-        wind_corr[0, *]=U_TRUE_2[0, *]
-        wind_corr[1, *]=U_TRUE_2[1, *]
-        true_son=bearing_avg(U_TRUE_2[3, *], U_TRUE_2[2, *])
+        ;; needed later; what to do if the test in this block (e.g. SOG is
+        ;; too low) fails?]
+        u_true=truewind_sonic(wind_corr[0, *], wind_corr[1, *], cog, $
+                                sog / 1.9438449, heading, 337.0)
+        wind_corr[0, *]=u_true[0, *]
+        wind_corr[1, *]=u_true[1, *]
+        true_son=bearing_avg(u_true[3, *], u_true[2, *])
         true_sonic_spd=true_son[0, 1]
         true_sonic_dir=true_son[0, 0]
-        raw_son=bearing_avg(U_TRUE_2[5, *], U_TRUE_2[4, *])
+        raw_son=bearing_avg(u_true[5, *], u_true[4, *])
         raw_sonic_spd=raw_son[0, 1]
         raw_sonic_dir=raw_son[0, 0]
 
@@ -646,7 +647,7 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         write_csv, mc_ofile_name, omot_corr, header=omc_tags
      ENDELSE
      delvar, omot_corr
-
+  
      ;; Eddy covariance calculations
      sf_hz=float(isample_rate) * 100 ; sampling freq (Hz)
      mom=ec_momentum(wind, sonic_temperature, $
