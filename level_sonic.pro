@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T19:11:00+0000
-;; Last-Updated: 2013-11-14T18:10:21+0000
+;; Last-Updated: 2014-08-14T15:27:14+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -18,7 +18,7 @@
 ;; 
 ;; CALLING SEQUENCE:
 ;; 
-;;     level=level_sonic(Wind, Pitch, Roll)
+;;     level=level_sonic(Wind, Roll, Pitch)
 ;; 
 ;; INPUTS:
 ;; 
