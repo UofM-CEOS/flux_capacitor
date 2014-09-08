@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2014-08-13T21:54:05+0000
+;; Last-Updated: 2014-08-28T16:35:39+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -478,11 +478,11 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; information, then add that to the high frequency angles Low pass
         ;; filter cuts off frequencies abve the cutoff period (in this case
         ;; 20s or 0.05Hz).
-        lf_pitch=lowpass_filter(reform(asin(accel[0, *] / g)), 10, $
-                                  xover_freq_thr)
+        lf_pitch=-lowpass_filter(reform(asin(accel[0, *] / g)), 10, $
+                                   xover_freq_thr)
         lf_roll=lowpass_filter(reform(asin(accel[1, *] / g)), 10, $
                                  xover_freq_thr)
-        pitch=detrend(hf_pitch) - lf_pitch
+        pitch=detrend(hf_pitch) + lf_pitch
         roll=detrend(hf_roll) + lf_roll
         pitch_avg=(bearing_avg(pitch, 1))[0]
         roll_avg=(bearing_avg(roll, 1))[0]
@@ -496,8 +496,8 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; Demean and low pass filter
         gyro_sf=flux_times_dims[1] / double(ec_period) ; sampling freq
         head_dmean=heading_rad - mean(heading_rad, /NAN)
-        flux_lf_yaw=lowpass_filter(reform([head_dmean]), gyro_sf, $
-                                     xover_freq_thr)
+        flux_lf_yaw=-lowpass_filter(reform([head_dmean]), gyro_sf, $
+                                      xover_freq_thr)
         ;; We need to stop here if low pass filter failed
         lpf_ok=where(finite(flux_lf_yaw), nlpf_ok)
         IF nlpf_ok EQ 0 THEN BEGIN
@@ -507,7 +507,7 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ENDIF
         ;; Add the lowfreq and highfreq components --> BUT multiply lf_yaw
         ;; by -1 to convert to L.H. system
-        yaw=reform(-flux_lf_yaw + hf_yaw)
+        yaw=reform(hf_yaw + flux_lf_yaw)
         angle=transpose([[pitch], [roll], [yaw]])
 
         ;; Level sonic anemometer
