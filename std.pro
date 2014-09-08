@@ -1,8 +1,8 @@
 ;; $Id$
 ;; Author: Sebastian Luque (from original by Brent Else, Bruce Johnson)
 ;; Created: 2013-09-20T17:13:48+0000
-;; Last-Updated: 2013-12-02T02:24:49+0000
-;;           By: Sebastian P. Luque
+;; Last-Updated: 2014-09-02T22:38:26+0000
+;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -108,6 +108,7 @@ PRO STD, IDIR, ODIR, ITEMPLATE_SAV, TIME_BEG_IDX, KEEP_FIELDS, $
   ;; Loop through files in input directory
   FOR k=0, nidir_files - 1 DO BEGIN
      iname=strsplit(file_basename(idir_files[k]), '.', /extract)
+     file_mkdir, odir
      ;; Get a path for the file, check if it already exists
      ofile_name=strcompress(odir + path_sep() + iname[0] + '_std.' + $
                             iname[1], /remove_all)
