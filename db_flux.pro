@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2014-08-28T16:35:39+0000
+;; Last-Updated: 2014-09-09T22:25:28+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -96,6 +96,7 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
          message, 'TIME_IDX must be an integer scalar >= zero'
   IF ((n_elements(isample_rate) NE 1) OR (isample_rate LT 0)) THEN $
      message, 'ISAMPLE_RATE must be a scalar >= zero'
+  sf_hz=float(isample_rate) * 100 ; sampling frequency (Hz)
   IF ((n_elements(ec_period) NE 1) OR (ec_period LT 0)) THEN $
      message, 'EC_PERIOD must be a scalar >= zero'
   IF (n_elements(motpak_offset) NE 3) THEN $
@@ -438,27 +439,26 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
            motion_flag=1
            message, 'Motion-flagged', /informational
         ENDIF
-        accel[0, *]=level[0, *]
-        accel[1, *]=level[1, *]
-        accel[2, *]=level[2, *]
-        rate[0, *]=level[3, *]
-        rate[1, *]=level[4, *]
-        rate[2, *]=level[5, *]
+        accel_lev=level[0:2, *]
+        rate_lev=level[3:5, *]
      
         ;; [Original comment: demean the rates by extracting the
         ;; fluctuating component and setting the mean to 0]
-        rate[0, *]=(rate[0, *] - mean(rate[0, *], /NAN, /DOUBLE)) + 0
-        rate[1, *]=(rate[1, *] - mean(rate[1, *], /NAN, /DOUBLE)) + 0
-        rate[2, *]=(rate[2, *] - mean(rate[2, *], /NAN, /DOUBLE)) + 0
+        rate_lev[0, *]=(rate_lev[0, *] - $
+                          mean(rate_lev[0, *], /NAN, /DOUBLE)) + 0
+        rate_lev[1, *]=(rate_lev[1, *] - $
+                          mean(rate_lev[1, *], /NAN, /DOUBLE)) + 0
+        rate_lev[2, *]=(rate_lev[2, *] - $
+                          mean(rate_lev[2, *], /NAN, /DOUBLE)) + 0
      
         ;; Gravity calculation
-        g=(mean(accel[2, *], /NAN, /DOUBLE))
+        g=(mean(accel_lev[2, *], /NAN, /DOUBLE))
 
         ;; Check to make sure the x/y accelerations are not greater than
         ;; g... this is indicative of a problem w/ the Motion Pak, and the
         ;; run needs to be skipped
-        bad_mp=where((accel[0, *] GT g) OR $
-                       (accel[1, *] GT g), nbad_mp)
+        bad_mp=where((accel_lev[0, *] GT g) OR $
+                       (accel_lev[1, *] GT g), nbad_mp)
         IF nbad_mp GT 0 THEN BEGIN
            motion_flag=1
            message, 'Invalid Motion Pak accelerations. Skipping.', $
@@ -470,17 +470,17 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; high pass filter, cutting off all frequencies below the cutoff
         ;; period (in this case, the cutoff period is set to 20s (or
         ;; 0.05Hz)). [SPL: WATCH INT1BYF FUNCTION]
-        hf_pitch=int1byf(rate[0, *], 10, xover_freq_thr)
-        hf_roll=int1byf(rate[1, *], 10, xover_freq_thr)
-        hf_yaw=int1byf(rate[2, *], 10, xover_freq_thr)
+        hf_pitch=int1byf(rate_lev[0, *], sf_hz, xover_freq_thr)
+        hf_roll=int1byf(rate_lev[1, *], sf_hz, xover_freq_thr)
+        hf_yaw=int1byf(rate_lev[2, *], sf_hz, xover_freq_thr)
 
         ;; Use the accelerometer data to calculate low frequency angle
         ;; information, then add that to the high frequency angles Low pass
         ;; filter cuts off frequencies abve the cutoff period (in this case
         ;; 20s or 0.05Hz).
-        lf_pitch=-lowpass_filter(reform(asin(accel[0, *] / g)), 10, $
+        lf_pitch=-lowpass_filter(reform(asin(accel_lev[0, *] / g)), sf_hz, $
                                    xover_freq_thr)
-        lf_roll=lowpass_filter(reform(asin(accel[1, *] / g)), 10, $
+        lf_roll=lowpass_filter(reform(asin(accel_lev[1, *] / g)), sf_hz, $
                                  xover_freq_thr)
         pitch=detrend(hf_pitch) + lf_pitch
         roll=detrend(hf_roll) + lf_roll
@@ -526,9 +526,11 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         wind_v_mean=mean(wind_lev[2, *], /nan)
 
         ;; Call motion correction routine
-        wind_corr=motcorr(wind_lev, accel, angle, motpak_offset, $
-                            double(isample_rate) / 10, lfreq_thr, $
-                            hfreq_thr, g)
+        wind_corr=motcorr(wind_lev, accel_lev, angle, motpak_offset, $
+                            sf_hz, lfreq_thr, hfreq_thr, g)
+        ;; ;; Attempting to do it with Miller's code, ported to IDL
+        ;; motion, wind_lev, accel_lev, rate_lev, heading, sog, $
+        ;;         motpak_offset, sf_hz, 10, 20, [0, 0], [0, 0]
      
         ;; Low frequency motion correction
      
@@ -610,15 +612,15 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                reform(accel_raw[0, *]), $
                                reform(accel_raw[1, *]), $
                                reform(accel_raw[2, *]), $
-                               reform(accel[0, *]), $
-                               reform(accel[1, *]), $
-                               reform(accel[2, *]), $
+                               reform(accel_lev[0, *]), $
+                               reform(accel_lev[1, *]), $
+                               reform(accel_lev[2, *]), $
                                reform(rate_raw[0, *]), $
                                reform(rate_raw[1, *]), $
                                reform(rate_raw[2, *]), $
-                               reform(rate[0, *]), $
-                               reform(rate[1, *]), $
-                               reform(rate[2, *]), $
+                               reform(rate_lev[0, *]), $
+                               reform(rate_lev[1, *]), $
+                               reform(rate_lev[2, *]), $
                                latitude, $
                                longitude, $
                                sog, $
@@ -649,7 +651,6 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      delvar, omot_corr
   
      ;; Eddy covariance calculations
-     sf_hz=float(isample_rate) * 100 ; sampling freq (Hz)
      mom=ec_momentum(wind, sonic_temperature, $
                        flux.air_temperature[0], $
                        flux.relative_humidity[0], $
