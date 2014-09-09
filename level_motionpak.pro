@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T20:41:26+0000
-;; Last-Updated: 2013-12-05T20:10:14+0000
+;; Last-Updated: 2014-09-09T21:37:07+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -151,8 +151,7 @@ FUNCTION LEVEL_MOTIONPAK, ACC, RATE, R_RANGE, P_RANGE, STATUS=STATUS
   acc_z_ship=reform(-acc[0, *] * sp + acc[1, *] * cp * sr + $
 		    acc[2, *] * cp * cr)
 
-  message, 'Motion Pak level - Roll:' + $
-	   strcompress(min_roll_angle / !DTOR) + ' degrees, ' + $
+  message, 'Roll:' + strcompress(min_roll_angle / !DTOR) + ' degrees, ' + $
 	   'Pitch:' + strcompress(min_pitch_angle / !DTOR) + ' degrees', $
 	   /informational
   corr_pak=[[ACC_x_ship], [ACC_y_ship], [ACC_z_ship], $
