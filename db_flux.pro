@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2014-09-09T22:25:28+0000
+;; Last-Updated: 2014-09-24T18:38:48+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -528,9 +528,15 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; Call motion correction routine
         wind_corr=motcorr(wind_lev, accel_lev, angle, motpak_offset, $
                             sf_hz, lfreq_thr, hfreq_thr, g)
-        ;; ;; Attempting to do it with Miller's code, ported to IDL
+        ;; ;; Attempting to do it with Miller's code, ported to IDL. Debugging
+        ;; ;; (these variables should be moved to the control file)
+        ;; butter_num=transpose([0.9693, -3.8772, 5.8157, -3.8772, 0.9693])
+        ;; butter_den=transpose([1, -3.9376, 5.8148, -3.8167, 0.9395])
+        ;; butter_coeffs=[butter_num, butter_den]
+        ;; cutoffs=float([80, 80, 40])
         ;; motion, wind_lev, accel_lev, rate_lev, heading, sog, $
-        ;;         motpak_offset, sf_hz, 10, 20, [0, 0], [0, 0]
+        ;;         motpak_offset, sf_hz, 20, cutoffs, butter_coeffs, $
+        ;;         [0, 0], [0, 0]
      
         ;; Low frequency motion correction
      
@@ -573,15 +579,15 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                  'accel_x', $
                  'accel_y', $
                  'accel_z', $
-                 'accel_x_corr', $
-                 'accel_y_corr', $
-                 'accel_z_corr', $
+                 'accel_x_lev', $
+                 'accel_y_lev', $
+                 'accel_z_lev', $
                  'rate_phi', $
                  'rate_theta', $
                  'rate_shi', $
-                 'rate_phi_corr', $
-                 'rate_theta_corr', $
-                 'rate_shi_corr', $
+                 'rate_phi_lev', $
+                 'rate_theta_lev', $
+                 'rate_shi_lev', $
                  'latitude', $
                  'longitude', $
                  'SOG', $
@@ -651,7 +657,7 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      delvar, omot_corr
   
      ;; Eddy covariance calculations
-     mom=ec_momentum(wind, sonic_temperature, $
+     mom=ec_momentum(wind_corr, sonic_temperature, $
                        flux.air_temperature[0], $
                        flux.relative_humidity[0], $
                        flux.atmospheric_pressure[0], $
@@ -662,7 +668,7 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      ;; WITH THE SAME DIMENSIONS AS THAT RETURNED BY EC_OPEN, for
      ;; printing purposes.
      IF open_flag NE 1 THEN BEGIN
-        open_path=ec_open(wind, sonic_temperature, flux.op_co2_density, $
+        open_path=ec_open(wind_corr, sonic_temperature, flux.op_co2_density, $
                             flux.op_h2o_density, flux.op_pressure, $
                             float(ec_period) / 60, $ ; in minutes
                             sf_hz, $
@@ -672,6 +678,26 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                             BURBA=[sw_avg, lw_avg, raw_sonic_spd], $
                             pkt=mom[2])
      ENDIF ELSE open_path=make_array(27, value=!VALUES.D_NAN)
+
+     ;; Closed-path flow rate for 2010 = 11.5 LPM.  Sample tube length
+     ;; for 2010 = 8.0m.  Do closed path calculations if available.  IF
+     ;; CLOSED FLAG IS UP, THEN WE CREATE AN ARRAY OF SAME DIMENSIONS AS
+     ;; THAT RETURNED BY EC_CLOSED, for printing purposes.
+     IF closed_flag EQ 0 THEN BEGIN
+        cl_flow=11.5            ; NEED LUT FOR FLOW RATE
+        closed_path=ec_closed(wind_corr, flux.co2_cl, flux.h2o_cl, $
+                                flux.pressure_cl, flux.temperature_cl, $
+                                flux.air_temperature[0], $
+                                flux.relative_humidity[0], $
+                                flux.atmospheric_pressure[0], [-10, 50], $
+                                float(ec_period) / 60, $ ; in minutes
+                                sf_hz, $
+                                CORR_MASSMAN=[isample_rate, 0.10, -0.06, $
+                                                0.44, !VALUES.D_NAN, $
+                                                !VALUES.D_NAN, $
+                                                !VALUES.D_NAN, cl_flow, $
+                                                0.005, 8.0])
+     ENDIF ELSE closed_path=make_array(11, value=!VALUES.D_NAN)
 
      ;; MICROMET CALCULATIONS
 
