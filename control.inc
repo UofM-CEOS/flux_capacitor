@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2013-12-05T21:10:24+0000
+;; Last-Updated: 2014-08-25T17:43:47+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -197,6 +197,13 @@ rad_raw_keep_fields=['battery_voltage', 'panel_temperature', $
                      'k_down_sd', 'thermopile_sd', 'Tcase_sd', $
                      'Tdome_sd', 'lw_in_sd', 'par_sd', 'temperature_uv_sd', $
                      'uv_b_sd', 'uv_a_sd', 'uv_broad_sd']
+;; ;; 2013
+;; rad_raw_keep_fields=['battery_voltage', 'panel_temperature', $
+;;                      'battery_voltage_sd', 'panel_temperature_sd', $
+;;                      'k_down', 'Tcase', 'Tdome', 'lw_in', $
+;;                      'par', 'temperature_uv', 'uv_a', 'uv_b', $
+;;                      'k_down_sd', 'Tcase_sd', 'Tdome_sd', 'lw_in_sd', $
+;;                        'par_sd', 'temperature_uv_sd', 'uv_a_sd', 'uv_b_sd']
 rad_stamp='RAD'
 rad_daily_rate=60
 ;; See PROCESS_RAD docs for the two below.
@@ -205,6 +212,8 @@ met_par_fld=16                  ; location of PAR field in MET STD files
 
 ;; Raw files
 rad_idir=root_dir + path_sep() + 'RAD'
+;; ;; 2013
+;; rad_idir=root_dir + path_sep() + 'Tower' + path_sep() + 'RAD'
 ;; STD files
 rad_std_dir=rad_idir + path_sep() + 'STD'
 ;; Daily files
@@ -217,6 +226,8 @@ rad_period_dir=rad_proc_dir + path_sep() + 'Periods'
 ;;;_  . Templates
 
 rad_raw_template=templates_dir + path_sep() + 'rad_raw.sav'
+;; ;; 2013
+;; rad_raw_template=templates_dir + path_sep() + 'rad_raw_2013.sav'
 rad_std_template=templates_dir + path_sep() + 'rad_std.sav'
 rad_proc_template=templates_dir + path_sep() + 'rad_processed.sav'
 
