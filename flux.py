@@ -242,34 +242,38 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     ws = 1.0 / Tcf / (sample_freq / 2.0)
     N, Wn = signal.buttord(wp, ws, Apass, Astop)
     bc, ac = signal.butter(N, Wn, "high")
+    # WATCH THIS: we need to make padlen the same as in Matlab
+    pdl = 3 * (max(len(ac), len(bc)) - 1)
 
     # EULER ANGLES: (see Edson et al., 1998)
     # Low frequency tilt using accelerometers
     g = np.sqrt(np.sum(np.mean(acceleration, 0) ** 2))
     ax, ay = acceleration[:, 0], acceleration[:, 1]
-    p_lf = np.arctan2(ay, g) - signal.filtfilt(bc, ac, np.arctan2(ay, g))
+    p_lf = np.arctan2(ay, g) - \
+           signal.filtfilt(bc, ac, np.arctan2(ay, g), padlen=pdl)
     # High frequency angles using angle rates
     rm = signal.detrend(angle_rate, 0)
-    rx, ry, rz = angle_rate[:, 0], angle_rate[:, 1], angle_rate[:, 2]
+    rx, ry, rz = rm[:, 0], rm[:, 1], rm[:, 2] # don't do this in ipdb!
     p_hf = signal.filtfilt(bc, ac,
                            ((np.cumsum(rx) - 0.5 * rx - 0.5 * rx[0]) /
-                            sample_freq))
+                            sample_freq), padlen=pdl)
     pitch = p_lf + p_hf
     t_lf = np.arctan2(-ax * np.cos(pitch), g) - \
-           signal.filtfilt(bc, ac, np.arctan2(-ax * np.cos(pitch), g))
+           signal.filtfilt(bc, ac, np.arctan2(-ax * np.cos(pitch), g),
+                           padlen=pdl)
 
     gyro = np.unwrap(-np.radians(heading)) # Put heading in radians and RHS
     heading_rhs = gyro[0]               # Initial heading
     gyro = gyro - heading_rhs           # Remove the intial heading
     # Low-pass filter to retain low-frequency content, but not the offset
-    s_lf = gyro - signal.filtfilt(bc, ac, gyro)
+    s_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
 
     t_hf = signal.filtfilt(bc, ac,
                            ((np.cumsum(ry) - 0.5 * ry - 0.5 * ry[0]) /
-                            sample_freq))
+                            sample_freq), padlen=pdl)
     s_hf = signal.filtfilt(bc, ac,
                            ((np.cumsum(rz) - 0.5 * rz - 0.5 * rz[0]) /
-                            sample_freq))
+                            sample_freq), padlen=pdl)
     tilt = t_lf + t_hf
     # s = s_lf + s_hf             # SPL: not used...
 
@@ -300,13 +304,13 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # the fast angles.
     p_hf = signal.filtfilt(bc, ac,
                            (np.cumsum(pdot) - 0.5 * pdot - 0.5 * pdot[0]) /
-                           sample_freq)
+                           sample_freq, padlen=pdl)
     t_hf = signal.filtfilt(bc, ac,
                            (np.cumsum(tdot) - 0.5 * tdot - 0.5 * tdot[0]) /
-                           sample_freq)
+                           sample_freq, padlen=pdl)
     s_hf = signal.filtfilt(bc, ac,
                            (np.cumsum(sdot) - 0.5 * sdot - 0.5 * sdot[0]) /
-                           sample_freq)
+                           sample_freq, padlen=pdl)
 
     # combine high- and low-frequency angles; make 2D matrix
     EA = np.column_stack((p_lf+p_hf, t_lf+t_hf, s_lf+s_hf))
@@ -338,12 +342,12 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     Ur = euler_translate(np.dot(M_ma, wind_speed.T).T, EA)
 
     ## PLATFORM ANGULAR VELOCITY
-    uam = np.column_stack((anemometer_pos[2] * rm[:, 1] -
-                           anemometer_pos[1] * rm[:, 2],
-                           anemometer_pos[0] * rm[:, 2] -
-                           anemometer_pos[2] * rm[:, 0],
-                           anemometer_pos[1] * rm[:, 0] -
-                           anemometer_pos[0] * rm[:, 1]))
+    uam = np.column_stack((anemometer_pos[2] * ry -
+                           anemometer_pos[1] * rz,
+                           anemometer_pos[0] * rz -
+                           anemometer_pos[2] * rx,
+                           anemometer_pos[1] * rx -
+                           anemometer_pos[0] * ry))
     Ua = euler_translate(uam, EA) # rotate to earth frame
 
     ## PLATFORM LINEAR VELOCITY
@@ -352,16 +356,20 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     ws = 1.0 / Ta[0] / (sample_freq / 2.0)   # stop, passband cutoffs
     N, Wn = signal.buttord(wp, ws, Apass, Astop)
     bax, aax = signal.butter(N, Wn, "high")
+    # Again, watch padlen
+    pdlx = 3 * (max(len(aax), len(bax)) - 1)
 
     wp = 1.0 / (2.0 * Ta[1]) / (sample_freq / 2.0)
     ws = 1.0 / Ta[1] / (sample_freq / 2.0)   # stop, passband cutoffs
     N, Wn = signal.buttord(wp, ws, Apass, Astop)
     bay, aay = signal.butter(N, Wn, "high")
+    pdly = 3 * (max(len(aay), len(bay)) - 1)
 
     wp = 1.0 / (2.0 * Ta[2]) / (sample_freq / 2.0)
     ws = 1.0 / Ta[2] / (sample_freq / 2.0)   # stop, passband cutoffs
     N, Wn = signal.buttord(wp, ws, Apass, Astop)
     baz, aaz = signal.butter(N, Wn, "high")
+    pdlz = 3 * (max(len(aaz), len(baz)) - 1)
 
     # Rotate accelerations
     ae = euler_translate(acceleration, EA)
@@ -369,9 +377,9 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     n = np.size(ae, 0)
     up = (np.cumsum(ae, 0) -
           0.5 * ae - 0.5 * (np.ones((n, 1)) * ae[0, :])) / sample_freq
-    Up = np.column_stack((signal.filtfilt(bax, aax, up[:, 0]),
-                          signal.filtfilt(bay, aay, up[:, 1]),
-                          signal.filtfilt(baz, aaz, up[:, 2])))
+    Up = np.column_stack((signal.filtfilt(bax, aax, up[:, 0], padlen=pdlx),
+                          signal.filtfilt(bay, aay, up[:, 1], padlen=pdly),
+                          signal.filtfilt(baz, aaz, up[:, 2], padlen=pdlz)))
 
     ## SHIP SPEED: this is in the positive x-direction (assuming the bow is
     ## positive x direction).  We low-pass filter this signal so there isnt
@@ -379,7 +387,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     ## Also, the y- and z-components are zero (ie, captured by the
     ## integrated accelerometers).
     n = len(speed)
-    us = np.column_stack((speed - signal.filtfilt(bax, aax, speed),
+    us = np.column_stack((speed -
+                          signal.filtfilt(bax, aax, speed, padlen=pdlx),
                           np.zeros((n, 1)), np.zeros((n, 1))))
 
     UVW = Ur + Ua + Up + us     # corrected wind vector
@@ -404,9 +413,9 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # Platform displacement
     xp = (np.cumsum(Up, 0) - 0.5 * Up -
           0.5 * (np.ones((n, 1)) * Up[0, :])) / sample_freq
-    Xp = np.column_stack((signal.filtfilt(bax, aax, xp[:, 0]),
-                          signal.filtfilt(bay, aay, xp[:, 1]),
-                          signal.filtfilt(baz, aaz, xp[:, 2])))
+    Xp = np.column_stack((signal.filtfilt(bax, aax, xp[:, 0], padlen=pdlx),
+                          signal.filtfilt(bay, aay, xp[:, 1], padlen=pdly),
+                          signal.filtfilt(baz, aaz, xp[:, 2], padlen=pdlz)))
 
     return (UVW, EA, EA_rate, EA_acc, EA_slow, EA_fast, M_ma, Ur, Ua, Up,
             U_ship, U_earth, Xp)
