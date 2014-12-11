@@ -258,7 +258,7 @@ function [u, varargout]=motion_octave(um, am, rm, gyro, speed, r, sf, Tcf,
         case {'ULINEAR'}
           varargout(i) = {up};
         case {'USHIP'}
-	  hdgrhs = (headingrhs + pi / 2) * ones(n, 1)
+	  hdgrhs = (headingrhs + pi / 2) * ones(n, 1);
           us_e = trans(us, [zeros(n, 1) zeros(n,1) hdgrhs]);
           varargout(i)={us_e};
         case {'UEARTH'}
