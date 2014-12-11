@@ -72,7 +72,6 @@ colnames = ["time_20min", "time_study", "longitude", "latitude",
             "cp_temperature_block", "cp_temperature_cell",
             "cp_CO2_signal_strength", "cp_H2O_signal_strength"]
 
-# ppdf = PdfPages("winds_2011.pdf")
 for ec_period in ec_files[0:3]:
     print ec_period             # REMOVE FOR PRODUCTION
     ec = pd.read_csv(ec_period, dtype=np.float, parse_dates=[0, 1],
@@ -249,8 +248,6 @@ for ec_period in ec_files[0:3]:
     fig.savefig(iname_prefix + ".png", bbox_extra_artists=(leg,),
                 bbox_inches="tight")
 
-# ppdf.close()
-
 
 
 ## TESTS ------------------------------------------------------------------
@@ -271,3 +268,15 @@ for ec_period in ec_files[0:3]:
 # heading = smooth_angle(ec.heading.values, 1, 21)
 # plt.plot(ec.heading, 'b.')
 # plt.plot(heading["angle"])
+
+# # Replicate Miller's test code
+# import scipy.io as sio
+# miller_objs = sio.loadmat('motiondata.mat')
+# UVW = wind3D_correct(miller_objs["uvwm"], miller_objs["acc"],
+#                      miller_objs["rate"], np.squeeze(miller_objs["heading"]),
+#                      np.squeeze(miller_objs["speed"]),
+#                      np.squeeze(miller_objs["r"]),
+#                      np.squeeze(miller_objs["sf"]), 10, 20, [0, 0], [0, 0])
+
+# plt.plot(miller_objs["uvwm"][:, 0])
+# plt.plot(UVW[0][:, 0])
