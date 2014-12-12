@@ -1,3 +1,93 @@
+2014-12-12  spluque@gmail.com
+
+	* db_flux_prep.py:
+	  Separate the summary of calculations per file, and place the
+	  flags there as well.
+
+	* db_flux_prep.py:
+	  Extract both ship- and earth-referenced 3D winds.
+
+2014-12-11  spluque@gmail.com
+
+	* motion_octave.m:
+	  Forgot EOL semicolon.
+
+	* motion_octave.m:
+	  Convert comments to octave mode.
+
+	* motion_octave.m:
+	  Adding octave version of Miller's motion.m.
+
+	* motion.pro:
+	  No longer needed.
+
+	* flux.py:
+	  Specify padlen to filtfilt() to be replicate Matlab's behaviour.
+
+	* db_flux_prep.py:
+	  Add example to replicate Miller's results.
+
+2014-12-10  spluque@gmail.com
+
+	* db_flux_prep.py, flux.py:
+	  New Python processing module and script.
+
+2014-09-24  spluque@gmail.com
+
+	* db_flux.pro:
+	  Renaming motion corrected output headers. Use corrected 3D wind
+	  for gas analyses.
+
+	* control.inc:
+	  Adding some instructions for 2013 data.
+
+2014-09-09  spluque@gmail.com
+
+	* db_flux.pro:
+	  Factor out the sampling rate in Hz.
+
+	  Separate the levelled Motion Pak matrix, and use that downstream.
+
+	* level_motionpak.pro:
+	  Simplify message.
+
+2014-09-08  spluque@gmail.com
+
+	* motion.pro:
+	  Starting work on new motion correction routine.
+
+	* std.pro:
+	  Create output directory if not there.
+
+	* db_flux.pro:
+	  Inconsequential rearrangement of signs for 'low-frequency' pitch
+	  and yaw.
+
+2014-08-25  spluque@gmail.com
+
+	* Templates/rad_raw.sav:
+	  This is the version that should be used for post 2013 data.
+
+2014-08-14  spluque@gmail.com
+
+	* level_sonic.pro:
+	  Fix instruction comments.
+
+	* db_flux.pro:
+	  Use level_motionpak output for level_sonic, and cleanup of
+	  comments and minor naming issues.
+
+2014-08-13  spluque@gmail.com
+
+	* flux.pro:
+	  Rename gravity threshold check.
+
+2014-07-21  spluque@gmail.com
+
+	* db_flux.pro:
+	  Moving levelling of sonic anemometer after levelling of Motion
+	  Pak, and providing output for each step of the process.
+
 2014-07-04  spluque@gmail.com
 
 	* read_std_file.pro:
