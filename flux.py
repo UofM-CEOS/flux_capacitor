@@ -181,7 +181,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
         scalar if the same cutoff is used for the three components, or a 3
         element vector to indicate cutoff period for the `x`, `y`, `z`
         components.
-    tilt_motion: array_like
+    tilt_motion : array_like
         [roll, pitch] vector with mean tilt (radians) relative to a
         horizontal plane.  `Roll` angle offset is positive is port side up,
         and `pitch` is positive for bow down (see Miller 2008 for info, set
@@ -387,11 +387,11 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     ## Also, the y- and z-components are zero (ie, captured by the
     ## integrated accelerometers).
     n = len(speed)
-    us = np.column_stack((speed -
+    Us = np.column_stack((speed -
                           signal.filtfilt(bax, aax, speed, padlen=pdlx),
                           np.zeros((n, 1)), np.zeros((n, 1))))
 
-    UVW = Ur + Ua + Up + us     # corrected wind vector
+    UVW = Ur + Ua + Up + Us     # corrected wind vector
 
     # Organize outputs
     EA_rate = np.column_stack(((np.cumsum(rx) - 0.5 * rx - 0.5 * rx[0]) /
@@ -408,7 +408,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     u_ea = np.column_stack((np.zeros((n, 1)),
                             np.zeros((n, 1)),
                             (heading_rhs + np.pi / 2) * np.ones((n, 1))))
-    U_ship = euler_translate(us, u_ea)
+    U_ship = euler_translate(Us, u_ea)
     U_earth = euler_translate(UVW, u_ea)
     # Platform displacement
     xp = (np.cumsum(Up, 0) - 0.5 * Up -
