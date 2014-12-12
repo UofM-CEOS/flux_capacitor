@@ -219,34 +219,46 @@ for ec_period in ec_files[0:3]:
                          10.0, 10.0, 20.0, [0.0, 0.0], [0.0, 0.0])
     # Ship-referenced speeds
     uvw_ship = UVW[0]
+    # Earth-referenced speeds
+    uvw_earth = UVW[11]
     # Append corrected wind vectors to DataFrame
-    wind_corr_names = ["wind_speed_u_corr", "wind_speed_v_corr",
-                       "wind_speed_w_corr"]
-    wind[wind_corr_names[0]] = pd.Series(UVW[11][:, 0], index=wind.index)
-    wind[wind_corr_names[1]] = pd.Series(UVW[11][:, 1], index=wind.index)
-    wind[wind_corr_names[2]] = pd.Series(UVW[11][:, 2], index=wind.index)
+    wind_corr_names = ["wind_speed_u_ship", "wind_speed_v_ship",
+                       "wind_speed_w_ship", "wind_speed_u_earth",
+                       "wind_speed_v_earth", "wind_speed_w_earth"]
+    wind[wind_corr_names[0]] = pd.Series(uvw_ship[:, 0], index=wind.index)
+    wind[wind_corr_names[1]] = pd.Series(uvw_ship[:, 1], index=wind.index)
+    wind[wind_corr_names[2]] = pd.Series(uvw_ship[:, 2], index=wind.index)
+    wind[wind_corr_names[3]] = pd.Series(uvw_earth[:, 0],
+                                         index=wind.index)
+    wind[wind_corr_names[4]] = pd.Series(uvw_earth[:, 1],
+                                         index=wind.index)
+    wind[wind_corr_names[5]] = pd.Series(uvw_earth[:, 2],
+                                         index=wind.index)
 
-    # Plot smoothed and corrected data for each vector
-    fig, axs = plt.subplots(3, 1, sharex=True)
-    fig.set_size_inches((11, 9))
-    wind[["wind_speed_u", "wind_speed_u_corr"]].plot(ax=axs[0],
-                                                     legend=False)
-    axs[0].set_title("U"); axs[0].set_xlabel('')
-    wind[["wind_speed_v", "wind_speed_v_corr"]].plot(ax=axs[1],
-                                                     legend=False)
-    axs[1].set_title("V")
-    axs[1].set_ylabel("Wind speed [m/s/s]"); axs[1].set_xlabel('')
-    wind[["wind_speed_w", "wind_speed_w_corr"]].plot(ax=axs[2],
-                                                     rot=0,
-                                                     legend=False)
-    axs[2].set_title("W"); axs[2].set_xlabel('')
-    leg = axs[2].legend(loc=9, bbox_to_anchor=(0.5, -0.1),
-                        title=iname_prefix, frameon=False,
-                        borderaxespad=0, ncol=3)
-    # axs[1].set_xticklabels(wind.index, rotation=0, ha="center")
-    fig.tight_layout()
-    fig.savefig(iname_prefix + ".png", bbox_extra_artists=(leg,),
-                bbox_inches="tight")
+    # # Plot smoothed and corrected data for each vector. Turned off for
+    # # production of output files.
+    # fig, axs = plt.subplots(3, 1, sharex=True)
+    # fig.set_size_inches((11, 9))
+    # wind[["wind_speed_u", "wind_speed_u_corr"]].plot(ax=axs[0],
+    #                                                  legend=False)
+    # axs[0].set_title("U"); axs[0].set_xlabel('')
+    # wind[["wind_speed_v", "wind_speed_v_corr"]].plot(ax=axs[1],
+    #                                                  legend=False)
+    # axs[1].set_title("V")
+    # axs[1].set_ylabel("Wind speed [m/s/s]"); axs[1].set_xlabel('')
+    # wind[["wind_speed_w", "wind_speed_w_corr"]].plot(ax=axs[2],
+    #                                                  rot=0,
+    #                                                  legend=False)
+    # axs[2].set_title("W"); axs[2].set_xlabel('')
+    # leg = axs[2].legend(loc=9, bbox_to_anchor=(0.5, -0.1),
+    #                     title=iname_prefix, frameon=False,
+    #                     borderaxespad=0, ncol=3)
+    # leg.get_texts()[0].set_text("Measured (de-spiked)")
+    # leg.get_texts()[1].set_text("Corrected (ship reference)")
+    # # axs[1].set_xticklabels(wind.index, rotation=0, ha="center")
+    # fig.tight_layout()
+    # fig.savefig(iname_prefix + ".png", bbox_extra_artists=(leg,),
+    #             bbox_inches="tight")
 
 
 
