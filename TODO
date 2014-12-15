@@ -419,6 +419,19 @@ There's a reason ISO implemented a standard for time information.
 * Use read_std_file throughout for standardized files
 
 
+* Questions regarding S. Miller's motion.m
+
+** Output definitions
+
+I don't understand what all the outputs mean.
+
+I do understand that the first argument is the ship-referenced wind
+vectors, without the north offset of our anemometer.  However, if we
+eventually want the earth-referenced winds, the script does output that.
+It sounds as though this is true wind.
+
+
+
 * Emacs local variables
 
 #+STARTUP: content
