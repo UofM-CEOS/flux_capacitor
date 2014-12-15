@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# $Id: $
+# $Id$
 
 """Utility for configuring user variables for flux analyses."""
 
 import configparser as cfg
 from collections import OrderedDict
-from os import getenv, getcwd
+from os import getcwd
 import os.path as osp
 import re
 
@@ -19,6 +19,10 @@ dflts = {
     "motion2anemometer_pos": '0.0, 0.0, 0.0',
     "complementary_filter_period": '10.0',
     "accel_highpass_cutoff": '20.0'}
+# Scalar option names
+scalar_opts = ['sample_frequency', 'complementary_filter_period',
+               'accel_highpass_cutoff']
+vector_opts = ['motion2anemometer_pos']
 
 # Ordered dictionary based on dflts to give to the parser
 dflt_dict = OrderedDict((
@@ -44,38 +48,64 @@ dflt_dict = OrderedDict((
  ),))
 
 
-config = cfg.ConfigParser()     # set up the parser
-config.read_dict(dflt_dict)     # set up our specific defaults
-config.read('flux.cfg')         # replace defaults with what we're given
+def parse_config(cfg_file):
+    """Parse configuration file for essential variables for flux analysis.
 
-# Copy where we'll replace strings with other types
-py_dict = dflt_dict.copy()
-# Loop through all items and clean them to generate our variables
-for section in config.sections():
-    for option in config.options(section):
-        opt_value = config.get(section, option)
-        # Just replace and skip if we have the same as defaults
-        if (dflt_dict[section][option] == opt_value):
-            py_dict[section][option] = opt_value.split(',')
-            continue
-        # Remove double quotes, newlines, and spaces
-        clean_opt = re.sub('["\n ]+', '', opt_value)
-        config.set(section, option, clean_opt)
-        # Replace values with lists, splitting on comma character, on our
-        # local dictionary
-        py_dict[section][option] = opt_value.split(',')
+    Parameters
+    ----------
+    cfg_file : string
+        Path to configuration file.
 
-# Work on each item manually because we need specific checks
+    Returns
+    -------
+    Ordered dictionary with variables for each section.
 
-# Check input directory exists
-if (~ osp.exists(py_dict['Inputs']['input_directory'][0])):
-    raise Exception("Input directory doesn't exist")
+    """
+    config = cfg.ConfigParser()     # set up the parser
+    config.read_dict(dflt_dict)     # set up our specific defaults
+    config.read_file(open(cfg_file)) # replace defaults with what
+                                     # we're given
+    # Copy where we'll replace strings with other types
+    py_dict = dflt_dict.copy()
+    # Loop through all items and clean them to generate our variables as
+    # lists of strings
+    for sec in config.sections():
+        for opt in config.options(sec):
+            opt_value = config.get(sec, opt)
+            # Just replace and skip if we have the same as defaults
+            if (dflt_dict[sec][opt] == opt_value):
+                py_dict[sec][opt] = opt_value.split(',')
+                continue
+            # Otherwise move on and remove double quotes, newlines, and
+            # spaces
+            clean_opt = re.sub('["\n ]+', '', opt_value)
+            config.set(sec, opt, clean_opt)
+            # Replace values with lists, splitting on comma character, on
+            # our local dictionary
+            py_dict[sec][opt] = opt_value.split(',')
 
-# Check if we have a valid sampling frequency
-sample_frequency = float(py_dict['Inputs']['sample_frequency'][0])
-if (sample_frequency <= 0):
-    raise Exception("Sampling frequency must be greater than zero")
+    # Loop again to extract single elements, and convert to floats and
+    # arrays where needed
+    for sec in config.sections():
+        for opt in config.options(sec):
+            # If we have a single element list, remove the container list
+            if (len(py_dict[sec][opt]) == 1):
+                py_dict[sec][opt] = py_dict[sec][opt][0]
+            if (opt in scalar_opts):
+                py_dict[sec][opt] = float(py_dict[sec][opt])
+            elif (opt in vector_opts):
+                py_dict[sec][opt] = [float(x) for x in py_dict[sec][opt]]
 
-# Check if directory for summary file exists
-if (~ osp.exists(osp.dirname(py_dict['Outputs']['summary_file'][0]))):
-    raise Exception("Directory for summary file doesn't exist")
+    # Check input directory exists
+    if (not osp.exists(py_dict['Inputs']['input_directory'])):
+        raise Exception("Input directory doesn't exist")
+
+    # Check if we have a valid sampling frequency
+    if (py_dict['Inputs']['sample_frequency'] <= 0):
+        raise Exception("Sampling frequency must be greater than zero")
+
+    # Check if directory for summary file exists
+    if (not osp.exists(osp.dirname(py_dict['Outputs']['summary_file']))):
+        raise Exception("Directory for summary file doesn't exist")
+
+    return py_dict
