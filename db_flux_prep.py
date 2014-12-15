@@ -18,9 +18,9 @@ import matplotlib.pyplot as plt
 
 plt.style.use('ggplot')
 
-# Main variables
+# Parse configuration file
 
-# 1. Position from motion sensor to anemometer
+# 1. Position from motion sensor to anemometer (3 floats)
 mot2anem_pos = [1.7, 0, 2.725]
 # 2. Input directory and file glob to search
 ec_idir = '/home/sluque/Data/ArcticNet/2011/FromDB'
