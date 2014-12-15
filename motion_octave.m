@@ -1,7 +1,7 @@
 # $Id$
 
-function [u, varargout]=motion_octave(um, am, rm, gyro, speed, r, sf, Tcf,
-				      Ta, tilt_ms, tilt_anem, OutputVars)
+function [u, varargout] = motion_octave(um, am, rm, gyro, speed, r, sf, Tcf,
+					Ta, tilt_ms, tilt_anem, OutputVars)
 # =========================================================================
 # MOTION.M - corrects wind vector measurements from a moving platform. The
 #     method is based on a 3-dimensional wind sensor, and a 6 degree of
