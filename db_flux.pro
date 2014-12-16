@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2014-09-24T18:38:48+0000
+;; Last-Updated: 2014-12-02T19:33:56+0000
 ;;           By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -119,8 +119,7 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
          message, 'OFILE must be a string scalar'
   idir_files=file_search(idir + path_sep() + '*', count=nidir_files, $
                          /nosort, /fold_case, /test_regular)
-  IF (nidir_files EQ 0) THEN $
-        message, 'No files in at least one of IDIR or DIAG_DIR, '
+  IF (nidir_files EQ 0) THEN message, 'No files in IDIR'
 
   ;; Standard time names (output from read_iso_file())
   stdtime_names=['year', 'month', 'day', 'hour', 'minute', 'second']
@@ -154,6 +153,9 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
             'pkt_FCO2_op', 'pkt_loop', 'cflux_det', 'dRH_by_dq', $
             'dc_by_dRH_initial', 'dc_by_dRH_final', 'dc_by_dq_initial', $
             'dc_by_dq_final']
+  okeys_cl=['CO2_cl', 'H2O_cl', 'cov_w_XCO2_cl', 'cf_wXCO2_cl', $
+            'FCO2_cl', 'lag_CO2_cl', 'cov_w_XH2O_cl', 'cf_wXH2O_cl', $
+            'E_cl', 'Qe_cl', 'lag_H2O_cl']
   okeys_calc=['sonic_speed', 'sonic_direction', 'true_sonic_speed', $
                 'true_sonic_direction', 'vertical', 'open_flag', $
                 'sonic_flag', 'motion_flag', 'sonic_NAN_pct', $
@@ -162,7 +164,7 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                'CE10', 'zQ', 'peakF', 'dist90', 'psim', 'psih', 'U10N', $
                'U10Nocean']
   okeys=['time', 'DOY', okeys_diag, okeys_mom, okeys_op, 'diag_op', $
-         okeys_calc, okeys_micro]
+         okeys_cl, okeys_calc, okeys_micro]
   fluxes=hash(okeys)            ; just empty keys; we'll be appending data
 
   FOREACH ifile, idir_files DO BEGIN
@@ -243,6 +245,7 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      ;; [Original comment: create flags for the 4 possible sources of
      ;; "bad" data, flag=0 means data good]
      open_flag=0
+     closed_flag=0
      sonic_flag=0
      motion_flag=0
 
@@ -250,16 +253,18 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      ;; (not worried about the odd one scattered here and there)]
      bad_co2_op=where(~finite(flux.op_co2_density), nbad_co2_op)
      bad_h2o_op=where(~finite(flux.op_h2o_density), nbad_h2o_op)
-     ;; bad_diag_op=where(~finite(fix(flux.diag_op)), nbad_diag_op)
-     ;; ;; [Original comment: set open flag if gt 2% of records are 'NAN']
-     ;; IF (float(nbad_co2_op) / flux_times_dims[1] * 100.0 GT 2) OR $
-     ;;    (float(nbad_h2o_op) / flux_times_dims[1] * 100.0 GT 2) OR $
-     ;;    (float(nbad_diag_op) / flux_times_dims[1] * 100.0 GT 2) THEN $
-     ;;       open_flag=1
+     nan_diag_op=where(flux.op_analyzer_status EQ 'NAN', /NULL)
+     flux.op_analyzer_status[nan_diag_op]=''
+     bad_diag_op=where(~finite(fix(flux.op_analyzer_status)), nbad_diag_op)
      ;; [Original comment: set open flag if gt 2% of records are 'NAN']
      IF (float(nbad_co2_op) / flux_times_dims[1] * 100.0 GT 2) OR $
-        (float(nbad_h2o_op) / flux_times_dims[1] * 100.0 GT 2) THEN $
+        (float(nbad_h2o_op) / flux_times_dims[1] * 100.0 GT 2) OR $
+        (float(nbad_diag_op) / flux_times_dims[1] * 100.0 GT 2) THEN $
            open_flag=1
+     ;; [Original comment: set open flag if gt 2% of records are 'NAN']
+     ;; IF (float(nbad_co2_op) / flux_times_dims[1] * 100.0 GT 2) OR $
+     ;;    (float(nbad_h2o_op) / flux_times_dims[1] * 100.0 GT 2) THEN $
+     ;;       open_flag=1
 
      bad_u=where(~finite(wind_u), nbad_u)
      bad_v=where(~finite(wind_v), nbad_v)
@@ -289,6 +294,16 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         (float(nbad_rate_shi) / flux_times_dims[1] * 100.0 GT 2) THEN $
            motion_flag=1
 
+     bad_co2_cl=where(~finite(flux.cp_co2_fraction), nbad_co2_cl)
+     bad_h2o_cl=where(~finite(flux.cp_h2o_fraction), nbad_h2o_cl)
+     bad_pressure_cl=where(~finite(flux.cp_pressure), nbad_pressure_cl)
+     irgaNANs=float(nbad_co2_cl / flux_times_dims[1] * 100.0)
+     ;; [Original comment: set closed flag if gt 2% of records are 'NAN']
+     IF (float(nbad_co2_cl) / flux_times_dims[1] * 100.0 GT 2) OR $
+        (float(nbad_h2o_cl) / flux_times_dims[1] * 100.0 GT 2) OR $
+        (float(nbad_pressure_cl) / flux_times_dims[1] * 100.0 GT 2) THEN $
+           closed_flag=1
+
      ;; [Original comment: now that we have looked for NANs, we may as
      ;; well fill in the NANs and any spikes using the shot filter].
      ;; [SPL: these changes are done outside the WIND array, which is
@@ -316,13 +331,35 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                            nbad_h2o_op)
         IF (nbad_co2_op GT 0) OR (nbad_h2o_op GT 0) THEN open_flag=1
      ENDIF
+     IF closed_flag NE 1 THEN BEGIN
+        flux.cp_co2_fraction=shot_filter(flux.cp_co2_fraction)
+        flux.cp_h2o_fraction=shot_filter(flux.cp_h2o_fraction)
+        flux.cp_pressure=shot_filter(flux.cp_pressure)
+        flux.cp_temperature=shot_filter(flux.cp_temperature)
+        fco2_cl=flux.cp_co2_fraction
+        bad_co2_cl=where(abs(fco2_cl - mean(fco2_cl, /NAN)) GT $
+                           (6.0 * stddev(fco2_cl, /NAN)), nbad_co2_cl)
+        fh2o_cl=flux.cp_h2o_fraction
+        bad_h2o_cl=where(abs(fh2o_cl - mean(fh2o_cl, /NAN)) GT $
+                           (6.0 * stddev(fh2o_cl, /NAN)), nbad_h2o_cl)
+        fp_cl=flux.cp_pressure
+        bad_pressure_cl=where(abs(fp_cl - mean(fp_cl, /NAN)) GT $
+                                (6.0 * stddev(fp_cl, /NAN)), $
+                                nbad_pressure_cl)
+        ft_cl=flux.cp_temperature
+        bad_temperature_cl=where(abs(ft_cl - mean(ft_cl, /NAN)) GT $
+                                   (6.0 * stddev(ft_cl, /NAN)), $
+                                   nbad_temperature_cl)
+        IF (nbad_co2_cl GT 0) OR (nbad_h2o_cl GT 0) OR $
+           (nbad_pressure_cl GT 0) THEN closed_flag=1
+     ENDIF
 
-     ;;       ;; Check for high or low diagnostic flags (set open flag if more
-     ;;       ;; than 2% of records have them)
-     ;;       bad_diags=where((flux.diag_op GT 249) OR (flux.diag_op LT 240), $
-     ;;                       nbad_diags)
-     ;;       IF (float(nbad_diags) / flux_times_dims[1] * 100.0 GT 2) THEN $
-     ;;          open_flag=1
+     ;; Check for high or low diagnostic flags (set open flag if more
+     ;; than 2% of records have them)
+     bad_diags=where((flux.op_analyzer_status GT 249) OR $
+                       (flux.op_analyzer_status LT 240), nbad_diags)
+     IF (float(nbad_diags) / flux_times_dims[1] * 100.0 GT 2) THEN $
+        open_flag=1
 
      ;; [Original comment: check for bad wind data: bad wind data can
      ;; usually be diagnosed by unusually high wind speeds.  this is
@@ -363,7 +400,7 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
      ;; Mean radiation
      sw_avg=flux.k_down[0]
-     lw_avg=flux.lw_in[0]
+     lw_avg=flux.lw_down[0]
 
      ;; Get RMC
      latitude=flux.latitude
@@ -543,7 +580,9 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
         ;; [SPL: Watch TRUEWIND_SONIC function, which redundantly uses
         ;; truewind.pro code.  See note above regarding these variables
         ;; needed later; what to do if the test in this block (e.g. SOG is
-        ;; too low) fails?]
+        ;; too low) fails? Also notice the offset of the sonic anemometer:
+        ;; 337 degrees -- this should be factored out into a parameter for
+        ;; db_flux]
         u_true=truewind_sonic(wind_corr[0, *], wind_corr[1, *], cog, $
                                 sog / 1.9438449, heading, 337.0)
         wind_corr[0, *]=u_true[0, *]
@@ -562,6 +601,24 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
 
      ;; Output motion corrected (if it was needed) data
      omc_tags=[stdtime_names, $
+                 'longitude', $
+                 'latitude', $
+                 'speed_over_ground', $
+                 'course_over_ground', $
+                 'heading', $
+                 'atmospheric_pressure', $
+                 'air_temperature', $
+                 'relative_humidity', $
+                 'surface_temperature', $
+                 'wind_speed', $
+                 'wind_direction', $
+                 'true_wind_speed', $
+                 'true_wind_direction', $
+                 'PAR', $
+                 'K_down', $
+                 'LW_down', $
+                 'UV_b', $
+                 'UV_broad', $
                  'wind_speed_u', $
                  'wind_speed_v', $
                  'wind_speed_w', $
@@ -571,11 +628,9 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                  'wind_speed_u_corr', $
                  'wind_speed_v_corr', $
                  'wind_speed_w_corr', $
-                 'sonic_temperature', $
-                 'CO2_op', $
-                 'H2O_op', $
-                 'pressure_op', $
-                 'diag_op', $
+                 'air_temperature_sonic', $
+                 'sound_speed', $
+                 'anemometer_status', $
                  'accel_x', $
                  'accel_y', $
                  'accel_z', $
@@ -588,11 +643,23 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                  'rate_phi_lev', $
                  'rate_theta_lev', $
                  'rate_shi_lev', $
-                 'latitude', $
-                 'longitude', $
-                 'SOG', $
-                 'COG', $
-                 'heading']
+                 'op_CO2_density', $
+                 'op_H2O_density', $
+                 'op_pressure', $
+                 'op_temperature', $
+                 'op_cooler_voltage', $
+                 'op_bandwidth', $
+                 'op_delay_interval', $
+                 'op_analyzer_status', $
+                 'cp_CO2_fraction', $
+                 'cp_H2O_fraction', $
+                 'cp_pressure', $
+                 'cp_temperature', $
+                 'cp_temperature_in', $
+                 'cp_temperature_out', $
+                 'cp_temperature_block', $
+                 'cp_temperature_cell', $
+                 'cp_analyzer_status']
      omot_corr=create_struct(stdtime_names[0], reform(flux_times[0, *]))
      FOREACH tfld, stdtime_names[1:*] DO BEGIN ; include all time data
         tfld_idx=where(stdtime_names EQ tfld)
@@ -601,6 +668,24 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      ENDFOREACH
      omot_corr=create_struct(omot_corr, $
                                omc_tags[n_elements(stdtime_names):*], $
+                               flux.longitude, $
+                               flux.latitude, $
+                               flux.speed_over_ground, $
+                               flux.course_over_ground, $
+                               flux.heading, $
+                               flux.atmospheric_pressure, $
+                               flux.air_temperature, $
+                               flux.relative_humidity, $
+                               flux.surface_temperature, $
+                               flux.wind_speed, $
+                               flux.wind_direction, $
+                               flux.true_wind_speed, $
+                               flux.true_wind_direction, $
+                               flux.par, $
+                               flux.k_down, $
+                               flux.lw_down, $
+                               flux.uv_b, $
+                               flux.uv_broad, $
                                reform(wind_raw[0, *]), $
                                reform(wind_raw[1, *]), $
                                reform(wind_raw[2, *]), $
@@ -611,10 +696,8 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                reform(wind_corr[1, *]), $
                                reform(wind_corr[2, *]), $
                                sonic_temperature, $
-                               flux.op_co2_density, $
-                               flux.op_h2o_density, $
-                               flux.op_pressure, $
-                               flux.op_analyzer_status, $
+                               flux.sound_speed, $
+                               flux.anemometer_status, $
                                reform(accel_raw[0, *]), $
                                reform(accel_raw[1, *]), $
                                reform(accel_raw[2, *]), $
@@ -627,15 +710,26 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
                                reform(rate_lev[0, *]), $
                                reform(rate_lev[1, *]), $
                                reform(rate_lev[2, *]), $
-                               latitude, $
-                               longitude, $
-                               sog, $
-                               cog, $
-                               heading)
+                               flux.op_co2_density, $
+                               flux.op_h2o_density, $
+                               flux.op_pressure, $
+                               flux.op_temperature, $
+                               flux.op_cooler_voltage, $
+                               flux.op_bandwidth, $
+                               flux.op_delay_interval, $
+                               flux.op_analyzer_status, $
+                               flux.cp_co2_fraction, $
+                               flux.cp_h2o_fraction, $
+                               flux.cp_pressure, $
+                               flux.cp_temperature, $
+                               flux.cp_temperature_in, $
+                               flux.cp_temperature_out, $
+                               flux.cp_temperature_block, $
+                               flux.cp_temperature_cell, $
+                               flux.cp_analyzer_status)
      file_mkdir, mot_corr_odir
      mc_ofile_name=strcompress(mot_corr_odir + path_sep() + $
-                                 iname_prefix + '_' + 'mc.' + $
-                                 iname[1], /remove_all)
+                                 iname_prefix + '_' + 'mc.' + iname[1])
      mc_ofile_stamp=file_basename(mc_ofile_name)
      mc_out_list=file_search(mot_corr_odir + path_sep() + '*.' + $
                                iname[1], /nosort, /fold_case, /test_regular)
@@ -656,272 +750,285 @@ PRO DB_FLUX, IDIR, ITEMPLATE_SAV, TIME_IDX, ISAMPLE_RATE, $
      ENDELSE
      delvar, omot_corr
   
-     ;; Eddy covariance calculations
-     mom=ec_momentum(wind_corr, sonic_temperature, $
-                       flux.air_temperature[0], $
-                       flux.relative_humidity[0], $
-                       flux.atmospheric_pressure[0], $
-                       float(ec_period) / 60, $ ; in minutes
-                       sf_hz, CORR_MASSMAN=[isample_rate, 0.145])
+     ;; ;; Eddy covariance calculations
+     ;; mom=ec_momentum(wind_corr, sonic_temperature, $
+     ;;                   flux.air_temperature[0], $
+     ;;                   flux.relative_humidity[0], $
+     ;;                   flux.atmospheric_pressure[0], $
+     ;;                   float(ec_period) / 60, $ ; in minutes
+     ;;                   sf_hz, CORR_MASSMAN=[isample_rate, 0.145])
 
-     ;; Open path calculations.  IF TEST FAILS, THEN WE CREATE AN ARRAY
-     ;; WITH THE SAME DIMENSIONS AS THAT RETURNED BY EC_OPEN, for
-     ;; printing purposes.
-     IF open_flag NE 1 THEN BEGIN
-        open_path=ec_open(wind_corr, sonic_temperature, flux.op_co2_density, $
-                            flux.op_h2o_density, flux.op_pressure, $
-                            float(ec_period) / 60, $ ; in minutes
-                            sf_hz, $
-                            CORR_MASSMAN=[isample_rate, 0.145, -0.04, $
-                                            0.38, !VALUES.D_NAN, 0.01, $
-                                            0.125], $
-                            BURBA=[sw_avg, lw_avg, raw_sonic_spd], $
-                            pkt=mom[2])
-     ENDIF ELSE open_path=make_array(27, value=!VALUES.D_NAN)
+     ;; ;; Open path calculations.  IF TEST FAILS, THEN WE CREATE AN ARRAY
+     ;; ;; WITH THE SAME DIMENSIONS AS THAT RETURNED BY EC_OPEN, for
+     ;; ;; printing purposes.
+     ;; IF open_flag NE 1 THEN BEGIN
+     ;;    open_path=ec_open(wind_corr, sonic_temperature, flux.op_co2_density, $
+     ;;                        flux.op_h2o_density, flux.op_pressure, $
+     ;;                        float(ec_period) / 60, $ ; in minutes
+     ;;                        sf_hz, $
+     ;;                        CORR_MASSMAN=[isample_rate, 0.145, -0.04, $
+     ;;                                        0.38, !VALUES.D_NAN, 0.01, $
+     ;;                                        0.125], $
+     ;;                        BURBA=[sw_avg, lw_avg, raw_sonic_spd], $
+     ;;                        pkt=mom[2])
+     ;; ENDIF ELSE open_path=make_array(27, value=!VALUES.D_NAN)
 
-     ;; Closed-path flow rate for 2010 = 11.5 LPM.  Sample tube length
-     ;; for 2010 = 8.0m.  Do closed path calculations if available.  IF
-     ;; CLOSED FLAG IS UP, THEN WE CREATE AN ARRAY OF SAME DIMENSIONS AS
-     ;; THAT RETURNED BY EC_CLOSED, for printing purposes.
-     IF closed_flag EQ 0 THEN BEGIN
-        cl_flow=11.5            ; NEED LUT FOR FLOW RATE
-        closed_path=ec_closed(wind_corr, flux.co2_cl, flux.h2o_cl, $
-                                flux.pressure_cl, flux.temperature_cl, $
-                                flux.air_temperature[0], $
-                                flux.relative_humidity[0], $
-                                flux.atmospheric_pressure[0], [-10, 50], $
-                                float(ec_period) / 60, $ ; in minutes
-                                sf_hz, $
-                                CORR_MASSMAN=[isample_rate, 0.10, -0.06, $
-                                                0.44, !VALUES.D_NAN, $
-                                                !VALUES.D_NAN, $
-                                                !VALUES.D_NAN, cl_flow, $
-                                                0.005, 8.0])
-     ENDIF ELSE closed_path=make_array(11, value=!VALUES.D_NAN)
+     ;; ;; Closed-path flow rate for 2010 = 11.5 LPM.  Sample tube length
+     ;; ;; for 2010 = 8.0m.  Do closed path calculations if available.  IF
+     ;; ;; CLOSED FLAG IS UP, THEN WE CREATE AN ARRAY OF SAME DIMENSIONS AS
+     ;; ;; THAT RETURNED BY EC_CLOSED, for printing purposes.
+     ;; IF closed_flag EQ 0 THEN BEGIN
+     ;;    cl_flow=11.5            ; NEED LUT FOR FLOW RATE
+     ;;    closed_path=ec_closed(wind_corr, flux.cp_co2_fraction, $
+     ;;                            flux.cp_h2o_fraction, flux.cp_pressure, $
+     ;;                            flux.cp_temperature, $
+     ;;                            flux.air_temperature[0], $
+     ;;                            flux.relative_humidity[0], $
+     ;;                            flux.atmospheric_pressure[0], [-10, 50], $
+     ;;                            float(ec_period) / 60, $ ; in minutes
+     ;;                            sf_hz, $
+     ;;                            CORR_MASSMAN=[isample_rate, 0.10, -0.06, $
+     ;;                                            0.44, !VALUES.D_NAN, $
+     ;;                                            !VALUES.D_NAN, $
+     ;;                                            !VALUES.D_NAN, cl_flow, $
+     ;;                                            0.005, 8.0])
+     ;; ENDIF ELSE closed_path=make_array(11, value=!VALUES.D_NAN)
 
-     ;; MICROMET CALCULATIONS
+     ;; ;; MICROMET CALCULATIONS
 
-     ;; Here, we make a number of micromet calculations that calculate
-     ;; the following things:
-     ;;  - 10m wind speed
-     ;;  - zo
-     ;;  - footprint modeling
-     ;;  - CD_10m, CH_10m, CV_10m
+     ;; ;; Here, we make a number of micromet calculations that calculate
+     ;; ;; the following things:
+     ;; ;;  - 10m wind speed
+     ;; ;;  - zo
+     ;; ;;  - footprint modeling
+     ;; ;;  - CD_10m, CH_10m, CV_10m
      
-     ;; The following publications are heavily used, and I will try to
-     ;; cite them and specific eq'ns: Andreas et al. 2005, BLM
-     ;; 114:439-460 Jordan et al. 1999, JGR 104 No. C4:7785-7806
+     ;; ;; The following publications are heavily used, and I will try to
+     ;; ;; cite them and specific eq'ns: Andreas et al. 2005, BLM
+     ;; ;; 114:439-460 Jordan et al. 1999, JGR 104 No. C4:7785-7806
      
-     ;; First, we need to extract the measurement height... we'll just
-     ;; give it a value of 14.1m... come back to that
-     zm=14.1 
-     ;; couple of constants
-     vonk=0.4                   ; von karman constant
-     Rval=8.31451               ; j/mol/k universal gas constant
-     mv=18.02                   ; g/mol molecular weight for water, Stull(1995)
-     ma=28.96                   ; g/mol molecular weight for dry air, Stull(1995)
-     ;; J/g/K specific heat for dry air at constant pressure Stull(1995)
-     cpd=1004.67 / 1000.0
+     ;; ;; First, we need to extract the measurement height... we'll just
+     ;; ;; give it a value of 14.1m... come back to that
+     ;; zm=14.1 
+     ;; ;; couple of constants
+     ;; vonk=0.4                   ; von karman constant
+     ;; Rval=8.31451               ; j/mol/k universal gas constant
+     ;; mv=18.02                   ; g/mol molecular weight for water, Stull(1995)
+     ;; ma=28.96                   ; g/mol molecular weight for dry air, Stull(1995)
+     ;; ;; J/g/K specific heat for dry air at constant pressure Stull(1995)
+     ;; cpd=1004.67 / 1000.0
      
-     ;; Now, we need to calculate the air density.  Sat'n vapour
-     ;; pressure (Pa)
-     es_met=[6.112 * exp((17.67 * flux.air_temperature[0]) / $
-                           (flux.air_temperature[0] + 243.5))] * $
-            100.0
-     ;; Vapour pressure (Pa)
-     ev_met=(flux.relative_humidity[0] / double(100)) * es_met
-     ;;  mol 
-     c_h2o_met=ev_met / (Rval * (flux.air_temperature[0] + 273.15))
-     rho_v_met=c_h2o_met * mv   ; g/m3
-     rho_d_met=((flux.atmospheric_pressure[0] * double(1000) - ev_met) / $
-                  (Rval * (flux.air_temperature[0] + 273.15))) * ma
-     rhoa=(rho_v_met + rho_d_met) / 1000.0 ; kg/m3
+     ;; ;; Now, we need to calculate the air density.  Sat'n vapour
+     ;; ;; pressure (Pa)
+     ;; es_met=[6.112 * exp((17.67 * flux.air_temperature[0]) / $
+     ;;                       (flux.air_temperature[0] + 243.5))] * $
+     ;;        100.0
+     ;; ;; Vapour pressure (Pa)
+     ;; ev_met=(flux.relative_humidity[0] / double(100)) * es_met
+     ;; ;;  mol 
+     ;; c_h2o_met=ev_met / (Rval * (flux.air_temperature[0] + 273.15))
+     ;; rho_v_met=c_h2o_met * mv   ; g/m3
+     ;; rho_d_met=((flux.atmospheric_pressure[0] * double(1000) - ev_met) / $
+     ;;              (Rval * (flux.air_temperature[0] + 273.15))) * ma
+     ;; rhoa=(rho_v_met + rho_d_met) / 1000.0 ; kg/m3
 
-     ;; Calculate CD at measurement height.  CD at measurement height,
-     ;; Andreas (2005), eqn, 10a)
-     CDm=mom[3] / (rhoa * true_sonic_spd ^ double(2))
+     ;; ;; Calculate CD at measurement height.  CD at measurement height,
+     ;; ;; Andreas (2005), eqn, 10a)
+     ;; CDm=mom[3] / (rhoa * true_sonic_spd ^ double(2))
      
-     ;; Drag coefficient should be positive... if not, do no more calcs
-     IF CDm GT 0 THEN BEGIN
-        ;; Calculate the wind profile modifiers.  Calculate the profile
-        ;; modifier for stable conditions (Jordan, 1999, eq 33)
-        IF zm / mom[4] GT 0.5 THEN BEGIN    
-           psim=-[((0.70 * zm) / mom[4]) + 0.75 * $
-                    ((zm / motpak_offset) - 14.3) * $
-                    exp((-0.35 * zm) / mom[4] ) + 10.7]
-           psih=psim
-        ENDIF
-        ;; Calculate the profile modifier for neutral/slightly stable
-        ;; (Jordan, 1999, eq 32)
-        IF zm / mom[4] GE 0 AND zm / mom[4] LE 0.5 THEN BEGIN
-           psim=-6.0 * (zm / mom[4])
-           psih=psim
-        ENDIF
-        ;; Calculate the profile modifier for unstable conditions
-        ;; (Jordan, 1999, eq 30)
-        IF zm / mom[4] LT 0 THEN BEGIN
-           xval=(1.0 - 16.0 * (zm / mom[4])) ^ (1.0 / 4.0)
-           psim=alog((1.0 + xval ^ 2.0) / 2.0) + 2.0 * $
-                alog((1.0 + xval) / 2.0) - 2.0 * atan(xval) + $
-                (!PI / 2.0)
-           ;; Jordan (1999), eq 31
-           psih=2.0 * alog((1.0 + xval ^ 2.0) / 2.0)
-        ENDIF
-        ;; Calculate the roughness length (Andreas, 2005, eq 12a)
-        z0=zm * EXP( -[vonk * CDm ^ (-0.5) + psim * (zm / mom[4])])
-        ;; Calculate the Drag coefficient at 10m (Andreas, 2005, eq 11a)
-        CD10=vonk ^ 2.0 / $
-             (alog(10.0 / z0) - psim * (10.0 / mom[4])) ^ 2.0
-        ;; Calculate wind speed at 10m & for interest sake, we'll see
-        ;; what our profile gives us for the measurement height wind
-        ;; speed...  Stull (1988), eq'n 9.7.5g
-        U10=[(1.0 / vonk) * $
-               (alog(10.0 / z0) + psim * (10.0 / mom[4]))] * mom[2]
-        Um=[(1.0 / vonk) * $
-              (alog(zm / z0) + psim * (zm / mom[4]))] * mom[2]
-        ;; Calculate the wind speed at 10m assuming neutral stability
-        U10N=[(double(1) / vonk) * (alog(zm / z0))] * mom[2]
-        ;; Calculate the wind speed at 10m assuming neutral stability
-        ;; AND that we're over the ocean
-        z0charnock=(0.016 * mom[2] ^ 2) / 9.81 ; Stull 9.7.2c
-        U10Nocean=[(double(1) / vonk) * $
-                     (alog(zm / z0charnock))] * mom[2]
-        ;; ;; Make call to the footprint routine, which follows Hsieh et
-        ;; ;; al. 2000, Advances in Water Resources 23 (2000) 765-777.
-        ;; ;; [SPL: Turning this off; it is taking way too much, stuck on
-        ;; ;; the while loop in hkt_footprint.pro.]
-        ;; foot_ofile_name=strcompress(footprint_odir + path_sep() + $
-        ;;                             iname_prefix + '_' + 'spec.ps', $
-        ;;                             /remove_all)
-        ;; IF finite(z0) EQ 1 THEN BEGIN
-        ;;    foot=hkt_footprint(mom[4], z0, zm, 1.0, 100.0, 0.99, $
-        ;;                       plot_file=foot_ofile_name)
-        ;; ENDIF
-        ;; peakF=foot[0]
-        ;; dist90=foot[1]
-        ;; Now we can also calculate the heat and water vapour transfer
-        ;; coefficients...  BUT BEWARE... fundamentally, we need surface
-        ;; T... we have to use our unreliable IR transducer for this...
-        ;; NOTE - using a new type of IR transducer starting in 2010
-        ;; which is more reliable
-        ;;  
-        ;; Calculate a few terms we'll need from the MET data.  Mean
-        ;; specific humidity (g_h2o/g_moist air)
-        mean_qh2o=rho_v_met / (rhoa * 1000.0)
-        ;; Mean specific heat capacity of moist air (J/g/K)
-        mean_cp=cpd * (1.0 + 0.84 * mean_qh2o)
-        IF (flux.air_temperature[0] GE 0) THEN $ ; vaporization
-           Lv=(2.50057 - 0.00245715 * $
-                 flux.air_temperature[0]) * 1000.0
-        IF (flux.air_temperature[0] LT 0) THEN $ ; sublimation
-           lv=(2.83539 - 0.000135713 * $
-                 flux.air_temperature[0]) * 1000.0
-        ;; Sat'n vapour pressure (Pa)
-        ev_surf=[6.112 * $
-                   EXP((17.67 * flux.surface_temperature[0]) / $
-                         (flux.surface_temperature[0] + 243.5))] * 100.0
-        c_h2o_surf=ev_surf / $
-                   (Rval * $
-                      (flux.surface_temperature[0] + 273.15)) ; mol
-        rho_v_surf=c_h2o_surf * mv                            ; g/m3
-        surf_qh2o=rho_v_surf / (rhoa * 1000.0) 
-        ;; Calculate the H coeficient and the T roughness length... from
-        ;; that get CH at 10m. Andreas (2005) eq'n 10b
-        CHm=open_path[2] / $
-            ((rhoa * 1000.0) * mean_cp * true_sonic_spd * $
-               (flux.surface_temperature[0] - $
-                  flux.air_temperature[0]) )
-        ;; Andreas (2005) eq'n 12b
-        zT=zm * EXP( -(vonk * CDm ^ (1.0 / 2.0) * $
-                         CHm ^ (-1.0) + psih * (zm / mom[4])))
-        ;; Andreas (2005) eq'n 11b
-        CH10=vonk ^ 2.0 / $
-             [(alog(10.0 / z0) - psim * (10.0 / mom[4])) * $
-                (alog(10.0 / zT) - psih * (10.0 / mom[4])) ]
-        ;; Now calculate the E coefficient, and the Q roughness
-        ;; length... from that get CE at 10m
-        CEm=open_path[9] / [(rhoa * 1000.0) * Lv * raw_sonic_spd * $
-                              (surf_qh2o - mean_qh2o)]
-        zQ=zm * exp(-(vonk * CDm ^ (1.0 / 2.0) * CEm ^ (-1.0) + $
-                        psih * (zm / mom[4]))) ;Andreas (2005) eq'n 12c
-        ;; Andreas (2005) eq'n 11c
-        CE10=vonk ^ 2.0 / $
-             [(alog(10.0 / z0) - psim * (10.0 / mom[4])) * $
-                (alog(10.0 / zQ) - psih * (10.0 / mom[4]))]
-     ENDIF
+     ;; ;; Drag coefficient should be positive... if not, do no more calcs
+     ;; IF CDm GT 0 THEN BEGIN
+     ;;    ;; Calculate the wind profile modifiers.  Calculate the profile
+     ;;    ;; modifier for stable conditions (Jordan, 1999, eq 33)
+     ;;    IF zm / mom[4] GT 0.5 THEN BEGIN    
+     ;;       psim=-[((0.70 * zm) / mom[4]) + 0.75 * $
+     ;;                ((zm / motpak_offset) - 14.3) * $
+     ;;                exp((-0.35 * zm) / mom[4] ) + 10.7]
+     ;;       psih=psim
+     ;;    ENDIF
+     ;;    ;; Calculate the profile modifier for neutral/slightly stable
+     ;;    ;; (Jordan, 1999, eq 32)
+     ;;    IF zm / mom[4] GE 0 AND zm / mom[4] LE 0.5 THEN BEGIN
+     ;;       psim=-6.0 * (zm / mom[4])
+     ;;       psih=psim
+     ;;    ENDIF
+     ;;    ;; Calculate the profile modifier for unstable conditions
+     ;;    ;; (Jordan, 1999, eq 30)
+     ;;    IF zm / mom[4] LT 0 THEN BEGIN
+     ;;       xval=(1.0 - 16.0 * (zm / mom[4])) ^ (1.0 / 4.0)
+     ;;       psim=alog((1.0 + xval ^ 2.0) / 2.0) + 2.0 * $
+     ;;            alog((1.0 + xval) / 2.0) - 2.0 * atan(xval) + $
+     ;;            (!PI / 2.0)
+     ;;       ;; Jordan (1999), eq 31
+     ;;       psih=2.0 * alog((1.0 + xval ^ 2.0) / 2.0)
+     ;;    ENDIF
+     ;;    ;; Calculate the roughness length (Andreas, 2005, eq 12a)
+     ;;    z0=zm * EXP( -[vonk * CDm ^ (-0.5) + psim * (zm / mom[4])])
+     ;;    ;; Calculate the Drag coefficient at 10m (Andreas, 2005, eq 11a)
+     ;;    CD10=vonk ^ 2.0 / $
+     ;;         (alog(10.0 / z0) - psim * (10.0 / mom[4])) ^ 2.0
+     ;;    ;; Calculate wind speed at 10m & for interest sake, we'll see
+     ;;    ;; what our profile gives us for the measurement height wind
+     ;;    ;; speed...  Stull (1988), eq'n 9.7.5g
+     ;;    U10=[(1.0 / vonk) * $
+     ;;           (alog(10.0 / z0) + psim * (10.0 / mom[4]))] * mom[2]
+     ;;    Um=[(1.0 / vonk) * $
+     ;;          (alog(zm / z0) + psim * (zm / mom[4]))] * mom[2]
+     ;;    ;; Calculate the wind speed at 10m assuming neutral stability
+     ;;    U10N=[(double(1) / vonk) * (alog(zm / z0))] * mom[2]
+     ;;    ;; Calculate the wind speed at 10m assuming neutral stability
+     ;;    ;; AND that we're over the ocean
+     ;;    z0charnock=(0.016 * mom[2] ^ 2) / 9.81 ; Stull 9.7.2c
+     ;;    U10Nocean=[(double(1) / vonk) * $
+     ;;                 (alog(zm / z0charnock))] * mom[2]
+     ;;    ;; ;; Make call to the footprint routine, which follows Hsieh et
+     ;;    ;; ;; al. 2000, Advances in Water Resources 23 (2000) 765-777.
+     ;;    ;; ;; [SPL: Turning this off; it is taking way too much, stuck on
+     ;;    ;; ;; the while loop in hkt_footprint.pro.]
+     ;;    ;; foot_ofile_name=strcompress(footprint_odir + path_sep() + $
+     ;;    ;;                             iname_prefix + '_' + 'spec.ps', $
+     ;;    ;;                             /remove_all)
+     ;;    ;; IF finite(z0) EQ 1 THEN BEGIN
+     ;;    ;;    foot=hkt_footprint(mom[4], z0, zm, 1.0, 100.0, 0.99, $
+     ;;    ;;                       plot_file=foot_ofile_name)
+     ;;    ;; ENDIF
+     ;;    ;; peakF=foot[0]
+     ;;    ;; dist90=foot[1]
+     ;;    ;; Now we can also calculate the heat and water vapour transfer
+     ;;    ;; coefficients...  BUT BEWARE... fundamentally, we need surface
+     ;;    ;; T... we have to use our unreliable IR transducer for this...
+     ;;    ;; NOTE - using a new type of IR transducer starting in 2010
+     ;;    ;; which is more reliable
+     ;;    ;;  
+     ;;    ;; Calculate a few terms we'll need from the MET data.  Mean
+     ;;    ;; specific humidity (g_h2o/g_moist air)
+     ;;    mean_qh2o=rho_v_met / (rhoa * 1000.0)
+     ;;    ;; Mean specific heat capacity of moist air (J/g/K)
+     ;;    mean_cp=cpd * (1.0 + 0.84 * mean_qh2o)
+     ;;    IF (flux.air_temperature[0] GE 0) THEN $ ; vaporization
+     ;;       Lv=(2.50057 - 0.00245715 * $
+     ;;             flux.air_temperature[0]) * 1000.0
+     ;;    IF (flux.air_temperature[0] LT 0) THEN $ ; sublimation
+     ;;       lv=(2.83539 - 0.000135713 * $
+     ;;             flux.air_temperature[0]) * 1000.0
+     ;;    ;; Sat'n vapour pressure (Pa)
+     ;;    ev_surf=[6.112 * $
+     ;;               EXP((17.67 * flux.surface_temperature[0]) / $
+     ;;                     (flux.surface_temperature[0] + 243.5))] * 100.0
+     ;;    c_h2o_surf=ev_surf / $
+     ;;               (Rval * $
+     ;;                  (flux.surface_temperature[0] + 273.15)) ; mol
+     ;;    rho_v_surf=c_h2o_surf * mv                            ; g/m3
+     ;;    surf_qh2o=rho_v_surf / (rhoa * 1000.0) 
+     ;;    ;; Calculate the H coeficient and the T roughness length... from
+     ;;    ;; that get CH at 10m. Andreas (2005) eq'n 10b
+     ;;    CHm=open_path[2] / $
+     ;;        ((rhoa * 1000.0) * mean_cp * true_sonic_spd * $
+     ;;           (flux.surface_temperature[0] - $
+     ;;              flux.air_temperature[0]) )
+     ;;    ;; Andreas (2005) eq'n 12b
+     ;;    zT=zm * EXP( -(vonk * CDm ^ (1.0 / 2.0) * $
+     ;;                     CHm ^ (-1.0) + psih * (zm / mom[4])))
+     ;;    ;; Andreas (2005) eq'n 11b
+     ;;    CH10=vonk ^ 2.0 / $
+     ;;         [(alog(10.0 / z0) - psim * (10.0 / mom[4])) * $
+     ;;            (alog(10.0 / zT) - psih * (10.0 / mom[4])) ]
+     ;;    ;; Now calculate the E coefficient, and the Q roughness
+     ;;    ;; length... from that get CE at 10m
+     ;;    CEm=open_path[9] / [(rhoa * 1000.0) * Lv * raw_sonic_spd * $
+     ;;                          (surf_qh2o - mean_qh2o)]
+     ;;    zQ=zm * exp(-(vonk * CDm ^ (1.0 / 2.0) * CEm ^ (-1.0) + $
+     ;;                    psih * (zm / mom[4]))) ;Andreas (2005) eq'n 12c
+     ;;    ;; Andreas (2005) eq'n 11c
+     ;;    CE10=vonk ^ 2.0 / $
+     ;;         [(alog(10.0 / z0) - psim * (10.0 / mom[4])) * $
+     ;;            (alog(10.0 / zQ) - psih * (10.0 / mom[4]))]
+     ;; ENDIF
 
-     ;; Time to append data to output hash.  Start with MET summary
-     ;; (diag) data.
-     fluxes['time']=[fluxes['time'], diag_tstamp]
-     fluxes['DOY']=[fluxes['DOY'], diag_doy]
-     FOREACH diag_fld, okeys_diag DO BEGIN
-        match_fld=where(strlowcase(tag_names(flux)) EQ $
-                          strlowcase(diag_fld))
-        fluxes[diag_fld]=[fluxes[diag_fld], $
-                            reform(flux.(match_fld)[0])]
-     ENDFOREACH
-     ;; Next we have momentum output.  We need to find out which
-     ;; elements from mom object correspond to field names in okeys_mom
-     mom_idx=[1, 2, 3, 4, 6, 7, 0] ; same # elements as okeys_mom
-     FOREACH mom_fld, indgen(n_elements(okeys_mom)) DO BEGIN
-        fluxes[okeys_mom[mom_fld]]=[fluxes[okeys_mom[mom_fld]], $
-                                      mom[mom_idx[mom_fld]]]
-     ENDFOREACH
-     ;; Next we have open path output.  We need to (be careful these
-     ;; indices match) find out which elements from open_path object
-     ;; correspond to field names in okeys_op.  Number of elements must
-     ;; be the same.
-     op_idx=[11, 12, 0, 1, 2, 3, 4, 5, 13, 14, 15, 16, 17, 6, 7, 8, 9, $
-               10, 18, 19, 20, 21, 22, 23, 24, 25]
-     FOREACH op_fld, indgen(n_elements(okeys_op)) DO BEGIN
-        fluxes[okeys_op[op_fld]]=[fluxes[okeys_op[op_fld]], $
-                                    open_path[op_idx[op_fld]]]
-     ENDFOREACH
-     ;; The mean diagnostic value for the open path flux data.  Not sure
-     ;; what the meaning of such a value would be.  FIX THIS (below should
-     ;; work, but 2013 we have all 'NAN' string and fails mean()/fix()
-     ;; fluxes['diag_op']=[fluxes['diag_op'], $
-     ;;                      mean(fix(flux.op_analyzer_status), /NAN)]
-     fluxes['diag_op']=[fluxes['diag_op'], !VALUES.F_NAN]
-     ;; For the calculated fields, we'll have to do it pseudo-manually,
-     ;; since they are (so far) just strewn across the workspace
-     calc_vals=[raw_sonic_spd, raw_sonic_dir, true_sonic_spd, $
-                  true_sonic_dir, wind_v_mean, open_flag, $
-                  sonic_flag, motion_flag, sonicNANs, sw_avg, CDm]
-     FOREACH calc_fld, indgen(n_elements(okeys_calc)) DO BEGIN
-        fluxes[okeys_calc[calc_fld]]=[fluxes[okeys_calc[calc_fld]], $
-                                        calc_vals[calc_fld]]
-     ENDFOREACH
-     ;; What to do with these?
-     ;; micro_vals=[Um, U10, CD10, z0, CHm, CH10, zT, CEm, CE10, $
-     ;;             zQ, !VALUES.D_NAN, !VALUES.D_NAN, psim, psih, U10N, $
-     ;;             U10Nocean]
+     ;; ;; Time to append data to output hash.  Start with MET summary
+     ;; ;; (diag) data.
+     ;; fluxes['time']=[fluxes['time'], diag_tstamp]
+     ;; fluxes['DOY']=[fluxes['DOY'], diag_doy]
+     ;; FOREACH diag_fld, okeys_diag DO BEGIN
+     ;;    match_fld=where(strlowcase(tag_names(flux)) EQ $
+     ;;                      strlowcase(diag_fld))
+     ;;    fluxes[diag_fld]=[fluxes[diag_fld], $
+     ;;                        reform(flux.(match_fld)[0])]
+     ;; ENDFOREACH
+     ;; ;; Next we have momentum output.  We need to find out which
+     ;; ;; elements from mom object correspond to field names in okeys_mom
+     ;; mom_idx=[1, 2, 3, 4, 6, 7, 0] ; same # elements as okeys_mom
+     ;; FOREACH mom_fld, indgen(n_elements(okeys_mom)) DO BEGIN
+     ;;    fluxes[okeys_mom[mom_fld]]=[fluxes[okeys_mom[mom_fld]], $
+     ;;                                  mom[mom_idx[mom_fld]]]
+     ;; ENDFOREACH
+     ;; ;; Next we have open path output.  We need to (be careful these
+     ;; ;; indices match) find out which elements from open_path object
+     ;; ;; correspond to field names in okeys_op.  Number of elements must
+     ;; ;; be the same.
+     ;; op_idx=[11, 12, 0, 1, 2, 3, 4, 5, 13, 14, 15, 16, 17, 6, 7, 8, 9, $
+     ;;           10, 18, 19, 20, 21, 22, 23, 24, 25]
+     ;; FOREACH op_fld, indgen(n_elements(okeys_op)) DO BEGIN
+     ;;    fluxes[okeys_op[op_fld]]=[fluxes[okeys_op[op_fld]], $
+     ;;                                open_path[op_idx[op_fld]]]
+     ;; ENDFOREACH
+     ;; ;; The mean diagnostic value for the open path flux data.  Not sure
+     ;; ;; what the meaning of such a value would be.
+     ;; mdiag_op=(nbad_diag_op EQ flux_times_dims[1]) ? $
+     ;;          !VALUES.D_NAN : $
+     ;;          mean(fix(flux.op_analyzer_status), /NAN)
+     ;; fluxes['diag_op']=[fluxes['diag_op'], mdiag_op]
+     ;; ;; Next we have closed path output.  We need to find out which
+     ;; ;; elements from closed_path object correspond to field names in
+     ;; ;; okeys_cl.  Number of elements must be the same.
+     ;; cl_idx=[9, 10, 0, 1, 3, 2, 4, 5, 7, 8, 6]
+     ;; FOREACH cl_fld, indgen(n_elements(okeys_cl)) DO BEGIN
+     ;;    fluxes[okeys_cl[cl_fld]]=[fluxes[okeys_cl[cl_fld]], $
+     ;;                                closed_path[cl_idx[cl_fld]]]
+     ;; ENDFOREACH
+     ;; ;; For the calculated fields, we'll have to do it pseudo-manually,
+     ;; ;; since they are (so far) just strewn across the workspace
+     ;; calc_vals=[raw_sonic_spd, raw_sonic_dir, true_sonic_spd, $
+     ;;              true_sonic_dir, wind_v_mean, open_flag, $
+     ;;              sonic_flag, motion_flag, sonicNANs, sw_avg, CDm]
+     ;; FOREACH calc_fld, indgen(n_elements(okeys_calc)) DO BEGIN
+     ;;    fluxes[okeys_calc[calc_fld]]=[fluxes[okeys_calc[calc_fld]], $
+     ;;                                    calc_vals[calc_fld]]
+     ;; ENDFOREACH
+     ;; ;; What to do with these?
+     ;; ;; micro_vals=[Um, U10, CD10, z0, CHm, CH10, zT, CEm, CE10, $
+     ;; ;;             zQ, !VALUES.D_NAN, !VALUES.D_NAN, psim, psih, U10N, $
+     ;; ;;             U10Nocean]
 
   ENDFOREACH
 
-  ;; Write the full hash, ordering fields in some way
-  odata=create_struct('time', fluxes['time'], 'DOY', fluxes['DOY'])
-  FOREACH fld, okeys_diag DO BEGIN ; MET summary data
-     odata=create_struct(odata, $
-                         okeys_diag[where(okeys_diag EQ fld)], $
-                         fluxes[fld])
-  ENDFOREACH
-  FOREACH fld, okeys_mom DO BEGIN ; momentum data
-     odata=create_struct(odata, $
-                         okeys_mom[where(okeys_mom EQ fld)], fluxes[fld])
-  ENDFOREACH
-  FOREACH fld, okeys_op DO BEGIN ; open path data
-     odata=create_struct(odata, $
-                         okeys_op[where(okeys_op EQ fld)], fluxes[fld])
-  ENDFOREACH
-  odata=create_struct(odata, 'diag_op', fluxes['diag_op'])
-  FOREACH fld, okeys_calc DO BEGIN ; calculated data
-     odata=create_struct(odata, $
-                         okeys_calc[where(okeys_calc EQ fld)], fluxes[fld])
-  ENDFOREACH
-  write_csv, ofile, odata, $
-             header=['time', 'DOY', okeys_diag, okeys_mom, okeys_op, $
-                     'diag_op', okeys_calc]
+  ;; ;; Write the full hash, ordering fields in some way
+  ;; odata=create_struct('time', fluxes['time'], 'DOY', fluxes['DOY'])
+  ;; FOREACH fld, okeys_diag DO BEGIN ; MET summary data
+  ;;    odata=create_struct(odata, $
+  ;;                        okeys_diag[where(okeys_diag EQ fld)], $
+  ;;                        fluxes[fld])
+  ;; ENDFOREACH
+  ;; FOREACH fld, okeys_mom DO BEGIN ; momentum data
+  ;;    odata=create_struct(odata, $
+  ;;                        okeys_mom[where(okeys_mom EQ fld)], fluxes[fld])
+  ;; ENDFOREACH
+  ;; FOREACH fld, okeys_op DO BEGIN ; open path data
+  ;;    odata=create_struct(odata, $
+  ;;                        okeys_op[where(okeys_op EQ fld)], fluxes[fld])
+  ;; ENDFOREACH
+  ;; odata=create_struct(odata, 'diag_op', fluxes['diag_op'])
+  ;; FOREACH fld, okeys_cl DO BEGIN ; closed path data
+  ;;    odata=create_struct(odata, $
+  ;;                        okeys_cl[where(okeys_cl EQ fld)], fluxes[fld])
+  ;; ENDFOREACH
+  ;; FOREACH fld, okeys_calc DO BEGIN ; calculated data
+  ;;    odata=create_struct(odata, $
+  ;;                        okeys_calc[where(okeys_calc EQ fld)], fluxes[fld])
+  ;; ENDFOREACH
+  ;; write_csv, ofile, odata, $
+  ;;            header=['time', 'DOY', okeys_diag, okeys_mom, okeys_op, $
+  ;;                    'diag_op', okeys_cl, okeys_calc]
 
 END
 
