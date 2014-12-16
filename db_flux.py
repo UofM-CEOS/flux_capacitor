@@ -19,34 +19,35 @@ import matplotlib.pyplot as plt
 
 plt.style.use('ggplot')
 
-# Parse configuration file
-config = parse_config("flux_2011.cfg")
 
-# 1. Position from motion sensor to anemometer (3 floats)
-mot2anem_pos = config['Motion Correction']['motion2anemometer_pos']
-# 2. Input directory and file glob to search
-ec_idir = config['Inputs']['input_directory']
-# ec_idir = '/home/sluque/tmp'
-ec_files = glob.glob(osp.join(ec_idir, config['Inputs']['file_pattern']))
-# Stop if we don't have any files
-if (len(ec_files) < 1):
-    raise Exception("There are no input files")
-# 3. Column names in input files
-colnames = config['Inputs']['colnames']
-# 4. Path to output calculation summary file
-osummary_fname = osp.join(ec_idir, 'fluxes.csv')
-# 5. Sample frequency (Hz)
-sample_freq_hz = config['Inputs']['sample_frequency']
-# 6. Complementary filter period (s)
-Tcf = config['Motion Correction']['complementary_filter_period']
-# 7. High-pass filter cutoff for accelerations (s).  This can be a scalar
-#    if the same cutoff is used for the three components, or a 3 element
-#    vector to indicate cutoff period for the `x`, `y`, `z` components.
-Ta = config['Motion Correction']['accel_highpass_cutoff']
-
-# No more input required beyond this point
-
-ec_files.sort()
+def get_config(config_file):
+    """Prepare a dictionary with required inputs for flux analysis."""
+    # Parse configuration file
+    config = parse_config("flux_2011.cfg")
+    # 1. Position from motion sensor to anemometer (3 floats)
+    mot2anem_pos = config['Motion Correction']['motion2anemometer_pos']
+    # 2. Input directory and file glob to search
+    ec_idir = config['Inputs']['input_directory']
+    ec_files = glob.glob(osp.join(ec_idir,
+                                  config['Inputs']['file_pattern']))
+    # Stop if we don't have any files
+    if (len(ec_files) < 1):
+        raise Exception("There are no input files")
+    # 3. Column names in input files
+    colnames = config['Inputs']['colnames']
+    # 4. Path to output calculation summary file
+    osummary_fname = osp.join(ec_idir, 'fluxes.csv')
+    # 5. Sample frequency (Hz)
+    sample_freq_hz = config['Inputs']['sample_frequency']
+    # 6. Complementary filter period (s)
+    Tcf = config['Motion Correction']['complementary_filter_period']
+    # 7. High-pass filter cutoff for accelerations (s).  This can be a scalar
+    #    if the same cutoff is used for the three components, or a 3 element
+    #    vector to indicate cutoff period for the `x`, `y`, `z` components.
+    Ta = config['Motion Correction']['accel_highpass_cutoff']
+    # No more input required beyond this point
+    ec_files.sort()
+    return                      # fill this with dictionary
 
 # [Original comment: create flags for the 4 possible sources of "bad"
 # data, flag=0 means data good]
