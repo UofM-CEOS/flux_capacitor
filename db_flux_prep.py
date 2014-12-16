@@ -9,6 +9,7 @@ database.
 import numpy as np
 from scipy.stats import zscore
 from flux import shot_filter, smooth_angle, wind3D_correct
+from flux_config import parse_config
 import pandas as pd
 import os.path as osp
 import glob
@@ -19,75 +20,29 @@ import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 
 # Parse configuration file
+config = parse_config("flux_2014.cfg")
 
 # 1. Position from motion sensor to anemometer (3 floats)
-mot2anem_pos = [1.7, 0, 2.725]
+mot2anem_pos = config['Motion Correction']['motion2anemometer_pos']
 # 2. Input directory and file glob to search
-ec_idir = '/home/sluque/Data/ArcticNet/2011/FromDB'
+ec_idir = config['Inputs']['input_directory']
 # ec_idir = '/home/sluque/tmp'
-ec_files = glob.glob(osp.join(ec_idir, 'EC_*[0-9].csv'))
+ec_files = glob.glob(osp.join(ec_idir, config['Inputs']['file_pattern']))
+# Stop if we don't have any files
+if (len(ec_files) < 1):
+    raise Exception("There are no input files")
 # 3. Column names in input files
-# colnames = ['time_20min', 'time_study', 'longitude', 'latitude',
-#             'speed_over_ground', 'course_over_ground', 'heading',
-#             'pitch', 'roll', 'heave', 'atmospheric_pressure', 
-#             'air_temperature', 'relative_humidity', 'surface_temperature',
-#             'wind_speed', 'wind_direction', 'true_wind_speed',
-#             'true_wind_direction', 'PAR', 'K_down',
-#             'temperature_thermopile', 'temperature_case',
-#             'temperature_dome', 'LW_down', 'UV_sensor_temperature',
-#             'UV_b', 'UV_broad', 'acceleration_x', 'acceleration_y',
-#             'acceleration_z', 'rate_x', 'rate_y', 'rate_z', 'wind_speed_u', 
-#             'wind_speed_v', 'wind_speed_w', 'air_temperature_sonic',
-#             'sound_speed', 'anemometer_status', 'op_CO2_fraction',
-#             'op_CO2_density', 'op_CO2_absorptance', 'op_H2O_fraction',
-#             'op_H2O_density', 'op_H2O_absorptance', 'op_pressure', 
-#             'op_temperature', 'op_temperature_base', 'op_temperature_spar',
-#             'op_temperature_bulb', 'op_cooler_voltage', 'op_bandwidth',
-#             'op_delay_interval', 'bad_chopper_wheel_temperature_flag', 
-#             'bad_detector_temperature_flag',
-#             'bad_optical_wheel_rotation_rate_flag', 
-#             'bad_sync_flag', 'op_AGC', 'cp_analyzer_status',
-#             'cp_CO2_fraction', 'cp_CO2_density', 'cp_CO2_dry_fraction',
-#             'cp_CO2_absorptance', 'cp_H2O_fraction', 'cp_H2O_density',
-#             'cp_H2O_dry_fraction', 'cp_H2O_absorptance', 
-#             'cp_pressure', 'cp_temperature', 'cp_temperature_in',
-#             'cp_temperature_out', 'cp_temperature_block',
-#             'cp_temperature_cell', 'cp_CO2_signal_strength', 
-#             'cp_H2O_signal_strength']
-colnames = ['time_20min', 'time_study', 'longitude', 'latitude',
-            'speed_over_ground', 'course_over_ground', 'heading',
-            'pitch', 'roll', 'heave', 'atmospheric_pressure', 
-            'air_temperature', 'relative_humidity', 'surface_temperature',
-            'wind_speed', 'wind_direction', 'true_wind_speed',
-            'true_wind_direction', 'PAR', 'K_down',
-            'temperature_thermopile', 'temperature_case',
-            'temperature_dome', 'LW_down', 'UV_sensor_temperature',
-            'UV_b', 'UV_broad', 'acceleration_x', 'acceleration_y',
-            'acceleration_z', 'rate_x', 'rate_y', 'rate_z', 'wind_speed_u', 
-            'wind_speed_v', 'wind_speed_w', 'air_temperature_sonic',
-            'sound_speed', 'anemometer_status', 'op_analyzer_status',
-            'op_CO2_fraction', 'op_CO2_density', 'op_CO2_absorptance',
-            'op_H2O_fraction', 'op_H2O_density', 'op_H2O_absorptance',
-            'op_pressure', 'op_temperature', 'op_temperature_base',
-            'op_temperature_spar', 'op_temperature_bulb',
-            'op_cooler_voltage', 'op_CO2_signal_strength', 'op_bandwidth',
-            'op_delay_interval', 'cp_analyzer_status', 'cp_CO2_fraction',
-            'cp_CO2_density', 'cp_CO2_dry_fraction', 'cp_CO2_absorptance',
-            'cp_H2O_fraction', 'cp_H2O_density', 'cp_H2O_dry_fraction',
-            'cp_H2O_absorptance', 'cp_pressure', 'cp_temperature',
-            'cp_temperature_in', 'cp_temperature_out',
-            'cp_temperature_block', 'cp_temperature_cell',
-            'cp_CO2_signal_strength', 'cp_H2O_signal_strength']
+colnames = config['Inputs']['colnames']
 # 4. Path to output calculation summary file
 osummary_fname = osp.join(ec_idir, 'fluxes.csv')
 # 5. Sample frequency (Hz)
-sample_freq_hz = 10.0
+sample_freq_hz = config['Inputs']['sample_frequency']
 # 6. Complementary filter period (s)
-Tcf = 10.0
+Tcf = config['Motion Correction']['complementary_filter_period']
 # 7. High-pass filter cutoff for accelerations (s).  This can be a scalar
 #    if the same cutoff is used for the three components, or a 3 element
 #    vector to indicate cutoff period for the `x`, `y`, `z` components.
-Ta = 20.0
+Ta = config['Motion Correction']['accel_highpass_cutoff']
 
 # No more input required beyond this point
 
