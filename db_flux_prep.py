@@ -186,14 +186,14 @@ for ec_period in ec_files[0:5]:
     # calculation]
     motion3d = motion3d.apply(shot_filter)
 
-    # Output to Octave for debugging
-    import scipy.io as sio
-    sio.savemat(iname_prefix + '_wind_motion.mat',
-                {'wind_speed': wind.values,
-                 'acceleration': motion3d.loc[:, :'acceleration_z'].values,
-                 'angular_rate': motion3d.loc[:, 'rate_phi':].values,
-                 'heading': np.reshape(heading, (len(heading), 1)),
-                 'sog': np.reshape(sog, (len(sog), 1))})
+    # # Output to Octave for debugging
+    # import scipy.io as sio
+    # sio.savemat(iname_prefix + '_wind_motion.mat',
+    #             {'wind_speed': wind.values,
+    #              'acceleration': motion3d.loc[:, :'acceleration_z'].values,
+    #              'angular_rate': motion3d.loc[:, 'rate_phi':].values,
+    #              'heading': np.reshape(heading, (len(heading), 1)),
+    #              'sog': np.reshape(sog, (len(sog), 1))})
 
     # Save full tuple output and select later. Note that we the use the
     # interpolated, smoothed heading and speed over ground.
