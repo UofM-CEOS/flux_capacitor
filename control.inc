@@ -1,7 +1,7 @@
 ;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2014-08-25T17:43:47+0000
+;; Last-Updated: 2014-10-24T22:22:14+0000
 ;;           By: Sebastian Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
@@ -199,11 +199,13 @@ rad_raw_keep_fields=['battery_voltage', 'panel_temperature', $
                      'uv_b_sd', 'uv_a_sd', 'uv_broad_sd']
 ;; ;; 2013
 ;; rad_raw_keep_fields=['battery_voltage', 'panel_temperature', $
-;;                      'battery_voltage_sd', 'panel_temperature_sd', $
-;;                      'k_down', 'Tcase', 'Tdome', 'lw_in', $
-;;                      'par', 'temperature_uv', 'uv_a', 'uv_b', $
-;;                      'k_down_sd', 'Tcase_sd', 'Tdome_sd', 'lw_in_sd', $
-;;                        'par_sd', 'temperature_uv_sd', 'uv_a_sd', 'uv_b_sd']
+;;                        'battery_voltage_sd', 'panel_temperature_sd', $
+;;                        'k_down', 'temperature_thermopile', $
+;;                        'temperature_case', 'temperature_dome', $
+;;                        'lw_in', 'par', 'temperature_uv', 'uv_b', 'uv_a', $
+;;                        'k_down_sd', 'temperature_thermopile_sd', $
+;;                        'temperature_case_sd', 'temperature_dome_sd', $
+;;                        'lw_in_sd', 'par_sd', 'temperature_uv_sd', 'uv_b_sd', 'uv_a_sd']
 rad_stamp='RAD'
 rad_daily_rate=60
 ;; See PROCESS_RAD docs for the two below.
