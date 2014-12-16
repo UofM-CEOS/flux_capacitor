@@ -24,30 +24,6 @@ scalar_opts = ['sample_frequency', 'complementary_filter_period',
                'accel_highpass_cutoff']
 vector_opts = ['motion2anemometer_pos']
 
-# Ordered dictionary based on dflts to give to the parser
-dflt_dict = OrderedDict((
-    ('Inputs',
-     OrderedDict((
-         ('input_directory', dflts['input_directory']),
-         ('file_pattern', dflts['file_pattern']),
-         ('colnames', dflts['colnames']),
-         ('sample_frequency', dflts['sample_frequency']),
-     ))
- ),
-    ('Outputs',
-     OrderedDict((
-         ('summary_file', dflts['summary_file']),
-     ))
- ),
-    ('Motion Correction',
-     OrderedDict((
-         ('motion2anemometer_pos', dflts['motion2anemometer_pos']),
-         ('complementary_filter_period', dflts['complementary_filter_period']),
-         ('accel_highpass_cutoff', dflts['accel_highpass_cutoff']),
-     ))
- ),))
-
-
 def parse_config(cfg_file):
     """Parse configuration file for essential variables for flux analysis.
 
@@ -61,7 +37,34 @@ def parse_config(cfg_file):
     Ordered dictionary with variables for each section.
 
     """
-    config = cfg.ConfigParser()     # set up the parser
+    # Ordered dictionary based on dflts to give to the parser
+    dflt_dict = OrderedDict((
+        ('Inputs',
+         OrderedDict((
+             ('input_directory', dflts['input_directory']),
+             ('file_pattern', dflts['file_pattern']),
+             ('colnames', dflts['colnames']),
+             ('sample_frequency', dflts['sample_frequency']),
+         ))
+     ),
+        ('Outputs',
+         OrderedDict((
+             ('summary_file', dflts['summary_file']),
+         ))
+     ),
+        ('Motion Correction',
+         OrderedDict((
+             ('motion2anemometer_pos',
+              dflts['motion2anemometer_pos']),
+             ('complementary_filter_period',
+              dflts['complementary_filter_period']),
+             ('accel_highpass_cutoff',
+              dflts['accel_highpass_cutoff']),
+         ))
+     ),))
+
+    # Set up the parser to interpolate across sections
+    config = cfg.ConfigParser(interpolation=cfg.ExtendedInterpolation())
     config.read_dict(dflt_dict)     # set up our specific defaults
     config.read_file(open(cfg_file)) # replace defaults with what
                                      # we're given
@@ -82,7 +85,7 @@ def parse_config(cfg_file):
             config.set(sec, opt, clean_opt)
             # Replace values with lists, splitting on comma character, on
             # our local dictionary
-            py_dict[sec][opt] = opt_value.split(',')
+            py_dict[sec][opt] = clean_opt.split(',')
 
     # Loop again to extract single elements, and convert to floats and
     # arrays where needed
@@ -104,8 +107,8 @@ def parse_config(cfg_file):
     if (py_dict['Inputs']['sample_frequency'] <= 0):
         raise Exception("Sampling frequency must be greater than zero")
 
-    # Check if directory for summary file exists
-    if (not osp.exists(osp.dirname(py_dict['Outputs']['summary_file']))):
-        raise Exception("Directory for summary file doesn't exist")
+    # # Check if directory for summary file exists
+    # if (not osp.exists(osp.dirname(py_dict['Outputs']['summary_file']))):
+    #     raise Exception("Directory for summary file doesn't exist")
 
     return py_dict
