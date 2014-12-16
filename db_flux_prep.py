@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 plt.style.use('ggplot')
 
 # Parse configuration file
-config = parse_config("flux_2014.cfg")
+config = parse_config("flux_2011.cfg")
 
 # 1. Position from motion sensor to anemometer (3 floats)
 mot2anem_pos = config['Motion Correction']['motion2anemometer_pos']
