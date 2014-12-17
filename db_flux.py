@@ -29,6 +29,10 @@ def do_flux(period_file, config):
     ec = pd.read_csv(period_file, dtype=np.float, parse_dates=[0, 1],
                      index_col=1, names=colnames)
     ec_nrows = len(ec.index)
+    # Initial values for flags
+    open_flag, closed_flag = False, False
+    sonic_flag, motion_flag = False, False
+    bad_navigation_flag, bad_meteorology_flag = False, False
     # Put acceleration components in 3-column array and make copy to keep
     # uncorrected data.  Original comment: read in angular rates in RH
     # coordinate system, convert to rad/s.
@@ -60,6 +64,10 @@ def do_flux(period_file, config):
         ((motion3d.rate_theta.count() / ec_nrows) < 0.98) or
         ((motion3d.rate_shi.count() / ec_nrows) < 0.98)):
         motion_flag = True
+    if (((ec.cp_CO2_fraction.count() / ec_nrows) < 0.98) or
+        ((ec.cp_H2O_fraction.count() / ec_nrows) < 0.98) or
+        ((ec.cp_pressure.count() / ec_nrows) < 0.98)):
+        closed_flag = True
 
     # [Original comment: now that we have looked for NANs, we may as
     # well fill in the NANs and any spikes using the shot filter].
@@ -107,17 +115,16 @@ def do_flux(period_file, config):
     if ((nbad_vertical_wind / ec_nrows) > 0.5 or
         (nbad_air_temp_sonic / ec_nrows) > 0.5):
         sonic_flag = True
-        print "Bad sonic anemometer data. Skipping."
-        continue
+        raise "Bad sonic anemometer data."
     # [Original comment: check critical low frequency variabiles]
     if not (np.isfinite(air_temp_avg) or
             np.isfinite(ec.relative_humidity[0])):
-        print "RH or average air temperature unavailable. Skipping."
         bad_meteorology_flag = True
-        continue
-    sw_avg = ec.K_down[0]
-    lw_avg = ec.LW_down[0]
-    sog_avg = ec['speed_over_ground'].mean()
+        raise "RH or average air temperature unavailable."
+    # # Below will be needed at some point
+    # sw_avg = ec.K_down[0]
+    # lw_avg = ec.LW_down[0]
+    # sog_avg = ec['speed_over_ground'].mean()
 
     # [Original comment: now fill in the gaps by applying a moving
     # average... In this case, we use a 100 sample window (10 sec) moving
@@ -139,9 +146,8 @@ def do_flux(period_file, config):
     # If we have no good COG, SOG, or heading, then we should skip
     # processing entirely.
     if cog.count() < 1 or sog.count() < 1 or heading.count() < 1:
-        print "Unusable COG, SOG, or heading records. Skipping."
         bad_navigation_flag = True
-        continue
+        raise "Unusable COG, SOG, or heading records."
     # [Original comment: shot filter the motion channels... this helps with
     # a problem where unreasonably high accelerations cause a 'NaN'
     # calculation]
@@ -210,43 +216,57 @@ def do_flux(period_file, config):
     ec_wind_corr = pd.concat((ec, wind.loc[:, 'wind_speed_u_ship':]),
                              axis=1)
     return ec_wind_corr, dict(open_flag=open_flag, closed_flag=closed_flag,
-                              sonic_flag=sonic_flag, motion_flag,
+                              sonic_flag=sonic_flag, motion_flag=motion_flag,
                               bad_navigation_flag=bad_navigation_flag,
                               bad_meteorology_flag=bad_meteorology_flag)
     
+def main(config_file):
+    # Parse configuration file
+    config = parse_config(config_file)
+    ec_idir = config["Inputs"]["input_directory"]
+    ec_files = config["Inputs"]["input_files"]
+    colnames = config["Inputs"]["colnames"]
+    summary_file = config["Outputs"]["summary_file"]
+    # Stop if we don't have any files
+    if (len(ec_files) < 1):
+        raise Exception("There are no input files")
 
-# Parse configuration file
-config = parse_config(config_file)
-# Stop if we don't have any files
-if (len(config["Inputs"]["input_files"]) < 1):
-    raise Exception("There are no input files")
+    # [Original comment: create flags for the 4 possible sources of "bad"
+    # data, flag=0 means data good]
+    flags = dict.fromkeys(['open_flag', 'closed_flag', 'sonic_flag',
+                           'motion_flag', 'bad_navigation_flag',
+                           'bad_meteorology_flag'], False)
+    # We set up a dataframe with all files to process as index, and all the
+    # flags as columns.  This is the basis for our summary output file;
+    # other columns (such as flux summary calculations for the period)
+    # will be appended as we loop.
+    osummary = pd.DataFrame(flags,
+                            index=[osp.basename(x) for x in ec_files])
+    for ec_file in ec_files[0:5]:
+        print ec_file             # REMOVE FOR PRODUCTION
+        # Get a file name prefix to be shared by the output files from this
+        # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
+        iname = osp.basename(ec_file)
+        iname_prefix = osp.splitext(iname)[0]
+        ec_wind_corr, ec_flags = do_flux(ec_file, config)
+        # Save to file with suffix '_mc.csv'
+        ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + '_mc.csv'),
+                            index_label=colnames[1])
 
-# [Original comment: create flags for the 4 possible sources of "bad"
-# data, flag=0 means data good]
-flags = dict.fromkeys(['open_flag', 'closed_flag', 'sonic_flag',
-                       'motion_flag', 'bad_navigation_flag',
-                       'bad_meteorology_flag'], False)
-# We set up a dataframe with all files to process as index, and all the
-# flags as columns.  This is the basis for our summary output file; other
-# columns (such as flux summary calculations for the period) will be
-# appended as we loop.
-osummary = pd.DataFrame(flags, index=[osp.basename(x) for x in ec_files])
-
-for ec_file in ec_files[0:5]:
-    print ec_file             # REMOVE FOR PRODUCTION
-    # Get a file name prefix to be shared by the output files from this
-    # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
-    iname = osp.basename(ec_file)
-    iname_prefix = osp.splitext(iname)[0]
-    ec_wind_corr, ec_flags = do_flux(ec_file, config)
-    # Save to file with suffix '_mc.csv'
-    ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + '_mc.csv'),
-                        index_label=colnames[1])
+    # Now we have the summary file is filled up and can work with it.
+    osummary.to_csv(summary_file, index_label="input_file")
+    print "Summary of fluxes written to " + summary_file
 
 
-# Now we have the summary file is filled up and can work with it.
-osummary.to_csv(osummary_fname, index_label="input_file")
-print "Summary of fluxes written to " + osummary_fname
+if __name__ == '__main__':
+    import argparse
+    description = 'Perform flux analyses, given a configuration file.'
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('config_file', type=str,
+                        help='Path to configuration file')
+    args = parser.parse_args()
+    main(args.config_file)
+
 
 ## TESTS ------------------------------------------------------------------
 
