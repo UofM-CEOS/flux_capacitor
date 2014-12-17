@@ -12,63 +12,23 @@ from flux import shot_filter, smooth_angle, wind3D_correct
 from flux_config import parse_config
 import pandas as pd
 import os.path as osp
-import glob
 # import psycopg2 as pg
 # from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 
 plt.style.use('ggplot')
 
-
-def get_config(config_file):
-    """Prepare a dictionary with required inputs for flux analysis."""
-    # Parse configuration file
-    config = parse_config("flux_2011.cfg")
-    # 1. Position from motion sensor to anemometer (3 floats)
-    mot2anem_pos = config['Motion Correction']['motion2anemometer_pos']
-    # 2. Input directory and file glob to search
-    ec_idir = config['Inputs']['input_directory']
-    ec_files = glob.glob(osp.join(ec_idir,
-                                  config['Inputs']['file_pattern']))
-    # Stop if we don't have any files
-    if (len(ec_files) < 1):
-        raise Exception("There are no input files")
-    # 3. Column names in input files
+def do_flux(period_file, config):
+    """Perform required calculations on period."""
+    # Extract all the config pieces
     colnames = config['Inputs']['colnames']
-    # 4. Path to output calculation summary file
-    osummary_fname = osp.join(ec_idir, 'fluxes.csv')
-    # 5. Sample frequency (Hz)
-    sample_freq_hz = config['Inputs']['sample_frequency']
-    # 6. Complementary filter period (s)
+    mot2anem_pos = config['Motion Correction']['motion2anemometer_pos']
+    sample_freq_hz = config['Inputs']['sample_freq']
     Tcf = config['Motion Correction']['complementary_filter_period']
-    # 7. High-pass filter cutoff for accelerations (s).  This can be a scalar
-    #    if the same cutoff is used for the three components, or a 3 element
-    #    vector to indicate cutoff period for the `x`, `y`, `z` components.
     Ta = config['Motion Correction']['accel_highpass_cutoff']
-    # No more input required beyond this point
-    ec_files.sort()
-    return                      # fill this with dictionary
-
-# [Original comment: create flags for the 4 possible sources of "bad"
-# data, flag=0 means data good]
-flags = dict.fromkeys(['open_flag', 'closed_flag', 'sonic_flag',
-                       'motion_flag', 'bad_navigation_flag',
-                       'bad_meteorology_flag'], False)
-# We set up a dataframe with all files to process as index, and all the
-# flags as columns.  This is the basis for our summary output file; other
-# columns (such as flux summary calculations for the period) will be
-# appended as we loop.
-osummary = pd.DataFrame(flags, index=[osp.basename(x) for x in ec_files])
-
-for ec_period in ec_files[0:5]:
-    print ec_period             # REMOVE FOR PRODUCTION
-    ec = pd.read_csv(ec_period, dtype=np.float, parse_dates=[0, 1],
+    ec = pd.read_csv(period_file, dtype=np.float, parse_dates=[0, 1],
                      index_col=1, names=colnames)
     ec_nrows = len(ec.index)
-    # Get a file name prefix to be shared by the output files from this
-    # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
-    iname = osp.basename(ec_period)
-    iname_prefix = osp.splitext(iname)[0]
     # Put acceleration components in 3-column array and make copy to keep
     # uncorrected data.  Original comment: read in angular rates in RH
     # coordinate system, convert to rad/s.
@@ -85,13 +45,13 @@ for ec_period in ec_files[0:5]:
     if (((ec.op_CO2_density.count() / ec_nrows) < 0.98) or
         ((ec.op_H2O_density.count() / ec_nrows) < 0.98) or
         ((ec.op_analyzer_status.count() / ec_nrows) < 0.98)):
-        osummary.loc[iname, 'open_flag'] = True
+        open_flag = True
     # [Original comment: set wind flag if gt 2% of records are 'NAN']
     if (((wind.wind_speed_u.count() / ec_nrows) < 0.98) or
         ((wind.wind_speed_v.count() / ec_nrows) < 0.98) or
         ((wind.wind_speed_w.count() / ec_nrows) < 0.98) or
         ((ec.air_temperature_sonic.count() / ec_nrows) < 0.98)):
-        osummary.loc[iname, 'sonic_flag'] = True
+        sonic_flag = True
     # [Original comment: set motion flag if gt 2% of records are 'NAN']
     if (((motion3d.acceleration_x.count() / ec_nrows) < 0.98) or
         ((motion3d.acceleration_y.count() / ec_nrows) < 0.98) or
@@ -99,40 +59,40 @@ for ec_period in ec_files[0:5]:
         ((motion3d.rate_phi.count() / ec_nrows) < 0.98) or
         ((motion3d.rate_theta.count() / ec_nrows) < 0.98) or
         ((motion3d.rate_shi.count() / ec_nrows) < 0.98)):
-        osummary.loc[iname, 'motion_flag'] = True
+        motion_flag = True
 
     # [Original comment: now that we have looked for NANs, we may as
     # well fill in the NANs and any spikes using the shot filter].
     # [SPL: these changes are done outside the WIND array, which is
     # the one that is used later for motion correction, etc., so they
     # are lost.]
-    if not osummary.loc[iname, 'sonic_flag']:
+    if not sonic_flag:
         wind = wind.apply(shot_filter)
         ec.air_temperature_sonic = shot_filter(ec.air_temperature_sonic)
 
-    if not osummary.loc[iname, 'open_flag']:
+    if not open_flag:
         ec['op_CO2_density'] = shot_filter(ec['op_CO2_density'])
         ec['op_H2O_density'] = shot_filter(ec['op_H2O_density'])
         ec['op_pressure'] = shot_filter(ec['op_pressure'])
     # [Original comment: this is necessary to check if there is still ugly
     # shot noise... if there is, we need to skip this]
     if any(abs(zscore(ec['op_CO2_density'])) > 6):
-        osummary.loc[iname, 'open_flag'] = True
+        open_flag = True
 
-    if not osummary.loc[iname, 'closed_flag']:
+    if not closed_flag:
         ec['cp_CO2_fraction'] = shot_filter(ec['cp_CO2_fraction'])
         ec['cp_H2O_fraction'] = shot_filter(ec['cp_H2O_fraction'])
         ec['cp_pressure'] = shot_filter(ec['cp_pressure'])
 
     if (any(abs(zscore(ec['cp_CO2_fraction'])) > 6) or
         any(abs(zscore(ec['cp_H2O_fraction'])) > 6)):
-        osummary.loc[iname, 'closed_flag'] = True
+        closed_flag = True
 
     # TODO: Here we need to prepare our check for the diagnostics from the
     # open path analyzers.  For now, keep using the rule of thumb
     if (ec.op_analyzer_status.gt(249) |
         ec.op_analyzer_status.lt(240)).sum() > 0.02:
-        osummary.loc[iname, 'open_flag'] = True
+        open_flag = True
     
     # [Original comment: check for bad wind data: bad wind data can
     # usually be diagnosed by unusually high wind speeds.  This is
@@ -146,14 +106,14 @@ for ec_period in ec_files[0:5]:
     # Set wind flag high if gt 0.5% of records are frost contaminated
     if ((nbad_vertical_wind / ec_nrows) > 0.5 or
         (nbad_air_temp_sonic / ec_nrows) > 0.5):
-        osummary.loc[iname, 'sonic_flag'] = True
+        sonic_flag = True
         print "Bad sonic anemometer data. Skipping."
         continue
     # [Original comment: check critical low frequency variabiles]
     if not (np.isfinite(air_temp_avg) or
             np.isfinite(ec.relative_humidity[0])):
         print "RH or average air temperature unavailable. Skipping."
-        osummary.loc[iname, 'bad_meteorology_flag'] = True
+        bad_meteorology_flag = True
         continue
     sw_avg = ec.K_down[0]
     lw_avg = ec.LW_down[0]
@@ -175,12 +135,12 @@ for ec_period in ec_files[0:5]:
 
     if ((cog.count() < len(cog)) or (sog.count() < len(sog)) or
         (heading.count < len(heading))):
-        osummary.loc[iname, 'motion_flag'] = True
+        motion_flag = True
     # If we have no good COG, SOG, or heading, then we should skip
     # processing entirely.
     if cog.count() < 1 or sog.count() < 1 or heading.count() < 1:
         print "Unusable COG, SOG, or heading records. Skipping."
-        osummary.loc[iname, 'bad_navigation_flag'] = True
+        bad_navigation_flag = True
         continue
     # [Original comment: shot filter the motion channels... this helps with
     # a problem where unreasonably high accelerations cause a 'NaN'
@@ -249,10 +209,40 @@ for ec_period in ec_files[0:5]:
     # Append results
     ec_wind_corr = pd.concat((ec, wind.loc[:, 'wind_speed_u_ship':]),
                              axis=1)
+    return ec_wind_corr, dict(open_flag=open_flag, closed_flag=closed_flag,
+                              sonic_flag=sonic_flag, motion_flag,
+                              bad_navigation_flag=bad_navigation_flag,
+                              bad_meteorology_flag=bad_meteorology_flag)
     
+
+# Parse configuration file
+config = parse_config(config_file)
+# Stop if we don't have any files
+if (len(config["Inputs"]["input_files"]) < 1):
+    raise Exception("There are no input files")
+
+# [Original comment: create flags for the 4 possible sources of "bad"
+# data, flag=0 means data good]
+flags = dict.fromkeys(['open_flag', 'closed_flag', 'sonic_flag',
+                       'motion_flag', 'bad_navigation_flag',
+                       'bad_meteorology_flag'], False)
+# We set up a dataframe with all files to process as index, and all the
+# flags as columns.  This is the basis for our summary output file; other
+# columns (such as flux summary calculations for the period) will be
+# appended as we loop.
+osummary = pd.DataFrame(flags, index=[osp.basename(x) for x in ec_files])
+
+for ec_file in ec_files[0:5]:
+    print ec_file             # REMOVE FOR PRODUCTION
+    # Get a file name prefix to be shared by the output files from this
+    # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
+    iname = osp.basename(ec_file)
+    iname_prefix = osp.splitext(iname)[0]
+    ec_wind_corr, ec_flags = do_flux(ec_file, config)
     # Save to file with suffix '_mc.csv'
     ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + '_mc.csv'),
                         index_label=colnames[1])
+
 
 # Now we have the summary file is filled up and can work with it.
 osummary.to_csv(osummary_fname, index_label="input_file")
