@@ -7,6 +7,7 @@ import configparser as cfg
 from collections import OrderedDict
 from os import getcwd
 import os.path as osp
+import glob
 import re
 
 # Simple dictionary to list our defaults
@@ -34,7 +35,9 @@ def parse_config(cfg_file):
 
     Returns
     -------
-    Ordered dictionary with variables for each section.
+    Ordered dictionary with variables for each section.  A list of input
+    files found, given the input directory and file pattern, is also
+    appended to the 'Inputs' section.
 
     """
     # Ordered dictionary based on dflts to give to the parser
@@ -106,6 +109,11 @@ def parse_config(cfg_file):
     # Check if we have a valid sampling frequency
     if (py_dict['Inputs']['sample_frequency'] <= 0):
         raise Exception("Sampling frequency must be greater than zero")
+
+    input_files = glob.glob(osp.join(config['Inputs']['input_directory'],
+                                     config['Inputs']['file_pattern']))
+    input_files.sort()
+    py_dict['Inputs']['input_files'] = input_files
 
     # # Check if directory for summary file exists
     # if (not osp.exists(osp.dirname(py_dict['Outputs']['summary_file']))):
