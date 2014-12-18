@@ -23,11 +23,16 @@ def do_flux(period_file, config):
     # Extract all the config pieces
     colnames = config['Inputs']['colnames']
     mot2anem_pos = config['Motion Correction']['motion2anemometer_pos']
-    sample_freq_hz = config['Inputs']['sample_freq']
+    sample_freq_hz = config['Inputs']['sample_frequency']
     Tcf = config['Motion Correction']['complementary_filter_period']
     Ta = config['Motion Correction']['accel_highpass_cutoff']
-    ec = pd.read_csv(period_file, dtype=np.float, parse_dates=[0, 1],
-                     index_col=1, names=colnames)
+    dtypes = config["Inputs"]["dtypes"]
+    # Read, specifying the options matching what we get in our database
+    # output files
+    ec = pd.read_csv(period_file, dtype=dtypes,
+                     parse_dates=[0, 1], index_col=1, names=colnames,
+                     na_values=["NAN"], true_values=["t"],
+                     false_values=["f"])
     ec_nrows = len(ec.index)
     # Initial values for flags
     open_flag, closed_flag = False, False
