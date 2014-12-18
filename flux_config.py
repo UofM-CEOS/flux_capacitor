@@ -10,11 +10,49 @@ import os.path as osp
 import glob
 import re
 
+# We need to control names.  We leave the date time columns (always the
+# first two in input) up to pandas to determine, as they're always safe.
+all_names = dict(longitude=float, latitude=float,
+                 speed_over_ground=float, course_over_ground=float,
+                 heading=float, pitch=float, roll=float, heave=float,
+                 atmospheric_pressure=float, air_temperature=float,
+                 relative_humidity=float, surface_temperature=float,
+                 wind_speed=float, wind_direction=float,
+                 true_wind_speed=float, true_wind_direction=float,
+                 PAR=float, K_down=float, temperature_thermopile=float,
+                 temperature_case=float, temperature_dome=float,
+                 LW_down=float, UV_sensor_temperature=float, UV_b=float,
+                 UV_broad=float, acceleration_x=float, acceleration_y=float,
+                 acceleration_z=float, rate_x=float, rate_y=float,
+                 rate_z=float, wind_speed_u=float, wind_speed_v=float,
+                 wind_speed_w=float, air_temperature_sonic=float,
+                 sound_speed=float, anemometer_status=float,
+                 op_CO2_fraction=float, op_CO2_density=float,
+                 op_CO2_absorptance=float, op_H2O_fraction=float,
+                 op_H2O_density=float, op_H2O_absorptance=float,
+                 op_pressure=float, op_temperature=float,
+                 op_temperature_base=float, op_temperature_spar=float,
+                 op_temperature_bulb=float, op_cooler_voltage=float,
+                 op_bandwidth=float, op_delay_interval=float,
+                 bad_chopper_wheel_temperature_flag=bool,
+                 bad_detector_temperature_flag=bool,
+                 bad_optical_wheel_rotation_rate_flag=bool,
+                 bad_sync_flag=bool, op_CO2_signal_strength=float,
+                 op_AGC=float, cp_analyzer_status=float,
+                 cp_CO2_fraction=float, cp_CO2_density=float,
+                 cp_CO2_dry_fraction=float, cp_CO2_absorptance=float,
+                 cp_H2O_fraction=float, cp_H2O_density=float,
+                 cp_H2O_dry_fraction=float, cp_H2O_absorptance=float,
+                 cp_pressure=float, cp_temperature=float,
+                 cp_temperature_in=float, cp_temperature_out=float,
+                 cp_temperature_block=float, cp_temperature_cell=float,
+                 cp_CO2_signal_strength=float, cp_H2O_signal_strength=float)
+
 # Simple dictionary to list our defaults
 dflts = {
     "input_directory": getcwd(),
     "file_pattern": '*[0-9].csv',
-    "colnames": 'time_20min,time_study,longitude,latitude,speed_over_ground,course_over_ground,heading,pitch,roll,heave,atmospheric_pressure,air_temperature,relative_humidity,surface_temperature,wind_speed,wind_direction,true_wind_speed,true_wind_direction,PAR,K_down,temperature_thermopile,temperature_case,temperature_dome,LW_down,UV_sensor_temperature,UV_b,UV_broad,acceleration_x,acceleration_y,acceleration_z,rate_x,rate_y,rate_z,wind_speed_u,wind_speed_v,wind_speed_w,air_temperature_sonic,sound_speed,anemometer_status,op_CO2_fraction,op_CO2_density,op_CO2_absorptance,op_H2O_fraction,op_H2O_density,op_H2O_absorptance,op_pressure,op_temperature,op_temperature_base,op_temperature_spar,op_temperature_bulb,op_cooler_voltage,op_bandwidth,op_delay_interval,bad_chopper_wheel_temperature_flag,bad_detector_temperature_flag,bad_optical_wheel_rotation_rate_flag,bad_sync_flag,op_AGC,cp_analyzer_status,cp_CO2_fraction,cp_CO2_density,cp_CO2_dry_fraction,cp_CO2_absorptance,cp_H2O_fraction,cp_H2O_density,cp_H2O_dry_fraction,cp_H2O_absorptance,cp_pressure,cp_temperature,cp_temperature_in,cp_temperature_out,cp_temperature_block,cp_temperature_cell,cp_CO2_signal_strength,cp_H2O_signal_strength',
+    "colnames": 'time_20min,time_study,longitude,latitude,speed_over_ground,course_over_ground,heading,pitch,roll,heave,atmospheric_pressure,air_temperature,relative_humidity,surface_temperature,wind_speed,wind_direction,true_wind_speed,true_wind_direction,PAR,K_down,temperature_thermopile,temperature_case,temperature_dome,LW_down,UV_sensor_temperature,UV_b,UV_broad,acceleration_x,acceleration_y,acceleration_z,rate_x,rate_y,rate_z,wind_speed_u,wind_speed_v,wind_speed_w,air_temperature_sonic,sound_speed,anemometer_status,op_CO2_fraction,op_CO2_density,op_CO2_absorptance,op_H2O_fraction,op_H2O_density,op_H2O_absorptance,op_pressure,op_temperature,op_temperature_base,op_temperature_spar,op_temperature_bulb,op_cooler_voltage,op_bandwidth,op_delay_interval,bad_chopper_wheel_temperature_flag,bad_detector_temperature_flag,bad_optical_wheel_rotation_rate_flag,bad_sync_flag,op_CO2_signal_strength,cp_analyzer_status,cp_CO2_fraction,cp_CO2_density,cp_CO2_dry_fraction,cp_CO2_absorptance,cp_H2O_fraction,cp_H2O_density,cp_H2O_dry_fraction,cp_H2O_absorptance,cp_pressure,cp_temperature,cp_temperature_in,cp_temperature_out,cp_temperature_block,cp_temperature_cell,cp_CO2_signal_strength,cp_H2O_signal_strength',
     "sample_frequency": '10.0',
     "summary_file": 'fluxes.csv',
     "motion2anemometer_pos": '0.0, 0.0, 0.0',
@@ -114,6 +152,17 @@ def parse_config(cfg_file):
                                      config['Inputs']['file_pattern']))
     input_files.sort()
     py_dict['Inputs']['input_files'] = input_files
+
+    # Check if we have all legal names
+    illegal_names = (set(py_dict["Inputs"]["colnames"][2:]) -
+                     set(all_names.keys()))
+    if len(illegal_names) > 0:
+        raise Exception("Found bad names in config file")
+        print illegal_names
+    else:
+        dtypes = {key: all_names[key] for key in
+                  py_dict["Inputs"]["colnames"][2:]}
+        py_dict["Inputs"]["dtypes"] = dtypes
 
     # # Check if directory for summary file exists
     # if (not osp.exists(osp.dirname(py_dict['Outputs']['summary_file']))):
