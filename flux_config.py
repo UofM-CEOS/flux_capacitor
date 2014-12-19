@@ -120,20 +120,16 @@ def parse_config(cfg_file):
             # Just replace and skip if we have the same as defaults
             if (dflt_dict[sec][opt] == opt_value):
                 py_dict[sec][opt] = opt_value.split(',')
-                continue
-            # Otherwise move on and remove double quotes, newlines, and
-            # spaces
-            clean_opt = re.sub('["\n ]+', '', opt_value)
-            config.set(sec, opt, clean_opt)
-            # Replace values with lists, splitting on comma character, on
-            # our local dictionary
-            py_dict[sec][opt] = clean_opt.split(',')
-
-    # Loop again to extract single elements, and convert to floats and
-    # arrays where needed
-    for sec in config.sections():
-        for opt in config.options(sec):
-            # If we have a single element list, remove the container list
+            else:
+                # Otherwise move on and remove double quotes, newlines, and
+                # spaces
+                clean_opt = re.sub('["\n ]+', '', opt_value)
+                config.set(sec, opt, clean_opt)
+                # Replace values with lists, splitting on comma character,
+                # on our local dictionary
+                py_dict[sec][opt] = clean_opt.split(',')
+            # Extract single elements, and convert to floats and arrays where
+            # appropriate
             if (len(py_dict[sec][opt]) == 1):
                 py_dict[sec][opt] = py_dict[sec][opt][0]
             if (opt in scalar_opts):
