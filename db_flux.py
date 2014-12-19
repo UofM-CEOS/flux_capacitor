@@ -33,7 +33,7 @@ def do_flux(period_file, config):
                      parse_dates=[0, 1], index_col=1, names=colnames,
                      na_values=["NAN"], true_values=["t"],
                      false_values=["f"])
-    ec_nrows = len(ec.index)
+    ec_nrows = float(len(ec.index))
     # Initial values for flags
     open_flag, closed_flag = False, False
     sonic_flag, motion_flag = False, False
