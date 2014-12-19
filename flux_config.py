@@ -38,15 +38,16 @@ all_names = dict(longitude=float, latitude=float,
                  bad_detector_temperature_flag=bool,
                  bad_optical_wheel_rotation_rate_flag=bool,
                  bad_sync_flag=bool, op_CO2_signal_strength=float,
-                 op_AGC=float, cp_analyzer_status=float,
-                 cp_CO2_fraction=float, cp_CO2_density=float,
-                 cp_CO2_dry_fraction=float, cp_CO2_absorptance=float,
-                 cp_H2O_fraction=float, cp_H2O_density=float,
-                 cp_H2O_dry_fraction=float, cp_H2O_absorptance=float,
-                 cp_pressure=float, cp_temperature=float,
-                 cp_temperature_in=float, cp_temperature_out=float,
-                 cp_temperature_block=float, cp_temperature_cell=float,
-                 cp_CO2_signal_strength=float, cp_H2O_signal_strength=float)
+                 op_analyzer_status=float, op_AGC=float,
+                 cp_analyzer_status=float, cp_CO2_fraction=float,
+                 cp_CO2_density=float, cp_CO2_dry_fraction=float,
+                 cp_CO2_absorptance=float, cp_H2O_fraction=float,
+                 cp_H2O_density=float, cp_H2O_dry_fraction=float,
+                 cp_H2O_absorptance=float, cp_pressure=float,
+                 cp_temperature=float, cp_temperature_in=float,
+                 cp_temperature_out=float, cp_temperature_block=float,
+                 cp_temperature_cell=float, cp_CO2_signal_strength=float,
+                 cp_H2O_signal_strength=float)
 
 # Simple dictionary to list our defaults
 dflts = {
