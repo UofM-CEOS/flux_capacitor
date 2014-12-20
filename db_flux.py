@@ -33,7 +33,7 @@ def do_flux(period_file, config):
                      parse_dates=[0, 1], index_col=1, names=colnames,
                      na_values=["NAN"], true_values=["t"],
                      false_values=["f"])
-    ec_nrows = float(len(ec.index))
+    ec_nrows = len(ec.index)
     # Initial values for flags
     open_flag, closed_flag = False, False
     sonic_flag, motion_flag = False, False
@@ -51,27 +51,27 @@ def do_flux(period_file, config):
     # [Original comment: check for any significant number of 'NAN's (not
     # worried about the odd one scattered here and there)].  [Original
     # comment: set open flag if gt 2% of records are 'NAN']
-    if (((ec.op_CO2_density.count() / ec_nrows) < 0.98) or
-        ((ec.op_H2O_density.count() / ec_nrows) < 0.98) or
-        ((ec.op_analyzer_status.count() / ec_nrows) < 0.98)):
+    if (((ec.op_CO2_density.count() / float(ec_nrows)) < 0.98) or
+        ((ec.op_H2O_density.count() / float(ec_nrows)) < 0.98) or
+        ((ec.op_analyzer_status.count() / float(ec_nrows)) < 0.98)):
         open_flag = True
     # [Original comment: set wind flag if gt 2% of records are 'NAN']
-    if (((wind.wind_speed_u.count() / ec_nrows) < 0.98) or
-        ((wind.wind_speed_v.count() / ec_nrows) < 0.98) or
-        ((wind.wind_speed_w.count() / ec_nrows) < 0.98) or
-        ((ec.air_temperature_sonic.count() / ec_nrows) < 0.98)):
+    if (((wind.wind_speed_u.count() / float(ec_nrows)) < 0.98) or
+        ((wind.wind_speed_v.count() / float(ec_nrows)) < 0.98) or
+        ((wind.wind_speed_w.count() / float(ec_nrows)) < 0.98) or
+        ((ec.air_temperature_sonic.count() / float(ec_nrows)) < 0.98)):
         sonic_flag = True
     # [Original comment: set motion flag if gt 2% of records are 'NAN']
-    if (((motion3d.acceleration_x.count() / ec_nrows) < 0.98) or
-        ((motion3d.acceleration_y.count() / ec_nrows) < 0.98) or
-        ((motion3d.acceleration_z.count() / ec_nrows) < 0.98) or
-        ((motion3d.rate_phi.count() / ec_nrows) < 0.98) or
-        ((motion3d.rate_theta.count() / ec_nrows) < 0.98) or
-        ((motion3d.rate_shi.count() / ec_nrows) < 0.98)):
+    if (((motion3d.acceleration_x.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.acceleration_y.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.acceleration_z.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.rate_phi.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.rate_theta.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.rate_shi.count() / float(ec_nrows)) < 0.98)):
         motion_flag = True
-    if (((ec.cp_CO2_fraction.count() / ec_nrows) < 0.98) or
-        ((ec.cp_H2O_fraction.count() / ec_nrows) < 0.98) or
-        ((ec.cp_pressure.count() / ec_nrows) < 0.98)):
+    if (((ec.cp_CO2_fraction.count() / float(ec_nrows)) < 0.98) or
+        ((ec.cp_H2O_fraction.count() / float(ec_nrows)) < 0.98) or
+        ((ec.cp_pressure.count() / float(ec_nrows)) < 0.98)):
         closed_flag = True
 
     # [Original comment: now that we have looked for NANs, we may as
@@ -117,8 +117,8 @@ def do_flux(period_file, config):
     nbad_air_temp_sonic = abs(ec['air_temperature_sonic'] -
                               air_temp_avg).gt(7).sum()
     # Set wind flag high if gt 0.5% of records are frost contaminated
-    if ((nbad_vertical_wind / ec_nrows) > 0.5 or
-        (nbad_air_temp_sonic / ec_nrows) > 0.5):
+    if ((nbad_vertical_wind / float(ec_nrows)) > 0.5 or
+        (nbad_air_temp_sonic / float(ec_nrows)) > 0.5):
         sonic_flag = True
         raise "Bad sonic anemometer data."
     # [Original comment: check critical low frequency variabiles]
@@ -257,8 +257,10 @@ def main(config_file):
         # Save to file with suffix '_mc.csv'
         ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + '_mc.csv'),
                             index_label=colnames[1])
+        for k, v in ec_flags.iteritems():
+            osummary.loc[iname, k] = v
 
-    # Now we have the summary file is filled up and can work with it.
+    # Now we have the summary DataFrame filled up and can work with it.
     osummary.to_csv(summary_file, index_label="input_file")
     print "Summary of fluxes written to " + summary_file
 
