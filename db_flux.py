@@ -247,7 +247,7 @@ def main(config_file):
     # will be appended as we loop.
     osummary = pd.DataFrame(flags,
                             index=[osp.basename(x) for x in ec_files])
-    for ec_file in ec_files[0:5]:
+    for ec_file in ec_files:
         print ec_file             # REMOVE FOR PRODUCTION
         # Get a file name prefix to be shared by the output files from this
         # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
