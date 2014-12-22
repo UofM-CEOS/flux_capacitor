@@ -4,6 +4,7 @@ import numpy as np
 from scipy import interpolate as itpl
 from scipy import signal
 from astropy.convolution import convolve, Box1DKernel
+from itertools import islice
 
 
 def shot_filter(x, sigma_thr=3):
@@ -419,3 +420,25 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
     return (UVW, EA, EA_rate, EA_acc, EA_slow, EA_fast, M_ma, Ur, Ua, Up,
             U_ship, U_earth, Xp)
+
+
+def despike_VickersMahrt(x, zscore_thr, nrep_thr, nreps):
+    """Vickers and Mahrt (1997) signal despiking procedure.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        A 1-D signal vectors to be despiked.
+    zscore_thr : float
+        The zscore beyond which an observation is considered to be an
+        outlier.
+    nrep_thr : int
+        The maximum number of consecutive outliers that should occur for a
+        spike to be detected.
+    nreps: int
+        How many times to run the procedure.
+
+    """
+    def window_indices(a, n):
+        """Iterator generating the indices"""
+        
