@@ -305,3 +305,32 @@ if __name__ == '__main__':
 
 # plt.plot(miller_objs['uvwm'][:, 0])
 # plt.plot(UVW[0][:, 0])
+
+# Building and working with spikes
+
+# x = np.sin(np.linspace(0, 2 * np.pi, 1000))
+# noise = np.random.gumbel(scale=0.5, size=1000)
+# # noise = (np.random.gumbel(scale=0.2, size=1000) *
+# #          np.random.randint(5, size=1000))
+# # plt.hist(noise, 50, normed=True)
+# x_noisy = x + noise
+# plt.plot(x); plt.plot(x_noisy)
+
+# Using our data
+config = parse_config('flux_2014.cfg')
+ec = pd.read_csv(config["Inputs"]["input_files"][0],
+                 dtype=config["Inputs"]["dtypes"], parse_dates=[0, 1],
+                 index_col=1, names=config["Inputs"]["colnames"],
+                 na_values=["NAN"], true_values=["t"], false_values=["f"])
+ec.op_CO2_density.plot()
+def n_grams(a, n):
+    from itertools import islice
+    z = (islice(a, i, None) for i in range(n))
+    return zip(*z)
+
+idx = n_grams(np.arange(2000, 3001), 200)
+for w in idx:
+    wdata = ec.op_CO2_density.iloc[[x for x in w]]
+    z = zscore(wdata.values)
+    z_abs = abs(z)
+    print sum(z_abs > 3.5)
