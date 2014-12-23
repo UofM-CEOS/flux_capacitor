@@ -422,6 +422,12 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
             U_ship, U_earth, Xp)
 
 
+def win_VickersMahrt(x):
+    """Computations in a Vickers Mahrt window."""
+    z = zscore(wdata.values)
+    z_abs = abs(z)
+    
+
 def despike_VickersMahrt(x, zscore_thr, nrep_thr, nreps):
     """Vickers and Mahrt (1997) signal despiking procedure.
 
@@ -441,4 +447,7 @@ def despike_VickersMahrt(x, zscore_thr, nrep_thr, nreps):
     """
     def window_indices(a, n):
         """Iterator generating the indices"""
-        
+        pass
+    pass
+
+
