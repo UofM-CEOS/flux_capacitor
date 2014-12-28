@@ -4,39 +4,47 @@ import numpy as np
 from scipy import interpolate as itpl
 from scipy import signal
 from astropy.convolution import convolve, Box1DKernel
-from itertools import islice
+from scipy.stats import zscore
+from itertools import groupby
 
 
 def shot_filter(x, sigma_thr=3):
-    """Perform spline interpolation for extreme values in Series `x`.
+    """Perform spline interpolation for extreme values in array `x`.
     
     Extreme values are those that are larger than `sigma_thr` * `sigma`,
-    where `sigma` is the sample standard deviation of Pandas Series `x`.
+    where `sigma` is the sample standard deviation of `x`.
 
-    Interpolation uses the time index of `x`.  The interpolating function
-    is created by the InterpolatedUnivariateSpline function from the scipy
-    package, and uses a single knot to approximate a simple linear
-    interpolation, so as to keep the original signal as untouched as
-    possible.
+    The interpolating function is created by the
+    InterpolatedUnivariateSpline function from the scipy package, and uses
+    a single knot to approximate a simple linear interpolation, so as to
+    keep the original signal as untouched as possible.
 
-    Returns:
-      A Pandas Series as `x` with interpolated values at index location of
-      extremes.
+    Parameters
+    ----------
+    x : array_like
+        1-D array with data to interpolate.
+    sigma_thr : float
+        The magnitude array associated with each angle.  It can be
+        a scalar that is common to all `angle` elements.
+
+    Returns
+    -------
+    A copy of `x` with interpolated values at index location of extremes.
 
     """
-    x_new = x.copy().astype('d')
+    x_new = x.astype('d')
+    idx = range(len(x_new))
     is_ok = abs(x_new - np.mean(x_new)) < (sigma_thr * np.std(x_new))
     x_ok = x_new[is_ok]
-    t_ok = x.index[is_ok]
-    t_bad = x.index[~is_ok]
+    t_ok = idx[is_ok]
+    t_bad = idx[~is_ok]
     # # Simple linear interpolation; extrapolation impossible
     # f_itpl = itpl.interp1d(t_ok.values.astype('d'), x_ok)
     # x_itpl = f_itpl(t_bad.values.astype('d'))
     # Trying a 1D B-spline for more realistic intra- and extrapolation.
     # This needs more work, and may not be worth it...
-    s = itpl.InterpolatedUnivariateSpline(t_ok.values.astype('d'),
-                                          x_ok, k=1)
-    x_itpl = s(t_bad.values.astype('d'))
+    s = itpl.InterpolatedUnivariateSpline(t_ok.astype('d'), x_ok, k=1)
+    x_itpl = s(t_bad.astype('d'))
     x_new[t_bad] = x_itpl
     return x_new
 
@@ -47,10 +55,10 @@ def decompose(angle, vmagnitude):
     Parameters
     ----------
     angle : array_like
-            The angle(s) in degree units.
+        The angle(s) in degree units.
     vmagnitude : array_like
-                 The magnitude array associated with each angle.  It can be
-                 a scalar that is common to all `angle` elements.
+        The magnitude array associated with each angle.  It can be a scalar
+        that is common to all `angle` elements.
 
     Returns
     -------
@@ -94,12 +102,12 @@ def smooth_angle(angle, vmagnitude=1, kernel_width=21):
     Parameters
     ----------
     angle : numpy.ndarray
-            The angle(s) in degree units.
+        The angle(s) in degree units.
     vmagnitude : numpy.ndarray, optional
-                 The magnitude array associated with each angle.  It can be
-                 a scalar that is common to all `angle` elements.
+        The magnitude array associated with each angle.  It can be a scalar
+        that is common to all `angle` elements.
     kernel_width : int
-                   The width of the filter kernel.
+        The width of the filter kernel.
 
     Returns
     -------
@@ -422,14 +430,28 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
             U_ship, U_earth, Xp)
 
 
-def win_VickersMahrt(x):
-    """Computations in a Vickers Mahrt window."""
-    z = zscore(wdata.values)
-    z_abs = abs(z)
-    
+def window_indices(idxs, width, step=None):
+    """List of sliding window indices across an index vector.
 
-def despike_VickersMahrt(x, zscore_thr, nrep_thr, nreps):
-    """Vickers and Mahrt (1997) signal despiking procedure.
+    Parameters
+    ----------
+    idx : numpy.ndarray
+        A 1-D index vector.
+    width : int
+        Window width.
+    step : int
+        Step size for sliding windows.
+
+    Returns
+    -------
+    List of tuples, each with the indices for a window.
+
+    """
+    return zip(*(idxs[i::step] for i in range(width)))
+
+
+def get_VickersMahrt(x, zscore_thr, nrep_thr):
+    """Vickers Mahrt computations in a window.
 
     Parameters
     ----------
@@ -441,13 +463,123 @@ def despike_VickersMahrt(x, zscore_thr, nrep_thr, nreps):
     nrep_thr : int
         The maximum number of consecutive outliers that should occur for a
         spike to be detected.
+
+    Returns
+    -------
+    Tuple with (index in brackets):
+    numpy.ndarray [0]
+        1-D array with interpolated input.
+    numpy.int [1]
+        Number of spikes detected.
+    numpy.int [2]
+        Number of outlier trends detected.
+    numpy.ndarray [3]
+        1-D array of the same size as input, indicating the classification
+        `k` for each measurement. k=0: measurement within plausibility
+        range, k=[-1 or 1]: measurement outside plausibility range, abs(k)
+        > 1: measurement is part of an outlier trend.
+
+    """
+    z = zscore(x)
+    # Discern between outliers above and below the threshold
+    isout_high = z > zscore_thr
+    isout_low = z < -zscore_thr
+    n_outs = sum(isout_high) + sum(isout_low)
+    # Set categorical x: 0 (ok), 1 (upper outlier), -1 (lower outlier)
+    xcat = np.zeros(x.shape, dtype=np.int)
+    xcat[isout_high] = 1
+    xcat[isout_low] = -1
+    if (n_outs > 0):
+        # Create tuples for each sequence indicating whether it's outliers
+        # and its length.
+        grps = [(val, len(list(seq))) for val, seq in groupby(xcat)]
+        vals = np.array([k[0] for k in grps])
+        lens = np.array([k[1] for k in grps])
+        is_spike = (vals != 0) & (lens <= nrep_thr)
+        nspikes = sum(is_spike)
+        # We tally trends as well
+        is_trend = (vals != 0) & (lens > nrep_thr)
+        ntrends = sum(is_trend)
+        # If we have trends, loop through each one, knowing the length of
+        # the spike and where we are along the input series.
+        if ntrends > 0:
+            trends = zip(vals[is_trend], lens[is_trend],
+                         np.cumsum(lens)[is_trend])
+            for i in trends:
+                # Double the categorical value for trends and consider
+                # these OK for interpolation. So abs(xcat) > 1 are trends.
+                xcat[(i[2] - i[1]):i[2]] = i[0] * 2
+        # Now we are left with true outliers to interpolate
+        x_new = x.copy()
+        xidx = np.arange(len(x)) # simple index along x
+        isok = (xcat == 0) | (abs(xcat) > 1) # ok if 0 or trend
+        s = itpl.InterpolatedUnivariateSpline(xidx[isok],
+                                              x[isok], k=1)
+        x_itpl = s(xidx[~ isok])
+        x_new[~ isok] = x_itpl
+        return x_new, nspikes, ntrends, xcat
+    else:
+        return x, 0, 0, xcat
+
+
+def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
+                         nrep_thr=None):
+    """Vickers and Mahrt (1997) signal despiking procedure.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        A 1-D signal vectors to be despiked.
+    width : int
+        Window width.
+    step : int
+        Step size for sliding windows.  Default is one-half window width.
+    zscore_thr : float
+        The zscore beyond which an observation is considered to be an
+        outlier.
+    nrep_thr : int
+        The maximum number of consecutive outliers that should occur for a
+        spike to be detected.  Default: 3.
     nreps: int
         How many times to run the procedure.
 
     """
-    def window_indices(a, n):
-        """Iterator generating the indices"""
-        pass
-    pass
+    if step is None:            # set default step as
+        step = width / 2        # one-half window size
+    if nrep_thr is None:
+        nrep_thr = 3
+    nspikes, ntrends = 0, 0
+    xout = x.copy()
+    # Get a series of tuples with indices for each window
+    idxl = window_indices(range(len(x)), width, step)
+    nloops = 0
+    while (nloops < nreps):
+        nspikes_loop = 0
+        for w in idxl:
+            winidx = [i for i in w] # indices of current window
+            xwin = xout[winidx] # values for the current window
+            xnew, nsp, ntr, xmask = get_VickersMahrt(xwin, zscore_thr,
+                                                     nrep_thr)
+            nspikes_loop += nsp; ntrends += ntr
+            xout[winidx] = xnew
+        nloops += 1
+        if nspikes_loop > 0:
+            nspikes += nspikes_loop
+        else:
+            break
+    print "Iterations: {}".format(nloops)
+        
+    return xout, nspikes, ntrends
 
 
+## ------------------------------------------------------------------------
+## TESTS
+
+# x = np.random.randn(100)
+# isout = abs(zscore(x)) > 0.5
+# x_new, ns, xmask = get_VickersMahrt(x, 0.5, 3)
+# plt.plot(x)
+# plt.plot(arange(len(x))[isout], x[isout], 'or')
+# plt.plot(x_new, '--g')
+# plt.plot(arange(len(x))[abs(xmask) > 1],
+#          x[abs(xmask) > 1], 'ob')
