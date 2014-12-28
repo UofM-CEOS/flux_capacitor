@@ -9,6 +9,7 @@ database.
 import numpy as np
 from scipy.stats import zscore
 from flux import shot_filter, smooth_angle, wind3D_correct
+from flux import despike_VickersMahrt
 from flux_config import parse_config
 import pandas as pd
 import os.path as osp
@@ -82,6 +83,9 @@ def do_flux(period_file, config):
     if not sonic_flag:
         wind = wind.apply(shot_filter)
         ec.air_temperature_sonic = shot_filter(ec.air_temperature_sonic)
+        despike_VickersMahrt(ec.air_temperature_sonic,
+                             width=5 * 60 * sample_freq_hz, zscore_thr=3.5,
+                             nreps=20)
 
     if not open_flag:
         ec['op_CO2_density'] = shot_filter(ec['op_CO2_density'])
@@ -316,21 +320,27 @@ if __name__ == '__main__':
 # x_noisy = x + noise
 # plt.plot(x); plt.plot(x_noisy)
 
-# Using our data
-config = parse_config('flux_2014.cfg')
-ec = pd.read_csv(config["Inputs"]["input_files"][0],
-                 dtype=config["Inputs"]["dtypes"], parse_dates=[0, 1],
-                 index_col=1, names=config["Inputs"]["colnames"],
-                 na_values=["NAN"], true_values=["t"], false_values=["f"])
-ec.op_CO2_density.plot()
-def n_grams(a, n):
-    from itertools import islice
-    z = (islice(a, i, None) for i in range(n))
-    return zip(*z)
+# # Using our data
+# config = parse_config('flux_2014.cfg')
+# ec = pd.read_csv(config["Inputs"]["input_files"][100],
+#                  dtype=config["Inputs"]["dtypes"], parse_dates=[0, 1],
+#                  index_col=1, names=config["Inputs"]["colnames"],
+#                  na_values=["NAN"], true_values=["t"], false_values=["f"])
+# ec.op_CO2_density[6000:9000].plot()
+# x_new, ns, nt, xmask = get_VickersMahrt(ec.op_CO2_density.values[6000:9000],
+#                                         3.5, 3)
+# plt.plot(ec.op_CO2_density[6000:9000].index, x_new, '--g')
+# plt.axhline(y=np.mean(ec.op_CO2_density[6000:9000]))
+# plt.axhline(y=(np.mean(ec.op_CO2_density[6000:9000]) -
+#                3.5 * np.std(ec.op_CO2_density[6000:9000])))
+# plt.axhline(y=(np.mean(ec.op_CO2_density[6000:9000]) +
+#                3.5 * np.std(ec.op_CO2_density[6000:9000])))
 
-idx = n_grams(np.arange(2000, 3001), 200)
-for w in idx:
-    wdata = ec.op_CO2_density.iloc[[x for x in w]]
-    z = zscore(wdata.values)
-    z_abs = abs(z)
-    print sum(z_abs > 3.5)
+# idxl = window_indices(range(len(ec.index)), 3000, 1500)
+# for w in idxl:
+#     print w[0]
+
+# x, nsp, ntr = despike_VickersMahrt(ec.op_CO2_density, width=3000,
+#                                    step=1500, zscore_thr=3.5, nreps=20)
+# ec.op_CO2_density.plot()
+# x.plot()
