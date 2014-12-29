@@ -482,13 +482,11 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
     """
     z = zscore(x)
     # Discern between outliers above and below the threshold
-    isout_high = z > zscore_thr
-    isout_low = z < -zscore_thr
-    n_outs = sum(isout_high) + sum(isout_low)
+    isout_hi, isout_lo = (z > zscore_thr), (z < -zscore_thr)
+    n_outs = sum(isout_hi) + sum(isout_lo)
     # Set categorical x: 0 (ok), 1 (upper outlier), -1 (lower outlier)
     xcat = np.zeros(x.shape, dtype=np.int)
-    xcat[isout_high] = 1
-    xcat[isout_low] = -1
+    xcat[isout_hi] = 1; xcat[isout_lo] = -1
     if (n_outs > 0):
         # Create tuples for each sequence indicating whether it's outliers
         # and its length.
@@ -523,8 +521,13 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
 
 
 def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
-                         nrep_thr=None):
+                         nrep_thr=None, interp_nan=True):
     """Vickers and Mahrt (1997) signal despiking procedure.
+
+    The interpolating function is created by the
+    InterpolatedUnivariateSpline function from the scipy package, and uses
+    a single knot to approximate a simple linear interpolation, so as to
+    keep the original signal as untouched as possible.
 
     Parameters
     ----------
@@ -542,6 +545,19 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         spike to be detected.  Default: 3.
     nreps: int
         How many times to run the procedure.
+    interp.nan : bool
+        Whether missing values should be interpolated.  Interpolated values
+        are computed after despiking.
+
+    Returns
+    -------
+    Tuple with (index in brackets):
+    numpy.ndarray [0]
+        1-D array with despiked input.
+    numpy.int [1]
+        Number of spikes detected.
+    numpy.int [2]
+        Number of outlier trends detected.
 
     """
     if step is None:            # set default step as
@@ -567,6 +583,16 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
             nspikes += nspikes_loop
         else:
             break
+    # Interpolate through missing values, if requested (default).
+    is_missing = np.isnan(np.array(xout)) # need to coerce to np array
+    nmissing = np.count_nonzero(is_missing)
+    if (nmissing > 0) and interp_nan:
+        xidx = np.arange(len(xout)) # simple index along x
+        s = itpl.InterpolatedUnivariateSpline(xidx[~ is_missing],
+                                              xout[~ is_missing], k=1)
+        x_itpl = s(xidx[is_missing])
+        xout[is_missing] = x_itpl
+
     print "Iterations: {}".format(nloops)
         
     return xout, nspikes, ntrends
