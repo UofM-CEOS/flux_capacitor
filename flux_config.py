@@ -56,11 +56,15 @@ dflts = {
     "colnames": 'time_20min,time_study,longitude,latitude,speed_over_ground,course_over_ground,heading,pitch,roll,heave,atmospheric_pressure,air_temperature,relative_humidity,surface_temperature,wind_speed,wind_direction,true_wind_speed,true_wind_direction,PAR,K_down,temperature_thermopile,temperature_case,temperature_dome,LW_down,UV_sensor_temperature,UV_b,UV_broad,acceleration_x,acceleration_y,acceleration_z,rate_x,rate_y,rate_z,wind_speed_u,wind_speed_v,wind_speed_w,air_temperature_sonic,sound_speed,anemometer_status,op_CO2_fraction,op_CO2_density,op_CO2_absorptance,op_H2O_fraction,op_H2O_density,op_H2O_absorptance,op_pressure,op_temperature,op_temperature_base,op_temperature_spar,op_temperature_bulb,op_cooler_voltage,op_bandwidth,op_delay_interval,bad_chopper_wheel_temperature_flag,bad_detector_temperature_flag,bad_optical_wheel_rotation_rate_flag,bad_sync_flag,op_CO2_signal_strength,cp_analyzer_status,cp_CO2_fraction,cp_CO2_density,cp_CO2_dry_fraction,cp_CO2_absorptance,cp_H2O_fraction,cp_H2O_density,cp_H2O_dry_fraction,cp_H2O_absorptance,cp_pressure,cp_temperature,cp_temperature_in,cp_temperature_out,cp_temperature_block,cp_temperature_cell,cp_CO2_signal_strength,cp_H2O_signal_strength',
     "sample_frequency": '10.0',
     "summary_file": 'fluxes.csv',
+    "despike_win_width": '3000',
+    "despike_step": '1500',
+    "despike_nreps": '20',
     "motion2anemometer_pos": '0.0, 0.0, 0.0',
     "complementary_filter_period": '10.0',
     "accel_highpass_cutoff": '20.0'}
 # Scalar option names
-scalar_opts = ['sample_frequency', 'complementary_filter_period',
+scalar_opts = ['sample_frequency', 'despike_win_width', 'despike_step',
+               'despike_nreps', 'complementary_filter_period',
                'accel_highpass_cutoff']
 vector_opts = ['motion2anemometer_pos']
 
@@ -92,6 +96,13 @@ def parse_config(cfg_file):
         ('Outputs',
          OrderedDict((
              ('summary_file', dflts['summary_file']),
+         ))
+     ),
+        ('Despiking',
+         OrderedDict((
+             ('despike_win_width', dflts['despike_win_width']),
+             ('despike_step', dflts['despike_step']),
+             ('despike_nreps', dflts['despike_nreps']),
          ))
      ),
         ('Motion Correction',
@@ -144,6 +155,14 @@ def parse_config(cfg_file):
     # Check if we have a valid sampling frequency
     if (py_dict['Inputs']['sample_frequency'] <= 0):
         raise Exception("Sampling frequency must be greater than zero")
+
+    # Check if we have a valid despiking parameters
+    if (py_dict['Despiking']['despike_win_width'] <= 0):
+        raise Exception("Despiking window width must be greater than zero")
+    if (py_dict['Despiking']['despike_step'] <= 0):
+        raise Exception("Despiking step size must be greater than zero")
+    if (py_dict['Despiking']['despike_nreps'] < 0):
+        raise Exception("The number of despiking iterations cannot be negative")
 
     input_files = glob.glob(osp.join(config['Inputs']['input_directory'],
                                      config['Inputs']['file_pattern']))
