@@ -86,7 +86,6 @@ def do_flux(period_file, config):
     nreps = np.int(config["Despiking"]["despike_nreps"])
 
     if not sonic_flag:
-        # wind = wind.apply(shot_filter)
         xnew, nspwu, ntr = despike_VickersMahrt(wind.wind_speed_u,
                                                 width=win_width,
                                                 step=win_step,
@@ -119,9 +118,6 @@ def do_flux(period_file, config):
             sonic_flag = True
 
     if not open_flag:
-        # ec['op_CO2_density'] = shot_filter(ec['op_CO2_density'])
-        # ec['op_H2O_density'] = shot_filter(ec['op_H2O_density'])
-        # ec['op_pressure'] = shot_filter(ec['op_pressure'])
         xnew, nspco2, ntr = despike_VickersMahrt(ec.op_CO2_density,
                                                  width=win_width,
                                                  step=win_step,
@@ -146,9 +142,6 @@ def do_flux(period_file, config):
             open_flag = True
 
     if not closed_flag:
-        # ec['cp_CO2_fraction'] = shot_filter(ec['cp_CO2_fraction'])
-        # ec['cp_H2O_fraction'] = shot_filter(ec['cp_H2O_fraction'])
-        # ec['cp_pressure'] = shot_filter(ec['cp_pressure'])
         xnew, nspco2, ntr = despike_VickersMahrt(ec.cp_CO2_fraction,
                                                  width=win_width,
                                                  step=win_step,
@@ -219,8 +212,7 @@ def do_flux(period_file, config):
     if ((cog.count() < len(cog)) or (sog.count() < len(sog)) or
         (heading.count < len(heading))):
         motion_flag = True
-    # If we have no good COG, SOG, or heading, then we should skip
-    # processing entirely.
+    # If we have no good COG, SOG, or heading, then we cannot continue.
     if cog.count() < 1 or sog.count() < 1 or heading.count() < 1:
         bad_navigation_flag = True
         raise "Unusable COG, SOG, or heading records."
@@ -389,17 +381,17 @@ if __name__ == '__main__':
 
 # # Using our data
 # config = parse_config('flux_2014.cfg')
-# ec = pd.read_csv(config["Inputs"]["input_files"][3],
+# win_width = np.int(config["Despiking"]["despike_win_width"])
+# win_step = np.int(config["Despiking"]["despike_step"])
+# nreps = np.int(config["Despiking"]["despike_nreps"])
+# ec = pd.read_csv(config["Inputs"]["input_files"][8],
 #                  dtype=config["Inputs"]["dtypes"], parse_dates=[0, 1],
 #                  index_col=1, names=config["Inputs"]["colnames"],
 #                  na_values=["NAN"], true_values=["t"], false_values=["f"])
-# win_width = config["Despiking"]["despike_win_width"]
-# win_step = config["Despiking"]["despike_step"]
-# nreps = config["Despiking"]["despike_nreps"]
 # # ec.loc[:, "acceleration_x":"acceleration_z"].plot()
 # ec.longitude.plot(style='o')
-# ec.op_H2O_density.plot()
-# xnew, nsp, ntr, nnan = despike_VickersMahrt(ec.longitude, width=3000,
-#                                             step=1500, zscore_thr=3.5, nreps=20)
-# ec.longitude.plot(style='o')
+# ec.op_CO2_density.plot()
+# xnew, nsp, ntr = despike_VickersMahrt(ec.op_CO2_density, width=win_width,
+#                                       step=win_step, zscore_thr=3.5, nreps=20)
+# ec.op_CO2_density.plot()
 # xnew.plot()
