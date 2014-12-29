@@ -69,7 +69,7 @@ scalar_opts = ['sample_frequency', 'despike_win_width', 'despike_step',
 vector_opts = ['motion2anemometer_pos']
 
 def parse_config(cfg_file):
-    """Parse configuration file for essential variables for flux analysis.
+    """Parse configuration file for essential variables during flux analysis.
 
     Parameters
     ----------
@@ -123,7 +123,7 @@ def parse_config(cfg_file):
                                      # we're given
     # Copy where we'll replace strings with other types
     py_dict = dflt_dict.copy()
-    # Loop through all items and clean them to generate our variables as
+    # Loop through all items and clean them up to generate our variables as
     # lists of strings
     for sec in config.sections():
         for opt in config.options(sec):
@@ -169,11 +169,12 @@ def parse_config(cfg_file):
     input_files.sort()
     py_dict['Inputs']['input_files'] = input_files
 
-    # Check if we have all legal names
+    # Check if we have all legal names for header of input files (don't
+    # care about first 2 time columns)
     illegal_names = (set(py_dict["Inputs"]["colnames"][2:]) -
                      set(all_names.keys()))
     if len(illegal_names) > 0:
-        raise Exception("Found bad names in config file")
+        raise Exception("There are illegal column names in config file:")
         print illegal_names
     else:
         dtypes = {key: all_names[key] for key in
