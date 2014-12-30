@@ -579,6 +579,9 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
             nspikes_loop += nsp; ntrends += ntr
             xout[winidx] = xnew
         nloops += 1
+        # Increase zscore_thr by 0.3, instead of 0.1 as in V&M (1997),
+        # following EddyUH implementation
+        zscore_thr += 0.3
         if nspikes_loop > 0:
             nspikes += nspikes_loop
         else:
@@ -593,7 +596,7 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         x_itpl = s(xidx[is_missing])
         xout[is_missing] = x_itpl
 
-    print "Iterations: {}".format(nloops)
+    print "Total despiking iterations: {}".format(nloops)
         
     return xout, nspikes, ntrends
 
