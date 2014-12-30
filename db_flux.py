@@ -184,12 +184,12 @@ def do_flux(period_file, config):
     if ((nbad_vertical_wind / float(ec_nrows)) > 0.5 or
         (nbad_air_temp_sonic / float(ec_nrows)) > 0.5):
         sonic_flag = True
-        raise "Bad sonic anemometer data."
+        raise Exception("Bad sonic anemometer data.")
     # [Original comment: check critical low frequency variabiles]
     if not (np.isfinite(air_temp_avg) or
             np.isfinite(ec.relative_humidity[0])):
         bad_meteorology_flag = True
-        raise "RH or average air temperature unavailable."
+        raise Exception("RH or average air temperature unavailable.")
     # # Below will be needed at some point
     # sw_avg = ec.K_down[0]
     # lw_avg = ec.LW_down[0]
@@ -215,11 +215,17 @@ def do_flux(period_file, config):
     # If we have no good COG, SOG, or heading, then we cannot continue.
     if cog.count() < 1 or sog.count() < 1 or heading.count() < 1:
         bad_navigation_flag = True
-        raise "Unusable COG, SOG, or heading records."
+        raise Exception("Unusable COG, SOG, or heading records.")
     # [Original comment: shot filter the motion channels... this helps with
     # a problem where unreasonably high accelerations cause a 'NaN'
     # calculation]
-    motion3d = motion3d.apply(shot_filter)
+    for col in motion3d.columns:
+        xnew, nsp, ntr = despike_VickersMahrt(motion3d[col],
+                                              width=win_width,
+                                              step=win_step,
+                                              zscore_thr=3.5,
+                                              nreps=nreps)
+        motion3d[col] = xnew
 
     # # Output to Octave for debugging
     # import scipy.io as sio
