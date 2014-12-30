@@ -584,7 +584,7 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         zscore_thr += 0.3
         if nspikes_loop > 0:
             nspikes += nspikes_loop
-        else:
+        else:                   # Stop if we haven't found any new spikes
             break
     # Interpolate through missing values, if requested (default).
     is_missing = np.isnan(np.array(xout)) # need to coerce to np array
@@ -596,7 +596,7 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         x_itpl = s(xidx[is_missing])
         xout[is_missing] = x_itpl
 
-    print "Total despiking iterations: {}".format(nloops)
+    print "N despiking iterations: {}".format(nloops)
         
     return xout, nspikes, ntrends
 
