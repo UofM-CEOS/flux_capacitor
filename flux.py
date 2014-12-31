@@ -558,6 +558,8 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         Number of spikes detected.
     numpy.int [2]
         Number of outlier trends detected.
+    numpy.int [2]
+        Number of iterations performed.
 
     """
     if step is None:            # set default step as
@@ -596,9 +598,7 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         x_itpl = s(xidx[is_missing])
         xout[is_missing] = x_itpl
 
-    print "N despiking iterations: {}".format(nloops)
-        
-    return xout, nspikes, ntrends
+    return xout, nspikes, ntrends, nloops
 
 
 ## ------------------------------------------------------------------------
