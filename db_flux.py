@@ -86,30 +86,30 @@ def do_flux(period_file, config):
     nreps = np.int(config["Despiking"]["despike_nreps"])
 
     if not sonic_flag:
-        xnew, nspwu, ntr = despike_VickersMahrt(wind.wind_speed_u,
-                                                width=win_width,
-                                                step=win_step,
-                                                zscore_thr=3.5,
-                                                nreps=nreps)
+        xnew, nspwu, _, _ = despike_VickersMahrt(wind.wind_speed_u,
+                                                 width=win_width,
+                                                 step=win_step,
+                                                 zscore_thr=3.5,
+                                                 nreps=nreps)
         wind.wind_speed_u = xnew
-        xnew, nspwv, ntr = despike_VickersMahrt(wind.wind_speed_v,
-                                                width=win_width,
-                                                step=win_step,
-                                                zscore_thr=3.5,
-                                                nreps=nreps)
+        xnew, nspwv, _, _ = despike_VickersMahrt(wind.wind_speed_v,
+                                                 width=win_width,
+                                                 step=win_step,
+                                                 zscore_thr=3.5,
+                                                 nreps=nreps)
         wind.wind_speed_v = xnew
-        xnew, nspww, ntr = despike_VickersMahrt(wind.wind_speed_w,
-                                                width=win_width,
-                                                step=win_step,
-                                                zscore_thr=5.0,
-                                                nreps=nreps)
+        xnew, nspww, _, _ = despike_VickersMahrt(wind.wind_speed_w,
+                                                 width=win_width,
+                                                 step=win_step,
+                                                 zscore_thr=5.0,
+                                                 nreps=nreps)
         wind.wind_speed_w = xnew
         # ec.air_temperature_sonic = shot_filter(ec.air_temperature_sonic)
-        xnew, nspat, ntr = despike_VickersMahrt(ec.air_temperature_sonic,
-                                                width=win_width,
-                                                step=win_step,
-                                                zscore_thr=3.5,
-                                                nreps=nreps)
+        xnew, nspat, _, _ = despike_VickersMahrt(ec.air_temperature_sonic,
+                                                 width=win_width,
+                                                 step=win_step,
+                                                 zscore_thr=3.5,
+                                                 nreps=nreps)
         ec.air_temperature_sonic = xnew
         if (((nspwu / wind.wind_speed_u.count()) > 0.01) or
             ((nspwv / wind.wind_speed_v.count()) > 0.01) or
@@ -118,23 +118,23 @@ def do_flux(period_file, config):
             sonic_flag = True
 
     if not open_flag:
-        xnew, nspco2, ntr = despike_VickersMahrt(ec.op_CO2_density,
-                                                 width=win_width,
-                                                 step=win_step,
-                                                 zscore_thr=3.5,
-                                                 nreps=nreps)
+        xnew, nspco2, _, _ = despike_VickersMahrt(ec.op_CO2_density,
+                                                  width=win_width,
+                                                  step=win_step,
+                                                  zscore_thr=3.5,
+                                                  nreps=nreps)
         ec.op_CO2_density = xnew
-        xnew, nsph2o, ntr = despike_VickersMahrt(ec.op_H2O_density,
+        xnew, nsph2o, _, _ = despike_VickersMahrt(ec.op_H2O_density,
+                                                  width=win_width,
+                                                  step=win_step,
+                                                  zscore_thr=3.5,
+                                                  nreps=nreps)
+        ec.op_H2O_density = xnew
+        xnew, nsppr, _, _ = despike_VickersMahrt(ec.op_pressure,
                                                  width=win_width,
                                                  step=win_step,
                                                  zscore_thr=3.5,
                                                  nreps=nreps)
-        ec.op_H2O_density = xnew
-        xnew, nsppr, ntr = despike_VickersMahrt(ec.op_pressure,
-                                                width=win_width,
-                                                step=win_step,
-                                                zscore_thr=3.5,
-                                                nreps=nreps)
         ec.op_pressure = xnew
         if (((nspco2 / ec.op_CO2_density.count()) > 0.01) or
             ((nsph2o / ec.op_H2O_density.count()) > 0.01) or
@@ -142,23 +142,23 @@ def do_flux(period_file, config):
             open_flag = True
 
     if not closed_flag:
-        xnew, nspco2, ntr = despike_VickersMahrt(ec.cp_CO2_fraction,
-                                                 width=win_width,
-                                                 step=win_step,
-                                                 zscore_thr=3.5,
-                                                 nreps=nreps)
+        xnew, nspco2, _, _ = despike_VickersMahrt(ec.cp_CO2_fraction,
+                                                  width=win_width,
+                                                  step=win_step,
+                                                  zscore_thr=3.5,
+                                                  nreps=nreps)
         ec.cp_CO2_fraction = xnew
-        xnew, nsph2o, ntr = despike_VickersMahrt(ec.cp_H2O_fraction,
+        xnew, nsph2o, _, _ = despike_VickersMahrt(ec.cp_H2O_fraction,
+                                                  width=win_width,
+                                                  step=win_step,
+                                                  zscore_thr=3.5,
+                                                  nreps=nreps)
+        ec.cp_H2O_fraction = xnew
+        xnew, nsppr, _, _ = despike_VickersMahrt(ec.cp_pressure,
                                                  width=win_width,
                                                  step=win_step,
                                                  zscore_thr=3.5,
                                                  nreps=nreps)
-        ec.cp_H2O_fraction = xnew
-        xnew, nsppr, ntr = despike_VickersMahrt(ec.cp_pressure,
-                                                width=win_width,
-                                                step=win_step,
-                                                zscore_thr=3.5,
-                                                nreps=nreps)
         ec.cp_pressure = xnew
         if (((nspco2 / ec.cp_CO2_fraction.count()) > 0.01) or
             ((nsph2o / ec.cp_H2O_fraction.count()) > 0.01) or
@@ -220,11 +220,11 @@ def do_flux(period_file, config):
     # a problem where unreasonably high accelerations cause a 'NaN'
     # calculation]
     for col in motion3d.columns:
-        xnew, nsp, ntr = despike_VickersMahrt(motion3d[col],
-                                              width=win_width,
-                                              step=win_step,
-                                              zscore_thr=3.5,
-                                              nreps=nreps)
+        xnew, nsp, _, _ = despike_VickersMahrt(motion3d[col],
+                                               width=win_width,
+                                               step=win_step,
+                                               zscore_thr=3.5,
+                                               nreps=nreps)
         motion3d[col] = xnew
 
     # # Output to Octave for debugging
@@ -235,6 +235,18 @@ def do_flux(period_file, config):
     #              'angular_rate': motion3d.loc[:, 'rate_phi':].values,
     #              'heading': np.reshape(heading, (len(heading), 1)),
     #              'sog': np.reshape(sog, (len(sog), 1))})
+    # # OR do a round-trip via Oct2Py!
+    # from oct2py import octave
+    # uvw_ship, uvw_earth = octave.motion_octave(wind.values,
+    #                                            motion3d.values[:, :3],
+    #                                            motion3d.values[:, 3:],
+    #                                            np.reshape(heading,
+    #                                                       (len(heading), 1)),
+    #                                            np.reshape(sog, (len(sog), 1)),
+    #                                            mot2anem_pos,
+    #                                            sample_freq_hz, Tcf, Ta,
+    #                                            [0.0, 0.0], [0.0, 0.0],
+    #                                            {'uearth'})
 
     # Save full tuple output and select later. Note that we the use the
     # interpolated, smoothed heading and speed over ground.
@@ -244,23 +256,27 @@ def do_flux(period_file, config):
                          heading.values, sog.values, mot2anem_pos,
                          sample_freq_hz, Tcf, Ta, [0.0, 0.0], [0.0, 0.0])
     # Ship-referenced speeds
-    uvw_ship = UVW[0]
+    UVW_ship = UVW[0]
     # Earth-referenced speeds
-    uvw_earth = UVW[11]
+    UVW_earth = UVW[11]
     # Append corrected wind vectors to DataFrame
     wind_corr_names = ['wind_speed_u_ship', 'wind_speed_v_ship',
                        'wind_speed_w_ship', 'wind_speed_u_earth',
                        'wind_speed_v_earth', 'wind_speed_w_earth']
-    wind[wind_corr_names[0]] = pd.Series(uvw_ship[:, 0], index=wind.index)
-    wind[wind_corr_names[1]] = pd.Series(uvw_ship[:, 1], index=wind.index)
-    wind[wind_corr_names[2]] = pd.Series(uvw_ship[:, 2], index=wind.index)
-    wind[wind_corr_names[3]] = pd.Series(uvw_earth[:, 0],
+    wind[wind_corr_names[0]] = pd.Series(UVW_ship[:, 0], index=wind.index)
+    wind[wind_corr_names[1]] = pd.Series(UVW_ship[:, 1], index=wind.index)
+    wind[wind_corr_names[2]] = pd.Series(UVW_ship[:, 2], index=wind.index)
+    wind[wind_corr_names[3]] = pd.Series(UVW_earth[:, 0],
                                          index=wind.index)
-    wind[wind_corr_names[4]] = pd.Series(uvw_earth[:, 1],
+    wind[wind_corr_names[4]] = pd.Series(UVW_earth[:, 1],
                                          index=wind.index)
-    wind[wind_corr_names[5]] = pd.Series(uvw_earth[:, 2],
+    wind[wind_corr_names[5]] = pd.Series(UVW_earth[:, 2],
                                          index=wind.index)
 
+    # # Plots comparing with Octave output
+    # fig, axs = plt.subplots(3, 2, sharex = True)
+    # axs[0, 0].plot(uvw_ship[:, 0], UVW_ship[:, 0])
+    # # etc, etc.
     # # Plot smoothed and corrected data for each vector. Turned off for
     # # production of output files.
     # fig, axs = plt.subplots(3, 1, sharex=True)
