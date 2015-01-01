@@ -8,47 +8,6 @@ from scipy.stats import zscore
 from itertools import groupby
 
 
-def shot_filter(x, sigma_thr=3):
-    """Perform spline interpolation for extreme values in array `x`.
-    
-    Extreme values are those that are larger than `sigma_thr` * `sigma`,
-    where `sigma` is the sample standard deviation of `x`.
-
-    The interpolating function is created by the
-    InterpolatedUnivariateSpline function from the scipy package, and uses
-    a single knot to approximate a simple linear interpolation, so as to
-    keep the original signal as untouched as possible.
-
-    Parameters
-    ----------
-    x : array_like
-        1-D array with data to interpolate.
-    sigma_thr : float
-        The magnitude array associated with each angle.  It can be
-        a scalar that is common to all `angle` elements.
-
-    Returns
-    -------
-    A copy of `x` with interpolated values at index location of extremes.
-
-    """
-    x_new = x.astype('d')
-    idx = range(len(x_new))
-    is_ok = abs(x_new - np.mean(x_new)) < (sigma_thr * np.std(x_new))
-    x_ok = x_new[is_ok]
-    t_ok = idx[is_ok]
-    t_bad = idx[~is_ok]
-    # # Simple linear interpolation; extrapolation impossible
-    # f_itpl = itpl.interp1d(t_ok.values.astype('d'), x_ok)
-    # x_itpl = f_itpl(t_bad.values.astype('d'))
-    # Trying a 1D B-spline for more realistic intra- and extrapolation.
-    # This needs more work, and may not be worth it...
-    s = itpl.InterpolatedUnivariateSpline(t_ok.astype('d'), x_ok, k=1)
-    x_itpl = s(t_bad.astype('d'))
-    x_new[t_bad] = x_itpl
-    return x_new
-
-
 def decompose(angle, vmagnitude):
     """Decompose angle and magnitude into `x` and `y` vector(s).
 

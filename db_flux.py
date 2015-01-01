@@ -8,8 +8,7 @@ database.
 
 import numpy as np
 from scipy.stats import zscore
-from flux import shot_filter, smooth_angle, wind3D_correct
-from flux import despike_VickersMahrt
+from flux import smooth_angle, wind3D_correct, despike_VickersMahrt
 from flux_config import parse_config
 import pandas as pd
 import os.path as osp
