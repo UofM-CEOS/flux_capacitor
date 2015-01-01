@@ -4,6 +4,10 @@
 """Steps towards CO2 flux analyses, using data files output from PostgreSQL
 database.
 
+It takes a single argument, which should be the path to a configuration
+file containing necessary set up information such as location of input
+files and variables.
+
 """
 
 import numpy as np
@@ -176,7 +180,7 @@ def do_flux(period_file, config):
     # values bad sonic data can also turn up in the Tsonic before the
     # wind, check the deviation between Tsonic and mean air T.]
     air_temp_avg = ec['air_temperature'].mean()
-    nbad_vertical_wind = wind['wind_speed_w'].gt(7).sum()
+    nbad_vertical_wind = abs(wind['wind_speed_w']).gt(7).sum()
     nbad_air_temp_sonic = abs(ec['air_temperature_sonic'] -
                               air_temp_avg).gt(7).sum()
     # Set wind flag high if gt 0.5% of records are frost contaminated
