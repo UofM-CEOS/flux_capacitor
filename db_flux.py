@@ -89,83 +89,63 @@ def do_flux(period_file, config):
     nreps = np.int(config["Despiking"]["despike_nreps"])
 
     if not sonic_flag:
-        xnew, nspwu, _, _ = despike_VickersMahrt(wind.wind_speed_u,
-                                                 width=win_width,
-                                                 step=win_step,
-                                                 zscore_thr=3.5,
-                                                 nreps=nreps)
-        wind.wind_speed_u = xnew
-        xnew, nspwv, _, _ = despike_VickersMahrt(wind.wind_speed_v,
-                                                 width=win_width,
-                                                 step=win_step,
-                                                 zscore_thr=3.5,
-                                                 nreps=nreps)
-        wind.wind_speed_v = xnew
-        xnew, nspww, _, _ = despike_VickersMahrt(wind.wind_speed_w,
-                                                 width=win_width,
-                                                 step=win_step,
-                                                 zscore_thr=5.0,
-                                                 nreps=nreps)
-        wind.wind_speed_w = xnew
+        wind_u_VM = despike_VickersMahrt(wind.wind_speed_u,
+                                         width=win_width, step=win_step,
+                                         zscore_thr=3.5, nreps=nreps)
+        wind.wind_speed_u = wind_u_VM[0]
+        wind_v_VM = despike_VickersMahrt(wind.wind_speed_v,
+                                         width=win_width, step=win_step,
+                                         zscore_thr=3.5, nreps=nreps)
+        wind.wind_speed_v = wind_v_VM[0]
+        wind_w_VM = despike_VickersMahrt(wind.wind_speed_w,
+                                         width=win_width, step=win_step,
+                                         zscore_thr=5.0, nreps=nreps)
+        wind.wind_speed_w = wind_w_VM[0]
         # ec.air_temperature_sonic = shot_filter(ec.air_temperature_sonic)
-        xnew, nspat, _, _ = despike_VickersMahrt(ec.air_temperature_sonic,
-                                                 width=win_width,
-                                                 step=win_step,
-                                                 zscore_thr=3.5,
-                                                 nreps=nreps)
-        ec.air_temperature_sonic = xnew
-        if (((nspwu / wind.wind_speed_u.count()) > 0.01) or
-            ((nspwv / wind.wind_speed_v.count()) > 0.01) or
-            ((nspww / wind.wind_speed_w.count()) > 0.01) or
-            ((nspat / ec.air_temperature_sonic.count()) > 0.01)):
+        sonic_T_VM = despike_VickersMahrt(ec.air_temperature_sonic,
+                                          width=win_width, step=win_step,
+                                          zscore_thr=3.5, nreps=nreps)
+        ec.air_temperature_sonic = sonic_T_VM[0]
+        if (((wind_u_VM[1] / wind.wind_speed_u.count()) > 0.01) or
+            ((wind_v_VM[1] / wind.wind_speed_v.count()) > 0.01) or
+            ((wind_w_VM[1] / wind.wind_speed_w.count()) > 0.01) or
+            ((sonic_T_VM[1] / ec.air_temperature_sonic.count()) > 0.01)):
             sonic_flag = True
 
     if not open_flag:
-        xnew, nspco2, _, _ = despike_VickersMahrt(ec.op_CO2_density,
-                                                  width=win_width,
-                                                  step=win_step,
-                                                  zscore_thr=3.5,
-                                                  nreps=nreps)
-        ec.op_CO2_density = xnew
-        xnew, nsph2o, _, _ = despike_VickersMahrt(ec.op_H2O_density,
-                                                  width=win_width,
-                                                  step=win_step,
-                                                  zscore_thr=3.5,
-                                                  nreps=nreps)
-        ec.op_H2O_density = xnew
-        xnew, nsppr, _, _ = despike_VickersMahrt(ec.op_pressure,
-                                                 width=win_width,
-                                                 step=win_step,
-                                                 zscore_thr=3.5,
-                                                 nreps=nreps)
-        ec.op_pressure = xnew
-        if (((nspco2 / ec.op_CO2_density.count()) > 0.01) or
-            ((nsph2o / ec.op_H2O_density.count()) > 0.01) or
-            ((nsppr / ec.op_pressure.count()) > 0.01)):
+        op_CO2_VM = despike_VickersMahrt(ec.op_CO2_density,
+                                         width=win_width, step=win_step,
+                                         zscore_thr=3.5, nreps=nreps)
+        ec.op_CO2_density = op_CO2_VM[0]
+        op_H2O_VM = despike_VickersMahrt(ec.op_H2O_density,
+                                         width=win_width, step=win_step,
+                                         zscore_thr=3.5, nreps=nreps)
+        ec.op_H2O_density = op_H2O_VM[0]
+        op_Pr_VM = despike_VickersMahrt(ec.op_pressure,
+                                        width=win_width, step=win_step,
+                                        zscore_thr=3.5, nreps=nreps)
+        ec.op_pressure = op_Pr_VM[0]
+        if (((op_CO2_VM[1] / ec.op_CO2_density.count()) > 0.01) or
+            ((op_H2O_VM[1] / ec.op_H2O_density.count()) > 0.01) or
+            ((op_Pr_VM[1] / ec.op_pressure.count()) > 0.01)):
             open_flag = True
 
     if not closed_flag:
-        xnew, nspco2, _, _ = despike_VickersMahrt(ec.cp_CO2_fraction,
-                                                  width=win_width,
-                                                  step=win_step,
-                                                  zscore_thr=3.5,
-                                                  nreps=nreps)
-        ec.cp_CO2_fraction = xnew
-        xnew, nsph2o, _, _ = despike_VickersMahrt(ec.cp_H2O_fraction,
-                                                  width=win_width,
-                                                  step=win_step,
-                                                  zscore_thr=3.5,
-                                                  nreps=nreps)
-        ec.cp_H2O_fraction = xnew
-        xnew, nsppr, _, _ = despike_VickersMahrt(ec.cp_pressure,
-                                                 width=win_width,
-                                                 step=win_step,
-                                                 zscore_thr=3.5,
-                                                 nreps=nreps)
-        ec.cp_pressure = xnew
-        if (((nspco2 / ec.cp_CO2_fraction.count()) > 0.01) or
-            ((nsph2o / ec.cp_H2O_fraction.count()) > 0.01) or
-            ((nsppr / ec.cp_pressure.count()) > 0.01)):
+        cp_CO2_VM = despike_VickersMahrt(ec.cp_CO2_fraction,
+                                         width=win_width, step=win_step,
+                                         zscore_thr=3.5, nreps=nreps)
+        ec.cp_CO2_fraction = cp_CO2_VM[0]
+        cp_H2O_VM = despike_VickersMahrt(ec.cp_H2O_fraction,
+                                         width=win_width, step=win_step,
+                                         zscore_thr=3.5, nreps=nreps)
+        ec.cp_H2O_fraction = cp_H2O_VM[0]
+        cp_Pr_VM = despike_VickersMahrt(ec.cp_pressure,
+                                        width=win_width, step=win_step,
+                                        zscore_thr=3.5, nreps=nreps)
+        ec.cp_pressure = cp_Pr_VM[0]
+        if (((cp_CO2_VM[1] / ec.cp_CO2_fraction.count()) > 0.01) or
+            ((cp_H2O_VM[1] / ec.cp_H2O_fraction.count()) > 0.01) or
+            ((cp_Pr_VM[1] / ec.cp_pressure.count()) > 0.01)):
             closed_flag = True
 
     # TODO: Here we need to prepare our check for the diagnostics from the
@@ -223,12 +203,10 @@ def do_flux(period_file, config):
     # a problem where unreasonably high accelerations cause a 'NaN'
     # calculation]
     for col in motion3d.columns:
-        xnew, nsp, _, _ = despike_VickersMahrt(motion3d[col],
-                                               width=win_width,
-                                               step=win_step,
-                                               zscore_thr=3.5,
-                                               nreps=nreps)
-        motion3d[col] = xnew
+        motcol_VM = despike_VickersMahrt(motion3d[col],
+                                         width=win_width, step=win_step,
+                                         zscore_thr=3.5, nreps=nreps)
+        motion3d[col] = motcol_VM[0]
 
     # # Output to Octave for debugging
     # import scipy.io as sio
