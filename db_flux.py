@@ -314,7 +314,7 @@ def main(config_file):
     osummary = pd.DataFrame(flags,
                             index=[osp.basename(x) for x in ec_files])
     for ec_file in ec_files:
-        print ec_file             # REMOVE FOR PRODUCTION
+        print(ec_file)             # REMOVE FOR PRODUCTION
         # Get a file name prefix to be shared by the output files from this
         # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
         iname = osp.basename(ec_file)
@@ -328,7 +328,7 @@ def main(config_file):
 
     # Now we have the summary DataFrame filled up and can work with it.
     osummary.to_csv(summary_file, index_label="input_file")
-    print "Summary of fluxes written to " + summary_file
+    print("Summary of fluxes written to " + summary_file)
 
 
 if __name__ == '__main__':
