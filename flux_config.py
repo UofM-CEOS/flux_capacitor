@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # $Id$
 
 """Utility for configuring user variables for flux analyses."""
@@ -9,6 +8,9 @@ from os import getcwd
 import os.path as osp
 import glob
 import re
+
+
+__all__ = ['parse_config']
 
 # We need to control names.  We leave the date time columns (always the
 # first two in input) up to pandas to determine, as they're always safe.
