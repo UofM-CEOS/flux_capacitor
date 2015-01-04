@@ -183,8 +183,4 @@ def parse_config(cfg_file):
                   py_dict["Inputs"]["colnames"][2:]}
         py_dict["Inputs"]["dtypes"] = dtypes
 
-    # # Check if directory for summary file exists
-    # if (not osp.exists(osp.dirname(py_dict['Outputs']['summary_file']))):
-    #     raise Exception("Directory for summary file doesn't exist")
-
     return py_dict
