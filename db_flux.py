@@ -11,7 +11,6 @@ files and variables.
 """
 
 import numpy as np
-from scipy.stats import zscore
 from flux import smooth_angle, wind3D_correct, despike_VickersMahrt
 from flux_config import parse_config
 import pandas as pd
