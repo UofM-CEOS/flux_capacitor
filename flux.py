@@ -100,17 +100,17 @@ def euler_translate(X, euler):
     x, y, z = X[:, 0], X[:, 1], X[:, 2]
     pitch, tilt, s = euler[:, 0], euler[:, 1], euler[:, 2]
     x_new =  (x * np.cos(tilt) * np.cos(s) + 
-              y * ( np.sin(pitch) * np.sin(tilt) * np.cos(s) -
-                    np.cos(pitch) * np.sin(s)) +
-              z * ( np.cos(pitch) * np.sin(tilt) * np.cos(s) +
-                    np.sin(pitch) * np.sin(s)))
+              y * (np.sin(pitch) * np.sin(tilt) * np.cos(s) -
+                   np.cos(pitch) * np.sin(s)) +
+              z * (np.cos(pitch) * np.sin(tilt) * np.cos(s) +
+                   np.sin(pitch) * np.sin(s)))
     y_new =  (x * np.cos(tilt) * np.sin(s) +
-              y * ( np.sin(pitch) * np.sin(tilt) * np.sin(s) +
-                    np.cos(pitch) * np.cos(s)) +
-              z * ( np.cos(pitch) * np.sin(tilt) * np.sin(s) -
-                    np.sin(pitch) * np.cos(s)))
+              y * (np.sin(pitch) * np.sin(tilt) * np.sin(s) +
+                   np.cos(pitch) * np.cos(s)) +
+              z * (np.cos(pitch) * np.sin(tilt) * np.sin(s) -
+                   np.sin(pitch) * np.cos(s)))
     z_new =  (x * (-np.sin(tilt)) + y * ( np.cos(tilt) * np.sin(pitch)) +
-              z * ( np.cos(tilt) * np.cos(pitch)))
+              z * (np.cos(tilt) * np.cos(pitch)))
     return np.column_stack((x_new, y_new, z_new))
     
 
@@ -219,8 +219,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # Low frequency tilt using accelerometers
     g = np.sqrt(np.sum(np.mean(acceleration, 0) ** 2))
     ax, ay = acceleration[:, 0], acceleration[:, 1]
-    p_lf = np.arctan2(ay, g) - \
-           signal.filtfilt(bc, ac, np.arctan2(ay, g), padlen=pdl)
+    p_lf = (np.arctan2(ay, g) -
+            signal.filtfilt(bc, ac, np.arctan2(ay, g), padlen=pdl))
     # High frequency angles using angle rates
     rm = signal.detrend(angle_rate, 0)
     rx, ry, rz = rm[:, 0], rm[:, 1], rm[:, 2] # don't do this in ipdb!
@@ -228,9 +228,9 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                            ((np.cumsum(rx) - 0.5 * rx - 0.5 * rx[0]) /
                             sample_freq), padlen=pdl)
     pitch = p_lf + p_hf
-    t_lf = np.arctan2(-ax * np.cos(pitch), g) - \
-           signal.filtfilt(bc, ac, np.arctan2(-ax * np.cos(pitch), g),
-                           padlen=pdl)
+    t_lf = (np.arctan2(-ax * np.cos(pitch), g) -
+            signal.filtfilt(bc, ac, np.arctan2(-ax * np.cos(pitch), g),
+                            padlen=pdl))
 
     gyro = np.unwrap(-np.radians(heading)) # Put heading in radians and RHS
     heading_rhs = gyro[0]               # Initial heading
