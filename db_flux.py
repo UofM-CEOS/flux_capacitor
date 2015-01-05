@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 plt.style.use('ggplot')
 
-def do_flux(period_file, config):
+def flux_period(period_file, config):
     """Perform required calculations on period."""
     # Extract all the config pieces
     colnames = config['Inputs']['colnames']
@@ -318,7 +318,7 @@ def main(config_file):
         # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
         iname = osp.basename(ec_file)
         iname_prefix = osp.splitext(iname)[0]
-        ec_wind_corr, ec_flags = do_flux(ec_file, config)
+        ec_wind_corr, ec_flags = flux_period(ec_file, config)
         # Save to file with suffix '_mc.csv'
         ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + '_mc.csv'),
                             index_label=colnames[1])
