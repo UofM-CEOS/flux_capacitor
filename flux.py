@@ -560,16 +560,3 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         xout[is_missing] = x_itpl
 
     return xout, nspikes, ntrends, nloops
-
-
-## ------------------------------------------------------------------------
-## TESTS
-
-# x = np.random.randn(100)
-# isout = abs(zscore(x)) > 0.5
-# x_new, ns, xmask = get_VickersMahrt(x, 0.5, 3)
-# plt.plot(x)
-# plt.plot(arange(len(x))[isout], x[isout], 'or')
-# plt.plot(x_new, '--g')
-# plt.plot(arange(len(x))[abs(xmask) > 1],
-#          x[abs(xmask) > 1], 'ob')
