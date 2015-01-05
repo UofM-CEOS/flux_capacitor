@@ -1,3 +1,167 @@
+2015-01-05  spluque@gmail.com
+
+	* db_flux.py:
+	  No longer need to import zscore.
+
+2015-01-04  spluque@gmail.com
+
+	* flux_config.py:
+	  Remove executable permission.
+
+	* flux_config.py:
+	  Rename dtypes dictionary.
+
+	* flux_config.py:
+	  Not worth checking if directory for summary file exists.
+
+2015-01-03  spluque@gmail.com
+
+	* flux_config.py:
+	  Guard against brutal imports and this module is not an
+	  executable.
+
+2015-01-02  spluque@gmail.com
+
+	* db_flux.py:
+	  Use print function.
+
+	* db_flux.py:
+	  Simply assign the full tuple when using despike_VickersMarhrt and
+	  then select whatever items are needed later.
+
+	* flux.py:
+	  Guard against brutal imports.
+
+2015-01-01  spluque@gmail.com
+
+	* db_flux.py:
+	  It's the absolute value of vertical wind velocity which needs to
+	  be checked for filtering.
+
+	* db_flux.py, flux.py:
+	  Removing shot_filter() as we no longer use it.
+
+2014-12-31  spluque@gmail.com
+
+	* db_flux.py:
+	  Adjusted for new despike_VickersMahrt() output and added comment
+	  about awesome Oct2Py functionality.
+
+	* flux.py:
+	  Don't print anything; just return an additional tuple element
+	  with the total number of iterations performed.
+
+2014-12-30  spluque@gmail.com
+
+	* db_flux.py:
+	  Properly raise exceptions and loop through 3D motion columns for
+	  despiking.
+
+	* flux.py:
+	  Increase zscore_thr between despiking loops, as per EddyUH.
+
+2014-12-29  spluque@gmail.com
+
+	* db_flux.py:
+	  Incorporating new Vickers Mahrt (1997) despiking procedure
+	  implementing in flux module.
+
+	* flux_config.py, flux_default.cfg:
+	  Adding despiking parameters.
+
+	* flux.py:
+	  Allow for interpolation through all missing data, which is now
+	  default. Interpolation is done on the entire series, after
+	  despiking.
+
+2014-12-28  spluque@gmail.com
+
+	* db_flux.py:
+	  Start to incorporate Vickers Mahrt despiking procedure.
+
+	* flux.py:
+	  Implemented Vickers Mahrt filtering for noise. We still need to
+	  make sure missing data are also considered as spikes.
+	  Remove dependency on Pandas for old shot_filter function; we just
+	  take any array-like input.
+
+2014-12-20  spluque@gmail.com
+
+	* db_flux.py:
+	  Enforce float division appropriately and append output to summary
+	  file.
+
+2014-12-19  spluque@gmail.com
+
+	* flux_2011.cfg, flux_2014.cfg, flux_config.py, flux_default.cfg:
+	  Fix our defaults.
+
+	* db_flux.py:
+	  Ensure that we get a float for tests using the number of rows.
+
+	* flux_config.py:
+	  Remove unnecessary double loop.
+
+	* flux_config.py, flux_default.cfg:
+	  Include op_diag.
+
+2014-12-18  spluque@gmail.com
+
+	* flux_config.py:
+	  Control names and dtypes of our columns.
+
+	* flux_default.cfg:
+	  Use proper names for columns.
+
+	* flux_2011.cfg, flux_2014.cfg:
+	  Use proper names for columns.
+
+	* db_flux.py:
+	  Properly read our files.
+
+2014-12-17  spluque@gmail.com
+
+	* flux_config.py:
+	  Adding input file list to the output dictionary.
+
+	* flux_2014.cfg:
+	  Correct input directory.
+
+	* db_flux.py:
+	  Refactor processing a single period file.
+
+2014-12-16  spluque@gmail.com
+
+	* Templates/rad_raw.sav, control.inc:
+	  Use correct columns for RAD files.
+
+	* Templates/ec_from_db.sav:
+	  Update template to take closed path input, but this is not yet
+	  ready with the new output dissecting the diagnostic value.
+
+	* db_flux.py:
+	  Refactor config parsing.
+
+	* flux_2014.cfg:
+	  Correct input path.
+
+	* flux_config.py:
+	  Moving the default dictionary into function to avoid shallow copy
+	  issue.
+
+2014-12-15  spluque@gmail.com
+
+	* flux_config.py, flux_default.cfg:
+	  Setting up function for parsing.
+
+	  Adding file and SVN properties.
+
+	* flux.cfg:
+	  No longer used, should have been renamed instead.
+
+	* flux.cfg:
+	  New configuration file.
+
 2014-12-12  spluque@gmail.com
 
 	* db_flux_prep.py:
