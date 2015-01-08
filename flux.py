@@ -283,7 +283,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                            sample_freq, padlen=pdl)
 
     # combine high- and low-frequency angles; make 2D matrix
-    EA = np.column_stack((p_lf+p_hf, t_lf+t_hf, s_lf+s_hf))
+    EA = np.column_stack((p_lf + p_hf, t_lf + t_hf, s_lf + s_hf))
 
     # SHIP AND ANEMOMETER OFFSET ANGLES
     # Pitch and roll tilt of platform w.r.t. earth (see Wilczak et al. 2000)
