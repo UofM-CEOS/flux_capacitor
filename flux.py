@@ -96,7 +96,7 @@ def level3D_anemometer(wind_speed, roll, pitch):
 
 
 def euler_rotate(X, euler):
-    """Rotate vector matrix using Euler transformation matrix."""
+    """Rotate vector matrix given Euler transformation matrix."""
     x, y, z = X[:, 0], X[:, 1], X[:, 2]
     phi, theta, psi = euler[:, 0], euler[:, 1], euler[:, 2]
     x_new =  (x * np.cos(theta) * np.cos(psi) + 
