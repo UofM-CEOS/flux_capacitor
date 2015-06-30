@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Will Drennan, Brent Else, Sebastian Luque
 ;; Created: 2013-11-14T21:45:39+0000
-;; Last-Updated: 2013-12-01T02:21:46+0000
+;; Last-Updated: 2015-06-30T19:49:09+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -123,5 +122,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; diff1byf.pro ends here

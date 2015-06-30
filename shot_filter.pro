@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-10-29T18:55:13+0000
-;; Last-Updated: 2013-12-02T02:21:36+0000
+;; Last-Updated: 2015-06-30T19:52:55+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -67,5 +66,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; shot_filter.pro ends here

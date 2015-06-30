@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-14T22:43:46+0000
-;; Last-Updated: 2013-12-05T20:08:04+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:54:02+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -82,5 +81,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; truewind_sonic.pro ends here

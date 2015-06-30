@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T18:01:54+0000
-;; Last-Updated: 2013-12-05T19:29:05+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:49:32+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -427,5 +426,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; ec_momentum.pro ends here

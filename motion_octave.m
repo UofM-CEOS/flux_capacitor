@@ -1,4 +1,3 @@
-# $Id$
 
 function [u, varargout] = motion_octave(um, am, rm, gyro, speed, r, sf, Tcf,
 					Ta, tilt_ms, tilt_anem, OutputVars)
@@ -8,7 +7,7 @@ function [u, varargout] = motion_octave(um, am, rm, gyro, speed, r, sf, Tcf,
 #     freedom motion sensor that measures 3 orthogonal accelerations and 3
 #     orthogonal angle rates.
 #
-#    Copyright (C) Scott Miller 1995-2008.
+#    Copyright (C) Scott Miller 1995-2008, 2015.
 #    Version: 2.0
 #    Last Revised: Dec 4, 2008
 #

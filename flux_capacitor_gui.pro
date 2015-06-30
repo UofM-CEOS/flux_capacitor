@@ -1,8 +1,7 @@
-;; $Id$
 ;;; flux_capacitor.pro --- 
 ;; Author: Bruce Johnson, Ryan Smith, Sebastian Luque
 ;; Created: 2013-08-23T22:24:25+0000
-;; Last-Updated: 2013-11-26T21:20:59+0000
+;; Last-Updated: 2015-06-30T19:50:16+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary:
@@ -519,5 +518,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; flux_capacitor.pro ends here

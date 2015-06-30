@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-27T17:52:26+0000
-;; Last-Updated: 2014-10-24T22:22:14+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:48:17+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
@@ -380,5 +379,3 @@ ec_std_template=templates_dir + path_sep() + 'ec_std.sav'
 ;; mode: idlwave
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; control.inc ends here

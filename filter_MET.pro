@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-29T14:29:43+0000
-;; Last-Updated: 2013-12-05T19:29:37+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:49:47+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -395,5 +394,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; filter_MET.pro ends here

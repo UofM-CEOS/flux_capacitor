@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-10-01T02:19:03+0000
-;; Last-Updated: 2013-11-22T16:04:05+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:51:33+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -115,5 +114,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; locate_time_strings.pro ends here

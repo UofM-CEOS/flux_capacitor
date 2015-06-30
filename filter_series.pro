@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-04T17:25:14+0000
-;; Last-Updated: 2013-12-02T01:44:47+0000
+;; Last-Updated: 2015-06-30T19:49:55+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -235,5 +234,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; filter_series.pro ends here

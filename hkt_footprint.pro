@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-19T16:31:01+0000
-;; Last-Updated: 2013-11-20T18:12:07+0000
+;; Last-Updated: 2015-06-30T19:50:55+0000
 ;;	     By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -151,5 +150,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; hkt_footprint.pro ends here

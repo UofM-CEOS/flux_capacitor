@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T19:11:00+0000
-;; Last-Updated: 2014-08-14T15:27:14+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:51:26+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -75,5 +74,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; level_sonic.pro ends here

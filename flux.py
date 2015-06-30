@@ -1,4 +1,3 @@
-# $Id$
 
 import numpy as np
 from scipy import interpolate as itpl

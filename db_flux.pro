@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T17:07:28+0000
-;; Last-Updated: 2014-12-02T19:33:56+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:48:34+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -1038,5 +1037,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; flux.pro ends here

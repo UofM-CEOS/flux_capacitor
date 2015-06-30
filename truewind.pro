@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-10-11T22:38:01+0000
-;; Last-Updated: 2013-12-05T20:12:38+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:53:56+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -102,5 +101,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; truewind.pro ends here

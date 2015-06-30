@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-14T00:15:07+0000
-;; Last-Updated: 2013-11-26T22:09:39+0000
+;; Last-Updated: 2015-06-30T19:53:02+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -50,5 +49,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; smooth_angle.pro ends here

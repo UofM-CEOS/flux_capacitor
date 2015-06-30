@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-03T18:49:19+0000
-;; Last-Updated: 2013-12-02T18:28:15+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:53:47+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -581,5 +580,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; subset_flux.pro ends here

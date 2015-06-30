@@ -1,4 +1,3 @@
-# $Id$
 
 """Utility for configuring user variables for flux analyses."""
 

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# $Id$
 
 """Steps towards CO2 flux analyses, using data files output from PostgreSQL
 database.
