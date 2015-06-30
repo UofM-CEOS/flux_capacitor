@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-09-20T03:54:03+0000
-;; Last-Updated: 2013-12-01T02:30:39+0000
+;; Last-Updated: 2015-06-30T19:48:26+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -281,5 +280,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; day_splitter.pro ends here

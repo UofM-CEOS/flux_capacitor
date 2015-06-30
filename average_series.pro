@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-17T14:59:07+0000
-;; Last-Updated: 2013-12-16T21:03:40+0000
+;; Last-Updated: 2015-06-30T19:47:38+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -327,5 +326,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; nav_avg.pro ends here

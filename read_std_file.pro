@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-11-12T19:18:12+0000
-;; Last-Updated: 2014-05-02T21:44:54+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:52:35+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -285,5 +284,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; read_std_file.pro ends here

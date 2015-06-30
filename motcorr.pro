@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Will Drennan, Brent Else, Sebastian Luque
 ;; Created: 2013-11-14T21:10:00+0000
-;; Last-Updated: 2014-05-03T18:03:25+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:51:46+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -164,5 +163,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; motcorr.pro ends here

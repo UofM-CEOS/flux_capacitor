@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian P. Luque
 ;; Created: 2013-11-29T14:57:17+0000
-;; Last-Updated: 2013-12-05T19:27:23+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:52:04+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -142,5 +141,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; ogive.pro ends here

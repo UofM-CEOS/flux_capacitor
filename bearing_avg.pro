@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Bruce Johnson, Sebastian Luque
 ;; Created: 2013-09-18T20:11:56+0000
-;; Last-Updated: 2013-11-26T22:14:21+0000
+;; Last-Updated: 2015-06-30T19:47:48+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -83,5 +82,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; bearing_avg.pro ends here

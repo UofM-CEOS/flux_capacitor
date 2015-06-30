@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-15T15:43:56+0000
-;; Last-Updated: 2013-12-05T19:33:17+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:52:19+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -659,5 +658,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; process_MET.pro ends here

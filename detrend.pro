@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-14T20:33:42+0000
-;; Last-Updated: 2013-11-20T15:43:29+0000
+;; Last-Updated: 2015-06-30T19:49:02+0000
 ;;	     By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -78,5 +77,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; detrend.pro ends here

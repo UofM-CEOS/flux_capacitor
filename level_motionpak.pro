@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T20:41:26+0000
-;; Last-Updated: 2014-09-09T21:37:07+0000
+;; Last-Updated: 2015-06-30T19:51:19+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -167,5 +166,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; level_motionpak.pro ends here

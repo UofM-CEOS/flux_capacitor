@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-18T20:47:27+0000
-;; Last-Updated: 2013-11-27T22:13:02+0000
+;; Last-Updated: 2015-06-30T19:53:22+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;;  NAME:
@@ -57,5 +56,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; stdev_yamartino.pro ends here

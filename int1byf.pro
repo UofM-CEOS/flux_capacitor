@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Will Drennan, Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T22:22:17+0000
-;; Last-Updated: 2013-11-14T22:35:01+0000
+;; Last-Updated: 2015-06-30T19:51:11+0000
 ;;	     By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -106,5 +105,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; int1byf.pro ends here

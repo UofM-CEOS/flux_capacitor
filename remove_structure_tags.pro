@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-09-24T15:38:09+0000
-;; Last-Updated: 2013-10-24T15:29:45+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:52:48+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -58,5 +57,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; remove_structure_tags.pro ends here

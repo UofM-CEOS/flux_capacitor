@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-11-26T23:41:42+0000
-;; Last-Updated: 2013-12-16T21:24:01+0000
+;; Last-Updated: 2015-06-30T19:50:23+0000
 ;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Code:
@@ -267,5 +266,3 @@ FLUX, expand_path('~/tmp/EC'), ec_std_template, 0, ec_daily_rate, $
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; flux_capacitor.pro ends here

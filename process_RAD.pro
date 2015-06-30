@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-11T14:48:45+0000
-;; Last-Updated: 2013-12-06T21:35:05+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:52:25+0000
+;;           By: Sebastian P. Luque
 ;; 
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -455,5 +454,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; process_RAD.pro ends here

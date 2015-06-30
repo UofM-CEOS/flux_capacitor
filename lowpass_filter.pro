@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-07T22:51:27+0000
-;; Last-Updated: 2014-05-03T17:59:08+0000
+;; Last-Updated: 2015-06-30T19:51:40+0000
 ;;	     By: Sebastian Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -109,5 +108,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; lowpass_filter.pro ends here

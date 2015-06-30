@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-31T20:49:18+0000
-;; Last-Updated: 2013-11-04T04:07:47+0000
+;; Last-Updated: 2015-06-30T19:52:41+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -85,5 +84,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; remove_fields_ascii.pro ends here

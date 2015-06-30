@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-10-01T20:08:28+0000
-;; Last-Updated: 2013-12-02T02:46:42+0000
+;; Last-Updated: 2015-06-30T19:53:35+0000
 ;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -304,5 +303,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; std_gyro.pro ends here

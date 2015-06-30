@@ -1,7 +1,6 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T19:12:08+0000
-;; Last-Updated: 2013-12-02T02:48:15+0000
+;; Last-Updated: 2015-06-30T19:54:08+0000
 ;;	     By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
@@ -114,5 +113,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; yawpitch.pro ends here

@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian P. Luque
 ;; Created: 2013-11-26T23:41:42+0000
-;; Last-Updated: 2014-05-04T13:59:50+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2016-02-23T21:40:13+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;; Commentary:
 ;;
@@ -85,5 +84,3 @@ DB_FLUX, ec_period_dir, ec_std_template, 1, ec_daily_rate, $
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; flux_capacitor.pro ends here

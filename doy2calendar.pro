@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Sebastian Luque
 ;; Created: 2013-08-28T17:54:17+0000
-;; Last-Updated: 2013-10-30T20:04:10+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:49:16+0000
+;;           By: Sebastian P. Luque
 ;; ------------------------------------------------------------------------
 ;;; Commentary: 
 ;;
@@ -48,5 +47,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; doy2calendar.pro ends here

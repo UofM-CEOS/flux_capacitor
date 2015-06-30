@@ -1,8 +1,7 @@
-;; $Id$
 ;; Author: Brent Else, Sebastian Luque
 ;; Created: 2013-11-15T20:04:23+0000
-;; Last-Updated: 2013-11-18T16:30:31+0000
-;;           By: Sebastian Luque
+;; Last-Updated: 2015-06-30T19:47:56+0000
+;;           By: Sebastian P. Luque
 ;;+ -----------------------------------------------------------------------
 ;; NAME:
 ;; 
@@ -85,5 +84,3 @@ END
 ;; Local variables:
 ;; allout-layout: (-2 + : 0)
 ;; End:
-;;
-;;; c_covariance.pro ends here
