@@ -10,7 +10,7 @@ plt.style.use('ggplot')
 
 idir="/home/sluque/Data/ArcticNet/2010/FromDB/LowFreq_1w30min"
 iheader = ["time_30min", "time_study", "longitude", "longitude_30min",
-           "latitude", "latitude_30min", " atmospheric_pressure",
+           "latitude", "latitude_30min", "atmospheric_pressure",
            "atmospheric_pressure_30min", "air_temperature",
            "air_temperature_30min", "relative_humidity",
            "relative_humidity_30min", "surface_temperature",
