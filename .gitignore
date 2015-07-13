@@ -1,1 +1,8 @@
 *.pyc
+auto/
+EddyUH/
+miller_jotech2008/
+Wickstrom/
+Lotte/
+flux_[0-9]*.cfg
+/motion.m
