@@ -1,4 +1,5 @@
 *.pyc
+*.[Rr][Dd]ata
 auto/
 EddyUH/
 miller_jotech2008/
