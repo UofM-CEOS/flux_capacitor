@@ -35,9 +35,9 @@ def recompose(x, y):
 
     Parameters
     ----------
-    x : array_like
+    x : array_like or scalar
         `x`-coordinates
-    y : array_like
+    y : array_like or scalar
         `y`-coordinates
 
     Returns
@@ -47,9 +47,18 @@ def recompose(x, y):
     """
     vmag = np.sqrt((x ** 2) + (y ** 2))
     ang = np.arctan2(y, x)
-    ang[ang < 0] = ang[ang < 0] + (2 * np.pi) # output range 0 - 2*pi
-    ang[vmag == 0] = 0          # when magnitude is 0 the angle is also 0
-    ang[ang == 0] = 2 * np.pi   # convention
+    try:                        # first assume array inputs
+        ang[ang < 0] = ang[ang < 0] + (2 * np.pi) # output range 0 - 2*pi
+        ang[vmag == 0] = 0        # when magnitude is 0 the angle is also 0
+        ang[ang == 0] = 2 * np.pi # convention
+    except IndexError:            # then check if scalar inputs
+        if np.isscalar(ang) and ang < 0:
+            ang = ang + (2 * np.pi)
+        elif np.isscalar(ang) and vmag == 0:
+            ang = 0
+        elif np.isscalar(ang) and ang == 0:
+            ang = 2 * np.pi
+
     return np.degrees(ang), vmag
 
 
@@ -98,7 +107,7 @@ def euler_rotate(X, euler):
     """Rotate vector matrix given Euler transformation matrix."""
     x, y, z = X[:, 0], X[:, 1], X[:, 2]
     phi, theta, psi = euler[:, 0], euler[:, 1], euler[:, 2]
-    x_new =  (x * np.cos(theta) * np.cos(psi) + 
+    x_new =  (x * np.cos(theta) * np.cos(psi) +
               y * (np.sin(phi) * np.sin(theta) * np.cos(psi) -
                    np.cos(phi) * np.sin(psi)) +
               z * (np.cos(phi) * np.sin(theta) * np.cos(psi) +
@@ -111,7 +120,7 @@ def euler_rotate(X, euler):
     z_new =  (x * (-np.sin(theta)) + y * ( np.cos(theta) * np.sin(phi)) +
               z * (np.cos(theta) * np.cos(phi)))
     return np.column_stack((x_new, y_new, z_new))
-    
+
 
 def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                    anemometer_pos, sample_freq, Tcf, Ta,
@@ -160,7 +169,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
         horizontal plane.  `Roll` angle offset is positive is port side up,
         and `pitch` is positive for bow down (see Miller 2008 for info, set
         to [0 0] if unknown).
-    
+
     Returns
     -------
     Tuple with (index in brackets):
@@ -193,7 +202,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
         frame.
     numpy.ndarray [12]
         2-D (NX3) array with displacement of the motion sensor.
-    
+
     Reference
     ---------
     Miller,S.D., Hristov,T.S., Edson,J.B., and C.A. Friehe, 2008:
