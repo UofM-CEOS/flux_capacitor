@@ -1,4 +1,11 @@
-"""Processing of underway pCO2 system data."""
+"""Processing of underway pCO2 system data.
+
+We take a single file output from the database, containing the 1-min
+resolution meteorology, radiation, and underway system data.  This input
+file, and other processing options, are specified in a configuration file,
+which is the single input parameter for this module.
+
+"""
 
 import os.path as osp
 import glob
@@ -7,34 +14,6 @@ import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
-
-idir="/home/sluque/Data/ArcticNet/2010/FromDB/LowFreq_1w30min"
-iheader = ["time_30min", "time_study", "longitude", "longitude_30min",
-           "latitude", "latitude_30min", "atmospheric_pressure",
-           "atmospheric_pressure_30min", "air_temperature",
-           "air_temperature_30min", "relative_humidity",
-           "relative_humidity_30min", "surface_temperature",
-           "surface_temperature_30min", "true_wind_speed",
-           "true_wind_direction", "PAR", "PAR_30min", "K_down",
-           "K_down_30min", "LW_down", "LW_down_30min",
-           "UV_sensor_temperature", "UV_sensor_temperature_30min",
-           "UV_b", "UV_b_30min", "UV_a", "UV_a_30min", "UV_broad",
-           "UV_broad_30min", "equ_temperature", "uw_CO2_cellA",
-           "uw_CO2_cellB", "uw_CO2_fraction", "uw_H2O_cellA",
-           "uw_H2O_cellB", "uw_H2O_fraction", "uw_temperature_analyzer",
-           "uw_pressure_analyzer", "equ_pressure", "H2O_flow",
-           "air_flow_analyzer", "equ_speed_pump", "ventilation_flow",
-           "condensation_atm", "condensation_equ", "drip_1", "drip_2",
-           "condenser_temperature", "temperature_dry_box", "ctd_pressure",
-           "ctd_temperature", "ctd_conductivity", "ctd_O2_saturation",
-           "ctd_O2_concentration", "uw_pH", "uw_redox_potential",
-           "temperature_external", "temperature_in"]
-odir = osp.join(idir, "Processed")
-ifiles = glob.glob(osp.join(idir, "BULK*.csv"))
-gasR = 8.31451                    # J/mol/K universal gas constant
-salinity_default = 30.0
-use_default_salinity = True
-anemometer_height = 16          # in m
 
 for ifile in ifiles[0:10]:
         # Get a file name prefix to be shared by the output files from this
@@ -151,3 +130,14 @@ for ifile in ifiles[0:10]:
         Tsw = Tsw - 273.15
         sc = (2073.1 - 125.62 * Tsw + 3.6276 * Tsw ** 2 - 0.043219 *
               Tsw ** 3.0)
+
+
+if __name__ == "__main__":
+    import argparse
+    description = ("Perform underway pCO2 calculations, " +
+                   "given a configuration file.")
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("config_file", type=str,
+                        help="Path to configuration file")
+    args = parser.parse_args()
+    main(args.config_file)

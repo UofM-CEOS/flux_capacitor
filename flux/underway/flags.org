@@ -1,0 +1,24 @@
+
+* Low flow cutoff (l/min): 2.0
+
+* Default salinity (not used): 30.0
+
+* Use default salinity (not used, boolean?): 0
+
+* CO2 in (umol/mol) > 1000 is set to NaN
+
+* H2O in (mmol/mol) > 1000 is set to NaN
+
+* Licor temperature (C) > 1000 is set to NaN
+
+* Licor pressure (mbar) > 1200 is set to NaN
+
+* CTD temperature (C) > 1000 is set to NaN
+
+* CTD Conductivity (C) > 1000 is set to NaN
+
+* CTD pressure (atmosphere) > 10 is set to NaN
+
+* Equilibrator temperature (C) > 1000 is set to NaN
+
+* External temperature (C) > 1000 is set to NaN
