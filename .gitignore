@@ -1,5 +1,6 @@
 *.pyc
 *.[Rr][Dd]ata
+*.pro
 auto/
 EddyUH/
 miller_jotech2008/
