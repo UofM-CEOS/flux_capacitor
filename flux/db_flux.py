@@ -18,6 +18,9 @@ import os.path as osp
 # from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 
+__all__ = ['main']
+
+
 plt.style.use('ggplot')
 
 def flux_period(period_file, config):
