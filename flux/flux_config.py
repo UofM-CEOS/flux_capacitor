@@ -115,44 +115,44 @@ def parse_config(cfg_file):
     dflt_dict = OrderedDict((
         ('EC Inputs',
          OrderedDict((
-             ('input_directory', dflts['ec_input_directory']),
-             ('file_pattern', dflts['ec_file_pattern']),
-             ('colnames', dflts['ec_colnames']),
-             ('sample_frequency', dflts['ec_sample_frequency']),
+             ('input_directory', _dflts['ec_input_directory']),
+             ('file_pattern', _dflts['ec_file_pattern']),
+             ('colnames', _dflts['ec_colnames']),
+             ('sample_frequency', _dflts['ec_sample_frequency']),
          ))
      ),
         ('EC Outputs',
          OrderedDict((
-             ('summary_file', dflts['ec_summary_file']),
+             ('summary_file', _dflts['ec_summary_file']),
          ))
      ),
         ('EC Despiking',
          OrderedDict((
-             ('despike_win_width', dflts['ec_despike_win_width']),
-             ('despike_step', dflts['ec_despike_step']),
-             ('despike_nreps', dflts['ec_despike_nreps']),
+             ('despike_win_width', _dflts['ec_despike_win_width']),
+             ('despike_step', _dflts['ec_despike_step']),
+             ('despike_nreps', _dflts['ec_despike_nreps']),
          ))
      ),
         ('EC Motion Correction',
          OrderedDict((
              ('motion2anemometer_pos',
-              dflts['motion2anemometer_pos']),
+              _dflts['motion2anemometer_pos']),
              ('complementary_filter_period',
-              dflts['ec_complementary_filter_period']),
+              _dflts['ec_complementary_filter_period']),
              ('accel_highpass_cutoff',
-              dflts['ec_accel_highpass_cutoff']),
+              _dflts['ec_accel_highpass_cutoff']),
          ))
      ),
         ('UW Inputs',
          OrderedDict((
-             ('input_directory', dflts['uw_input_directory']),
-             ('file_pattern', dflts['uw_file_pattern']),
-             ('colnames', dflts['uw_colnames']),
+             ('input_directory', _dflts['uw_input_directory']),
+             ('file_pattern', _dflts['uw_file_pattern']),
+             ('colnames', _dflts['uw_colnames']),
          ))
      ),
         ('UW Outputs',
          OrderedDict((
-             ('summary_file', dflts['uw_summary_file']),
+             ('summary_file', _dflts['uw_summary_file']),
          ))
      ),))
 
@@ -183,9 +183,9 @@ def parse_config(cfg_file):
             # appropriate
             if (len(py_dict[sec][opt]) == 1):
                 py_dict[sec][opt] = py_dict[sec][opt][0]
-            if (opt in scalar_opts):
+            if (opt in _scalar_opts):
                 py_dict[sec][opt] = float(py_dict[sec][opt])
-            elif (opt in vector_opts):
+            elif (opt in _vector_opts):
                 py_dict[sec][opt] = [float(x) for x in py_dict[sec][opt]]
 
     # Check input directories exist
