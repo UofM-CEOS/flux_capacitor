@@ -63,7 +63,7 @@ for ifile in ifiles[0:10]:
         bigR = bulk.ctd_conductivity / 42.914
 
         # Define coefficients
-        a0, a1, a2, a3, a4, 15 = (0.008, -0.1692, 25.3851,
+        a0, a1, a2, a3, a4, a5 = (0.008, -0.1692, 25.3851,
                                   14.0941, -7.0261, 2.7081)
         b0, b1, b2, b3, b4, b5 = (0.0005, -0.0056, -0.0066,
                                   -0.0375, 0.0636, -0.0144)
@@ -121,7 +121,7 @@ for ifile in ifiles[0:10]:
         pCO2_sw = pCO2_sw * np.exp(0.0423 * (Tsw - T_eq))
 
         # Calculate solubility (mmol/m3/atm) (Weiss, 1974)
-        A1, A2, A3 = -58.0931, 90.5069, =22.2940
+        A1, A2, A3 = -58.0931, 90.5069, 22.2940
         B1, B2, B3 = 0.027766, -0.025888, 0.0050578
         sol = (np.exp(A1 + A2 * (100.0 / Tsw) + A3 * np.log(Tsw / 100.0) +
                       sal * (B1 + B2 * (Tsw / 100.0) + B3 *
