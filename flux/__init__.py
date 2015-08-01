@@ -1,2 +1,4 @@
 
-__all__ = ['db_flux', 'flux_config', 'flux']
+__all__ = ['eddycov', 'underway']
+
+from flux_config import parse_config
