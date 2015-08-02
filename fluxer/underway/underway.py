@@ -17,13 +17,13 @@ import numpy as np
 import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
-plt.style.use('ggplot')
+plt.style.use("ggplot")
 from fluxer import parse_config
 
 def underway_pCO2(period_file, config):
     """"""
     # Extract all the config pieces
-    colnames = config['UW Inputs']['colnames']
+    colnames = config["UW Inputs"]["colnames"]
     dtypes = config["UW Inputs"]["dtypes"]
     # Read, specifying the options matching what we get in our database
     # output files

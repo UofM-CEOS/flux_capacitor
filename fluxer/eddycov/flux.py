@@ -7,7 +7,7 @@ from scipy.stats import zscore
 from itertools import groupby
 
 
-__all__ = ['smooth_angle', 'wind3D_correct', 'despike_VickersMahrt']
+__all__ = ["smooth_angle", "wind3D_correct", "despike_VickersMahrt"]
 
 def decompose(angle, vmagnitude):
     """Decompose angle and magnitude into `x` and `y` vector(s).

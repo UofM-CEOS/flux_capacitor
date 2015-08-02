@@ -46,12 +46,12 @@ def flux_period(period_file, config):
     # Put acceleration components in 3-column array and make copy to keep
     # uncorrected data.  Original comment: read in angular rates in RH
     # coordinate system, convert to rad/s.
-    motion3d = pd.DataFrame({"acceleration_x" : ec["acceleration_z"] * 9.81,
-                             "acceleration_y" : -ec["acceleration_x"] * 9.81,
-                             "acceleration_z" : -ec["acceleration_y"] * 9.81,
-                             "rate_phi" : np.radians(ec["rate_z"]),
-                             "rate_theta" : np.radians(ec["rate_x"]),
-                             "rate_shi" : np.radians(ec["rate_y"])})
+    motion3d = pd.DataFrame({'acceleration_x' : ec["acceleration_z"] * 9.81,
+                             'acceleration_y' : -ec["acceleration_x"] * 9.81,
+                             'acceleration_z' : -ec["acceleration_y"] * 9.81,
+                             'rate_phi' : np.radians(ec["rate_z"]),
+                             'rate_theta' : np.radians(ec["rate_x"]),
+                             'rate_shi' : np.radians(ec["rate_y"])})
     wind = ec[["wind_speed_u", "wind_speed_v", "wind_speed_w"]].copy()
     # [Original comment: check for any significant number of 'NAN's (not
     # worried about the odd one scattered here and there)].  [Original
@@ -212,11 +212,11 @@ def flux_period(period_file, config):
     # # Output to Octave for debugging
     # import scipy.io as sio
     # sio.savemat(iname_prefix + "_wind_motion.mat",
-    #             {"wind_speed": wind.values,
-    #              "acceleration": motion3d.loc[:, :"acceleration_z"].values,
-    #              "angular_rate": motion3d.loc[:, "rate_phi":].values,
-    #              "heading": np.reshape(heading, (len(heading), 1)),
-    #              "sog": np.reshape(sog, (len(sog), 1))})
+    #             {'wind_speed': wind.values,
+    #              'acceleration': motion3d.loc[:, :"acceleration_z"].values,
+    #              'angular_rate': motion3d.loc[:, "rate_phi":].values,
+    #              'heading': np.reshape(heading, (len(heading), 1)),
+    #              'sog': np.reshape(sog, (len(sog), 1))})
     # # OR do a round-trip via Oct2Py!
     # from oct2py import octave
     # uvw_ship, uvw_earth = octave.motion_octave(wind.values,
