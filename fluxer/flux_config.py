@@ -75,7 +75,33 @@ _incols_all = dict(longitude=float, latitude=float, speed_over_ground=float,
 _dflts = {
     "ec_input_directory": getcwd(),
     "ec_file_pattern": '*[0-9].csv',
-    "ec_colnames": 'time_20min,time_study,longitude,latitude,speed_over_ground,course_over_ground,heading,pitch,roll,heave,atmospheric_pressure,air_temperature,relative_humidity,surface_temperature,wind_speed,wind_direction,true_wind_speed,true_wind_direction,PAR,K_down,temperature_thermopile,temperature_case,temperature_dome,LW_down,UV_sensor_temperature,UV_b,UV_broad,acceleration_x,acceleration_y,acceleration_z,rate_x,rate_y,rate_z,wind_speed_u,wind_speed_v,wind_speed_w,air_temperature_sonic,sound_speed,anemometer_status,op_CO2_fraction,op_CO2_density,op_CO2_absorptance,op_H2O_fraction,op_H2O_density,op_H2O_absorptance,op_pressure,op_temperature,op_temperature_base,op_temperature_spar,op_temperature_bulb,op_cooler_voltage,op_bandwidth,op_delay_interval,op_bad_chopper_wheel_temperature_flag,op_bad_detector_temperature_flag,op_bad_optical_wheel_rate_flag,op_bad_sync_flag,op_CO2_signal_strength,cp_analyzer_status,cp_CO2_fraction,cp_CO2_density,cp_CO2_dry_fraction,cp_CO2_absorptance,cp_H2O_fraction,cp_H2O_density,cp_H2O_dry_fraction,cp_H2O_absorptance,cp_pressure,cp_temperature,cp_temperature_in,cp_temperature_out,cp_temperature_block,cp_temperature_cell,cp_CO2_signal_strength,cp_H2O_signal_strength',
+    "ec_colnames": ('time_20min,time_study,longitude,latitude,' +
+                    'speed_over_ground,course_over_ground,heading,' +
+                    'pitch,roll,heave,atmospheric_pressure,' +
+                    'air_temperature,relative_humidity,' +
+                    'surface_temperature,wind_speed,wind_direction,' +
+                    'true_wind_speed,true_wind_direction,PAR,K_down,' +
+                    'temperature_thermopile,temperature_case,' +
+                    'temperature_dome,LW_down,UV_sensor_temperature,' +
+                    'UV_b,UV_broad,acceleration_x,acceleration_y,' +
+                    'acceleration_z,rate_x,rate_y,rate_z,wind_speed_u,' +
+                    'wind_speed_v,wind_speed_w,air_temperature_sonic,' +
+                    'sound_speed,anemometer_status,op_CO2_fraction,' +
+                    'op_CO2_density,op_CO2_absorptance,op_H2O_fraction,' +
+                    'op_H2O_density,op_H2O_absorptance,op_pressure,' +
+                    'op_temperature,op_temperature_base,' +
+                    'op_temperature_spar,op_temperature_bulb,' +
+                    'op_cooler_voltage,op_bandwidth,op_delay_interval,' +
+                    'op_bad_chopper_wheel_temperature_flag,' +
+                    'op_bad_detector_temperature_flag,' +
+                    'op_bad_optical_wheel_rate_flag,op_bad_sync_flag,' +
+                    'op_CO2_signal_strength,cp_analyzer_status,' +
+                    'cp_CO2_fraction,cp_CO2_density,cp_CO2_dry_fraction,' +
+                    'cp_CO2_absorptance,cp_H2O_fraction,cp_H2O_density,' +
+                    'cp_H2O_dry_fraction,cp_H2O_absorptance,cp_pressure,' +
+                    'cp_temperature,cp_temperature_in,cp_temperature_out,' +
+                    'cp_temperature_block,cp_temperature_cell,' +
+                    'cp_CO2_signal_strength,cp_H2O_signal_strength'),
     "ec_sample_frequency": '10.0',
     "ec_summary_file": 'fluxes.csv',
     "ec_despike_win_width": '3000',
@@ -87,7 +113,30 @@ _dflts = {
     "uw_input_directory": getcwd(),
     "uw_file_pattern": '*[0-9].csv',
     "uw_summary_file": 'underway_pCO2.csv',
-    "uw_colnames": 'time_30min,time_study,longitude,latitude,speed_over_ground,course_over_ground,atmospheric_pressure,air_temperature,relative_humidity,surface_temperature,wind_speed,wind_direction,true_wind_speed,true_wind_direction,PAR,K_down,LW_down,UV_b,UV_a,UV_broad,air_temperature_sonic,cp_CO2_fraction,cp_H2O_fraction,cp_pressure,cp_temperature,op_CO2_density,op_H2O_density,op_pressure,op_temperature,equ_temperature,equ_pressure,equ_speed_pump,uw_CO2_fraction,uw_H2O_fraction,uw_temperature_analyzer,uw_pressure_analyzer,H2O_flow,air_flow_analyzer,ctd_pressure,ctd_temperature,ctd_conductivity,ctd_O2_saturation,ctd_O2_concentration,uw_pH,uw_redox_potential,temperature_external,temperature_in,bad_wind_direction_flag,very_bad_wind_direction_flag,bad_ice_flag,bad_atmospheric_pressure_flag,bad_ctd_flag,bad_CO2_flag,bad_H2O_flag,bad_H2O_flow_flag,bad_pressure_analyzer_flag,bad_temperature_analyzer_flag,bad_equ_temperature_flag,bad_temperature_external_flag',
+    "uw_colnames": ('time_30min,time_study,longitude,latitude,' +
+                    'speed_over_ground,course_over_ground,' +
+                    'atmospheric_pressure,air_temperature,' +
+                    'relative_humidity,surface_temperature,wind_speed,' +
+                    'wind_direction,true_wind_speed,true_wind_direction,' +
+                    'PAR,K_down,LW_down,UV_b,UV_a,UV_broad,' +
+                    'air_temperature_sonic,cp_CO2_fraction,' +
+                    'cp_H2O_fraction,cp_pressure,cp_temperature,' +
+                    'op_CO2_density,op_H2O_density,op_pressure,' +
+                    'op_temperature,equ_temperature,equ_pressure,' +
+                    'equ_speed_pump,uw_CO2_fraction,uw_H2O_fraction,' +
+                    'uw_temperature_analyzer,uw_pressure_analyzer,' +
+                    'H2O_flow,air_flow_analyzer,ctd_pressure,' +
+                    'ctd_temperature,ctd_conductivity,ctd_O2_saturation,' +
+                    'ctd_O2_concentration,uw_pH,uw_redox_potential,' +
+                    'temperature_external,temperature_in,' +
+                    'bad_wind_direction_flag,' +
+                    'very_bad_wind_direction_flag,bad_ice_flag,' +
+                    'bad_atmospheric_pressure_flag,bad_ctd_flag,' +
+                    'bad_CO2_flag,bad_H2O_flag,bad_H2O_flow_flag,' +
+                    'bad_pressure_analyzer_flag,' +
+                    'bad_temperature_analyzer_flag,' +
+                    'bad_equ_temperature_flag,' +
+                    'bad_temperature_external_flag'),
     "anemometer2D_height": 16}
 # Scalar option names
 _scalar_opts = ['ec_sample_frequency', 'ec_despike_win_width',

@@ -9,30 +9,28 @@ files and variables.
 
 """
 
+__all__ = ["main", "flux_period"]
+
 import numpy as np
-from flux.eddycov.flux import (
-    smooth_angle, wind3D_correct, despike_VickersMahrt
-    )
-from flux.flux_config import parse_config
+from fluxer.flux_config import parse_config
+from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
+                                 despike_VickersMahrt)
 import pandas as pd
 import os.path as osp
 # import psycopg2 as pg
 # from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 
-__all__ = ['main']
-
-
-plt.style.use('ggplot')
+plt.style.use("ggplot")
 
 def flux_period(period_file, config):
     """Perform required calculations on period."""
     # Extract all the config pieces
-    colnames = config['EC Inputs']['colnames']
-    mot2anem_pos = config['EC Motion Correction']['motion2anemometer_pos']
-    sample_freq_hz = config['EC Inputs']['sample_frequency']
-    Tcf = config['EC Motion Correction']['complementary_filter_period']
-    Ta = config['EC Motion Correction']['accel_highpass_cutoff']
+    colnames = config["EC Inputs"]["colnames"]
+    mot2anem_pos = config["EC Motion Correction"]["motion2anemometer_pos"]
+    sample_freq_hz = config["EC Inputs"]["sample_frequency"]
+    Tcf = config["EC Motion Correction"]["complementary_filter_period"]
+    Ta = config["EC Motion Correction"]["accel_highpass_cutoff"]
     dtypes = config["EC Inputs"]["dtypes"]
     # Read, specifying the options matching what we get in our database
     # output files
@@ -48,13 +46,13 @@ def flux_period(period_file, config):
     # Put acceleration components in 3-column array and make copy to keep
     # uncorrected data.  Original comment: read in angular rates in RH
     # coordinate system, convert to rad/s.
-    motion3d = pd.DataFrame({'acceleration_x' : ec['acceleration_z'] * 9.81,
-                             'acceleration_y' : -ec['acceleration_x'] * 9.81,
-                             'acceleration_z' : -ec['acceleration_y'] * 9.81,
-                             'rate_phi' : np.radians(ec['rate_z']),
-                             'rate_theta' : np.radians(ec['rate_x']),
-                             'rate_shi' : np.radians(ec['rate_y'])})
-    wind = ec[['wind_speed_u', 'wind_speed_v', 'wind_speed_w']].copy()
+    motion3d = pd.DataFrame({"acceleration_x" : ec["acceleration_z"] * 9.81,
+                             "acceleration_y" : -ec["acceleration_x"] * 9.81,
+                             "acceleration_z" : -ec["acceleration_y"] * 9.81,
+                             "rate_phi" : np.radians(ec["rate_z"]),
+                             "rate_theta" : np.radians(ec["rate_x"]),
+                             "rate_shi" : np.radians(ec["rate_y"])})
+    wind = ec[["wind_speed_u", "wind_speed_v", "wind_speed_w"]].copy()
     # [Original comment: check for any significant number of 'NAN's (not
     # worried about the odd one scattered here and there)].  [Original
     # comment: set open flag if gt 2% of records are 'NAN']
@@ -162,9 +160,9 @@ def flux_period(period_file, config):
     # most obvious in the vertical wind where we wouldn't expect high
     # values bad sonic data can also turn up in the Tsonic before the
     # wind, check the deviation between Tsonic and mean air T.]
-    air_temp_avg = ec['air_temperature'].mean()
-    nbad_vertical_wind = abs(wind['wind_speed_w']).gt(7).sum()
-    nbad_air_temp_sonic = abs(ec['air_temperature_sonic'] -
+    air_temp_avg = ec["air_temperature"].mean()
+    nbad_vertical_wind = abs(wind["wind_speed_w"]).gt(7).sum()
+    nbad_air_temp_sonic = abs(ec["air_temperature_sonic"] -
                               air_temp_avg).gt(7).sum()
     # Set wind flag high if gt 0.5% of records are frost contaminated
     if ((nbad_vertical_wind / float(ec_nrows)) > 0.5 or
@@ -179,7 +177,7 @@ def flux_period(period_file, config):
     # # Below will be needed at some point
     # sw_avg = ec.K_down[0]
     # lw_avg = ec.LW_down[0]
-    # sog_avg = ec['speed_over_ground'].mean()
+    # sog_avg = ec["speed_over_ground"].mean()
 
     # [Original comment: now fill in the gaps by applying a moving
     # average... In this case, we use a 100 sample window (10 sec) moving
@@ -188,11 +186,11 @@ def flux_period(period_file, config):
     # is used, where a window must be specified and may be introducing
     # bias.  Perhaps it doesn't matter.  Why aren't latitude and longitude
     # not similarly interpolated?]
-    cog, sog = smooth_angle(ec['course_over_ground'].values,
-                            ec['speed_over_ground'].values, 21)
+    cog, sog = smooth_angle(ec["course_over_ground"].values,
+                            ec["speed_over_ground"].values, 21)
     cog = pd.Series(cog, index=ec.index)
     sog = pd.Series(sog, index=ec.index)
-    heading, _ = smooth_angle(ec['heading'].values, 1, 21)
+    heading, _ = smooth_angle(ec["heading"].values, 1, 21)
     heading = pd.Series(heading, index=ec.index)
 
     if ((cog.count() < len(cog)) or (sog.count() < len(sog)) or
@@ -213,12 +211,12 @@ def flux_period(period_file, config):
 
     # # Output to Octave for debugging
     # import scipy.io as sio
-    # sio.savemat(iname_prefix + '_wind_motion.mat',
-    #             {'wind_speed': wind.values,
-    #              'acceleration': motion3d.loc[:, :'acceleration_z'].values,
-    #              'angular_rate': motion3d.loc[:, 'rate_phi':].values,
-    #              'heading': np.reshape(heading, (len(heading), 1)),
-    #              'sog': np.reshape(sog, (len(sog), 1))})
+    # sio.savemat(iname_prefix + "_wind_motion.mat",
+    #             {"wind_speed": wind.values,
+    #              "acceleration": motion3d.loc[:, :"acceleration_z"].values,
+    #              "angular_rate": motion3d.loc[:, "rate_phi":].values,
+    #              "heading": np.reshape(heading, (len(heading), 1)),
+    #              "sog": np.reshape(sog, (len(sog), 1))})
     # # OR do a round-trip via Oct2Py!
     # from oct2py import octave
     # uvw_ship, uvw_earth = octave.motion_octave(wind.values,
@@ -230,13 +228,13 @@ def flux_period(period_file, config):
     #                                            mot2anem_pos,
     #                                            sample_freq_hz, Tcf, Ta,
     #                                            [0.0, 0.0], [0.0, 0.0],
-    #                                            {'uearth'})
+    #                                            {"uearth"})
 
     # Save full tuple output and select later. Note that we the use the
     # interpolated, smoothed heading and speed over ground.
     UVW = wind3D_correct(wind.values,
-                         motion3d.loc[:, :'acceleration_z'].values,
-                         motion3d.loc[:, 'rate_phi':].values,
+                         motion3d.loc[:, :"acceleration_z"].values,
+                         motion3d.loc[:, "rate_phi":].values,
                          heading.values, sog.values, mot2anem_pos,
                          sample_freq_hz, Tcf, Ta, [0.0, 0.0], [0.0, 0.0])
     # Ship-referenced speeds
@@ -244,9 +242,9 @@ def flux_period(period_file, config):
     # Earth-referenced speeds
     UVW_earth = UVW[11]
     # Append corrected wind vectors to DataFrame
-    wind_corr_names = ['wind_speed_u_ship', 'wind_speed_v_ship',
-                       'wind_speed_w_ship', 'wind_speed_u_earth',
-                       'wind_speed_v_earth', 'wind_speed_w_earth']
+    wind_corr_names = ["wind_speed_u_ship", "wind_speed_v_ship",
+                       "wind_speed_w_ship", "wind_speed_u_earth",
+                       "wind_speed_v_earth", "wind_speed_w_earth"]
     wind[wind_corr_names[0]] = pd.Series(UVW_ship[:, 0], index=wind.index)
     wind[wind_corr_names[1]] = pd.Series(UVW_ship[:, 1], index=wind.index)
     wind[wind_corr_names[2]] = pd.Series(UVW_ship[:, 2], index=wind.index)
@@ -265,29 +263,29 @@ def flux_period(period_file, config):
     # # production of output files.
     # fig, axs = plt.subplots(3, 1, sharex=True)
     # fig.set_size_inches((11, 9))
-    # wind[['wind_speed_u', 'wind_speed_u_corr']].plot(ax=axs[0],
+    # wind[["wind_speed_u", "wind_speed_u_corr"]].plot(ax=axs[0],
     #                                                  legend=False)
-    # axs[0].set_title("U"); axs[0].set_xlabel('')
-    # wind[['wind_speed_v', 'wind_speed_v_corr']].plot(ax=axs[1],
+    # axs[0].set_title("U"); axs[0].set_xlabel("")
+    # wind[["wind_speed_v", "wind_speed_v_corr"]].plot(ax=axs[1],
     #                                                  legend=False)
     # axs[1].set_title("V")
-    # axs[1].set_ylabel("Wind speed [m/s/s]"); axs[1].set_xlabel('')
-    # wind[['wind_speed_w', 'wind_speed_w_corr']].plot(ax=axs[2],
+    # axs[1].set_ylabel("Wind speed [m/s/s]"); axs[1].set_xlabel("")
+    # wind[["wind_speed_w", "wind_speed_w_corr"]].plot(ax=axs[2],
     #                                                  rot=0,
     #                                                  legend=False)
-    # axs[2].set_title("W"); axs[2].set_xlabel('')
+    # axs[2].set_title("W"); axs[2].set_xlabel("")
     # leg = axs[2].legend(loc=9, bbox_to_anchor=(0.5, -0.1),
     #                     title=iname_prefix, frameon=False,
     #                     borderaxespad=0, ncol=3)
     # leg.get_texts()[0].set_text("Measured (de-spiked)")
     # leg.get_texts()[1].set_text("Corrected (ship reference)")
-    # # axs[1].set_xticklabels(wind.index, rotation=0, ha='center')
+    # # axs[1].set_xticklabels(wind.index, rotation=0, ha="center")
     # fig.tight_layout()
-    # fig.savefig(iname_prefix + '.png', bbox_extra_artists=(leg,),
-    #             bbox_inches='tight')
+    # fig.savefig(iname_prefix + ".png", bbox_extra_artists=(leg,),
+    #             bbox_inches="tight")
 
     # Append results
-    ec_wind_corr = pd.concat((ec, wind.loc[:, 'wind_speed_u_ship':]),
+    ec_wind_corr = pd.concat((ec, wind.loc[:, "wind_speed_u_ship":]),
                              axis=1)
     return ec_wind_corr, dict(open_flag=open_flag, closed_flag=closed_flag,
                               sonic_flag=sonic_flag, motion_flag=motion_flag,
@@ -307,9 +305,9 @@ def main(config_file):
 
     # [Original comment: create flags for the 4 possible sources of "bad"
     # data, flag=0 means data good]
-    flags = dict.fromkeys(['open_flag', 'closed_flag', 'sonic_flag',
-                           'motion_flag', 'bad_navigation_flag',
-                           'bad_meteorology_flag'], False)
+    flags = dict.fromkeys(["open_flag", "closed_flag", "sonic_flag",
+                           "motion_flag", "bad_navigation_flag",
+                           "bad_meteorology_flag"], False)
     # We set up a dataframe with all files to process as index, and all the
     # flags as columns.  This is the basis for our summary output file;
     # other columns (such as flux summary calculations for the period)
@@ -323,8 +321,8 @@ def main(config_file):
         iname = osp.basename(ec_file)
         iname_prefix = osp.splitext(iname)[0]
         ec_wind_corr, ec_flags = flux_period(ec_file, config)
-        # Save to file with suffix '_mc.csv'
-        ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + '_mc.csv'),
+        # Save to file with suffix "_mc.csv"
+        ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + "_mc.csv"),
                             index_label=colnames[1])
         for k, v in ec_flags.iteritems():
             osummary.loc[iname, k] = v
@@ -334,11 +332,11 @@ def main(config_file):
     print("Summary of fluxes written to " + summary_file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
-    description = 'Perform flux analyses, given a configuration file.'
+    description = "Perform flux analyses, given a configuration file."
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('config_file', type=str,
-                        help='Path to configuration file')
+    parser.add_argument("config_file", type=str,
+                        help="Path to configuration file")
     args = parser.parse_args()
     main(args.config_file)

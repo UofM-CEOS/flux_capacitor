@@ -1,1 +1,1 @@
-recursive-include flux/config *.cfg
+recursive-include fluxer/config *.cfg
