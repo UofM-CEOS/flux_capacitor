@@ -1,2 +1,2 @@
 
-__all__ = ['db_flux', 'flux_config', 'flux']
+__all__ = ['db_flux', 'flux']

@@ -16,7 +16,7 @@ import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
-from flux.flux_config import parse_config
+from fluxer import parse_config
 
 def underway_pCO2(period_file, config):
     """"""
