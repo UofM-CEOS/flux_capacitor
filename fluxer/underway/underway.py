@@ -9,6 +9,8 @@ which is the single input parameter for this module.
 
 """
 
+__all__ = ["main", "underway_pCO2"]
+
 import os.path as osp
 import glob
 import numpy as np
