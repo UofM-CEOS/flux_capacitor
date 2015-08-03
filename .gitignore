@@ -11,3 +11,4 @@ flux_[0-9]*.cfg
 /build
 /dist
 MANIFEST
+venv/
