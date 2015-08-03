@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-# fluxer_configs = ["fluxer/config/flux_default.cfg",
+# FLUXER_CONFIGS = ["fluxer/config/flux_default.cfg",
 #                   "fluxer/config/underway_default.cfg"]
 setup(name="fluxer",
       version="0.1.0",
@@ -9,7 +9,7 @@ setup(name="fluxer",
       author_email="sebastian.luque@umanitoba.ca",
       url="https://github.com/UofM-CEOS/flux_capacitor",
       packages=["fluxer", "fluxer.eddycov", "fluxer.underway"],
-      # package_data={'fluxer': fluxer_configs},
+      # package_data={'fluxer': FLUXER_CONFIGS},
       # data_files=[('config', ['config/flux_default.cfg',
       #                         'config/underway_default.cfg'])],
       )
