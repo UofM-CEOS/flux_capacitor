@@ -1,0 +1,61 @@
+===========================================
+Flux Capacitor: tools for gas flux analyses
+===========================================
+
+Routines and tools to process flux (eddy covariance) data as collected
+by our group.
+
+Basic usage
+===========
+
+The package currently has 2 sub-packages:
+
+-  ``eddycov``
+-  ``underway``
+
+=eddycov= is the eddy covariance package, and ``underway`` is for the
+calculation of pCO2 from the underway system.
+
+Both packages can be imported at once by:
+
+.. code:: python
+
+    import fluxer
+
+whereby each sub-package's namespace is accessible via
+``fluxer.eddycov.*`` or ``fluxer.underway.*``.
+
+However, each package can be be imported individually:
+
+.. code:: python
+
+    import fluxer.eddycov as eddycov
+
+Or
+
+.. code:: python
+
+    import fluxer.underway as underway
+
+thus, avoiding having to use the ``fluxer.`` prefix.
+
+Project configuration
+=====================
+
+The easiest way to use the packages is to set up a configuration for any
+given project. The source for ``fluxer`` includes the default
+configuration settings required by each sub-package (under the
+``config/`` directory). These settings are specified in a ``*.cfg`` file
+(syntax instructions are given in the default files).
+
+=eddycov= package
+=================
+
+The main interface for this package is via its ``db_flux`` module, which
+offers two functions: ``main`` and ``flux_period``.
+
+=underway= package
+==================
+
+Importing this package offers the following two functions: ``main`` and
+``underway_pCO2``.
