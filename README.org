@@ -21,25 +21,25 @@ calculation of pCO2 from the underway system.
 Both packages can be imported at once by:
 
 #+BEGIN_SRC python :results silent :exports code
-import fluxer
+  import fluxer
 #+END_SRC
 
 whereby each sub-package's namespace is accessible via =fluxer.eddycov.*=
 or =fluxer.underway.*=.
 
-However, each package can be be imported individually:
+However, each package can be be imported individually, if needed:
 
 #+BEGIN_SRC python :results silent :exports code
-import fluxer.eddycov as eddycov
+  import fluxer.eddycov as eddycov
 #+END_SRC
 
 Or
 
 #+BEGIN_SRC python :results silent :exports code
-import fluxer.underway as underway
+  import fluxer.underway as underway
 #+END_SRC
 
-thus, avoiding having to use the =fluxer.= prefix.
+thus avoiding having to use the =fluxer.= prefix.
 
 
 * Project configuration

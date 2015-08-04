@@ -20,24 +20,24 @@ Both packages can be imported at once by:
 
 .. code:: python
 
-    import fluxer
+      import fluxer
 
 whereby each sub-package's namespace is accessible via
 ``fluxer.eddycov.*`` or ``fluxer.underway.*``.
 
-However, each package can be be imported individually:
+However, each package can be be imported individually, if needed:
 
 .. code:: python
 
-    import fluxer.eddycov as eddycov
+      import fluxer.eddycov as eddycov
 
 Or
 
 .. code:: python
 
-    import fluxer.underway as underway
+      import fluxer.underway as underway
 
-thus, avoiding having to use the ``fluxer.`` prefix.
+thus avoiding having to use the ``fluxer.`` prefix.
 
 Project configuration
 =====================
