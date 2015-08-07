@@ -12,3 +12,7 @@ flux_[0-9]*.cfg
 /dist
 MANIFEST
 venv/
+*.csv
+*.xls*
+*.sav
+/pCO2/UNESCO_1983.pdf
