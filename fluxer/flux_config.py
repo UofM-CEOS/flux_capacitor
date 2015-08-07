@@ -137,12 +137,13 @@ _dflts = {
                     "bad_temperature_analyzer_flag," +
                     "bad_equ_temperature_flag," +
                     "bad_temperature_external_flag"),
-    'anemometer2D_height': 16}
+    'uw_intake_depth': "5.0",
+    'anemometer2D_height': "16.0"}
 # Scalar option names
 _scalar_opts = ["ec_sample_frequency", "ec_despike_win_width",
                 "ec_despike_step", "ec_despike_nreps",
                 "ec_complementary_filter_period", "ec_accel_highpass_cutoff",
-                "anemometer2D_height"]
+                "anemometer2D_height", "uw_intake_depth"]
 _vector_opts = ["motion2anemometer_pos"]
 
 def parse_config(cfg_file):
@@ -197,6 +198,8 @@ def parse_config(cfg_file):
              ("input_directory", _dflts["uw_input_directory"]),
              ("file_pattern", _dflts["uw_file_pattern"]),
              ("colnames", _dflts["uw_colnames"]),
+             ("uw_intake_depth", _dflts["uw_intake_depth"]),
+             ("anemometer2D_height", _dflts["anemometer2D_height"]),
          ))
      ),
         ("UW Outputs",
