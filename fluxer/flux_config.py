@@ -114,7 +114,7 @@ _dflts = {
     'uw_file_pattern': "*[0-9].csv",
     'uw_summary_file': "underway_pCO2.csv",
     'uw_colnames': ("time_30min,time_study,longitude,latitude," +
-                    "speed_over_ground,course_over_ground," +
+                    "speed_over_ground,course_over_ground,heading" +
                     "atmospheric_pressure,air_temperature," +
                     "relative_humidity,surface_temperature,wind_speed," +
                     "wind_direction,true_wind_speed,true_wind_direction," +
