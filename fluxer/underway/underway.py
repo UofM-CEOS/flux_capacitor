@@ -32,7 +32,7 @@ plt.style.use("ggplot")
 from fluxer import parse_config
 
 def underway_pCO2(period_file, config):
-    """"""
+    """Perform pCO2 computations on period."""
     R_u = 8.31451              # j/mol/k universal gas constant
     # Extract all the config pieces
     colnames = config["UW Inputs"]["colnames"]
@@ -175,15 +175,16 @@ def underway_pCO2(period_file, config):
           Tsw ** 3.0)
 
     # NULL data according to flags (these were setup in database)
-    sal[uw.bad_ctd_flag] = np.NaN
-    bad_pCO2 = (uw.bad_CO2_flag | uw.bad_H2O_flag |
-                uw.bad_temperature_external_flag |
-                uw.bad_temperature_analyzer_flag |
-                uw.bad_pressure_analyzer_flag |
-                uw.bad_equ_temperature_flag)
+    sal[uw.bad_ctd_flag.fillna(False)] = np.NaN
+    bad_pCO2 = (uw.bad_CO2_flag.fillna(False) |
+                uw.bad_H2O_flag.fillna(False) |
+                uw.bad_temperature_external_flag.fillna(False) |
+                uw.bad_temperature_analyzer_flag.fillna(False) |
+                uw.bad_pressure_analyzer_flag.fillna(False) |
+                uw.bad_equ_temperature_flag.fillna(False))
     pCO2_eq[bad_pCO2] = np.NaN
     fCO2[bad_pCO2] = np.NaN
-    sc[bad_temperature_external_flag] = np.NaN
+    sc[uw.bad_temperature_external_flag.fillna(False)] = np.NaN
 
     # Return object
     uw_new = pd.DataFrame({'solubility': sol,
@@ -197,12 +198,11 @@ def underway_pCO2(period_file, config):
 
 
 def main(config_file):
-    """"""
     config = parse_config(config_file)
     uw_idir = config["UW Inputs"]["input_directory"]
     uw_files = config["UW Inputs"]["input_files"]
     colnames = config["UW Inputs"]["colnames"]
-    summary_file = config["UW Outputs"]["summary_file"]
+    pCO2_dir = config["UW Outputs"]["pco2_directory"]
     # Stop if we don't have any files
     if (len(uw_files) < 1):
         raise Exception("There are no input files")
@@ -214,16 +214,10 @@ def main(config_file):
         iname = osp.basename(uw_file)
         iname_prefix = osp.splitext(iname)[0]
         uw_pCO2 = underway_pCO2(uw_file, config)
-        # ec_wind_corr, ec_flags = flux_period(ec_file, config)
-        # # Save to file with suffix '_mc.csv'
-        # ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + '_mc.csv'),
-        #                     index_label=colnames[1])
-        # for k, v in ec_flags.iteritems():
-        #     osummary.loc[iname, k] = v
-
-    # Now we have the summary DataFrame filled up and can work with it.
-    osummary.to_csv(summary_file, index_label="input_file")
-    print("Summary of fluxes written to " + summary_file)
+        # Save to file with suffix '_mc.csv'
+        ofile = osp.join(pCO2_dir, iname_prefix + '_pCO2.csv')
+        uw_pCO2.to_csv(ofile, index_label=colnames[1])
+        print("pCO2 file written to " + ofile)
 
 
 if __name__ == "__main__":
