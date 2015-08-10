@@ -112,7 +112,7 @@ _dflts = {
     'ec_accel_highpass_cutoff': "20.0",
     'uw_input_directory': getcwd(),
     'uw_file_pattern': "*[0-9].csv",
-    'uw_summary_file': "underway_pCO2.csv",
+    'uw_pco2_directory': getcwd(),
     'uw_colnames': ("time_30min,time_study,longitude,latitude," +
                     "speed_over_ground,course_over_ground,heading" +
                     "atmospheric_pressure,air_temperature," +
@@ -204,7 +204,7 @@ def parse_config(cfg_file):
      ),
         ("UW Outputs",
          OrderedDict((
-             ("summary_file", _dflts["uw_summary_file"]),
+             ("pco2_directory", _dflts["uw_pco2_directory"]),
          ))
      ),))
 
