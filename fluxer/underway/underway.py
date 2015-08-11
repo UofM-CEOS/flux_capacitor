@@ -7,7 +7,7 @@ resolution meteorology, radiation, and underway system data.  This input
 file, and other processing options, are specified in a configuration file,
 which is the single input parameter for this module.
 
-The following variables are looked for in input with units:
+The following variable names are expected in input with units:
 
 uw_pressure_analyzer (mbar)
 uw_temperature_analyzer (C)
@@ -17,6 +17,13 @@ ctd_pressure (dbar)
 ctd_temperature (C)
 ctd_conductivity (S/m; Siemens/m)
 equ_temperature (C)
+temperature_external (C)
+bad_CO2_flag (boolean)
+bad_H2O_flag (boolean)
+bad_temperature_external (boolean)
+bad_temperature_analyzer (boolean)
+bad_pressure_analyzer_flag (boolean)
+bad_equ_temperature_flag (boolean)
 
 """
 
@@ -59,7 +66,7 @@ def underway_pCO2(period_file, config):
     CO2_sw = (uw.uw_CO2_fraction / 1.0e6) * air_sw
     H2O_sw = (uw.uw_H2O_fraction / 1000.0) * air_sw
     # Dry air mixing ratio
-    pCO2_sw = (CO2_sw / (air_sw - H2O_sw)) * 1.0e6
+    xCO2 = (CO2_sw / (air_sw - H2O_sw)) * 1.0e6
 
     # # MET - atmosphere
     # # Bulk air molar concentration, CO2 molar concentration, water vapor
@@ -139,7 +146,7 @@ def underway_pCO2(period_file, config):
     Pw = (np.exp(24.4543 - 67.4509 * (100.0 / T_eq) - 4.8489 *
                  np.log(T_eq / 100.0) - 0.000544 * sal))
     # Calculate pCO2 in the equilibrator
-    pCO2_eq = pCO2_sw * (1 - Pw) # units: uatm, here 1 -> 1 atm
+    pCO2_eq = xCO2 * (1 - Pw) # units: uatm, here 1 -> 1 atm
 
     # Calculate pCO2_sw (apply temperature corrections)
 
@@ -150,7 +157,7 @@ def underway_pCO2(period_file, config):
     # # from 2013 - as per Tonya):
     # Tsw = (0.8866 * (T_eq - 273.15) - 0.7466) + 273.15
     # Now apply the temperature correction (Takahashi et al. 1993)
-    pCO2_eq = pCO2_eq * np.exp(0.0423 * (Tsw - T_eq))
+    pCO2_sw = pCO2_eq * np.exp(0.0423 * (Tsw - T_eq))
 
     # Calculate fugacity at base of MDL as per Weiss 1974
     fA = 12.0408 * Tsw
@@ -176,22 +183,27 @@ def underway_pCO2(period_file, config):
 
     # NULL data according to flags (these were setup in database)
     sal[uw.bad_ctd_flag.fillna(False)] = np.NaN
+    sol[uw.bad_ctd_flag.fillna(False)] = np.NaN
     bad_pCO2 = (uw.bad_CO2_flag.fillna(False) |
                 uw.bad_H2O_flag.fillna(False) |
                 uw.bad_temperature_external_flag.fillna(False) |
                 uw.bad_temperature_analyzer_flag.fillna(False) |
                 uw.bad_pressure_analyzer_flag.fillna(False) |
                 uw.bad_equ_temperature_flag.fillna(False))
+    xCO2[bad_pCO2] = np.NaN
     pCO2_eq[bad_pCO2] = np.NaN
+    pCO2_sw[bad_pCO2] = np.NaN
     fCO2[bad_pCO2] = np.NaN
     sc[uw.bad_temperature_external_flag.fillna(False)] = np.NaN
 
     # Return object
-    uw_new = pd.DataFrame({'solubility': sol,
-                           'salinity': sal,
-                           'pCO2': pCO2_eq,
+    uw_new = pd.DataFrame({'dry_air_mixing_ratio': xCO2,
+                           'pCO2_equilibrator': pCO2_eq,
+                           'pCO2_seawater': pCO2_sw,
                            'fCO2': fCO2,
-                           'sc': sc,
+                           'solubility': sol,
+                           'salinity': sal,
+                           'schmidt_number': sc,
                            },
                           index=uw.index)
     return pd.concat([uw, uw_new], axis=1)
