@@ -1,7 +1,3 @@
-===========================================
-Flux Capacitor: tools for gas flux analyses
-===========================================
-
 Routines and tools to process flux (eddy covariance) data as collected
 by our group.
 
@@ -51,11 +47,42 @@ configuration settings required by each sub-package (under the
 =eddycov= package
 =================
 
-The main interface for this package is via its ``db_flux`` module, which
-offers two functions: ``main`` and ``flux_period``.
+The main interface for this package is the two functions: ``main`` and
+``flux_period``:
+
+.. code:: python
+
+      # The main() function takes a configuration file and runs the analyses
+      from fluxer import eddycov
+      eddycov.main("ec_config.cfg")
+
+.. code:: python
+
+      # The flux_period() function takes an input data file and a *parsed*
+      # configuration file and runs the analysis for it
+      from fluxer import eddycov
+      from fluxer.flux_config import parse_config
+      config = parse_config("ec_config.cfg")
+      eddycov.flux_period("YYYYMMDD_100000_10hz.csv", config)
 
 =underway= package
 ==================
 
-Importing this package offers the following two functions: ``main`` and
-``underway_pCO2``.
+Consistent with ``eddycov``, this package offers two functions: ``main``
+and ``underway_pCO2``.
+
+.. code:: python
+
+      # The main() function takes a configuration file and runs the analyses
+      from fluxer import underway
+      underway.main("ec_config.cfg")
+
+.. code:: python
+
+      # The underway_pCO2() function takes an input data file and a *parsed*
+      # configuration file and runs the analysis for it
+      from fluxer import underway
+      from fluxer.flux_config import parse_config
+      config = parse_config("uw_config.cfg")
+      eddycov.underway_pCO2("YYYYMMDD_100000_20min.csv", config)
+
