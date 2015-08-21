@@ -7,7 +7,7 @@ Lotte/
 Wickstrom/
 miller_jotech2008/
 flux_[0-9]*.cfg
-/motion.m
+motion.m
 /build
 /dist
 MANIFEST
