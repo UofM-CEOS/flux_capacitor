@@ -154,7 +154,7 @@ def flux_period(period_file, config):
     if (ec.op_analyzer_status.gt(249) |
         ec.op_analyzer_status.lt(240)).sum() > 0.02:
         open_flag = True
-    
+
     # [Original comment: check for bad wind data: bad wind data can
     # usually be diagnosed by unusually high wind speeds.  This is
     # most obvious in the vertical wind where we wouldn't expect high
@@ -291,7 +291,7 @@ def flux_period(period_file, config):
                               sonic_flag=sonic_flag, motion_flag=motion_flag,
                               bad_navigation_flag=bad_navigation_flag,
                               bad_meteorology_flag=bad_meteorology_flag)
-    
+
 def main(config_file):
     # Parse configuration file
     config = parse_config(config_file)
@@ -300,7 +300,7 @@ def main(config_file):
     colnames = config["EC Inputs"]["colnames"]
     summary_file = config["EC Outputs"]["summary_file"]
     # Stop if we don't have any files
-    if (len(ec_files) < 1):
+    if len(ec_files) < 1:
         raise Exception("There are no input files")
 
     # [Original comment: create flags for the 4 possible sources of "bad"
@@ -315,7 +315,7 @@ def main(config_file):
     osummary = pd.DataFrame(flags,
                             index=[osp.basename(x) for x in ec_files])
     for ec_file in ec_files:
-        print(ec_file)             # REMOVE FOR PRODUCTION
+        # print(ec_file)             # REMOVE FOR PRODUCTION
         # Get a file name prefix to be shared by the output files from this
         # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
         iname = osp.basename(ec_file)

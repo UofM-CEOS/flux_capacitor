@@ -203,8 +203,7 @@ def underway_pCO2(period_file, config):
                            'fCO2': fCO2,
                            'solubility': sol,
                            'salinity': sal,
-                           'schmidt_number': sc,
-                           },
+                           'schmidt_number': sc},
                           index=uw.index)
     return pd.concat([uw, uw_new], axis=1)
 
@@ -216,7 +215,7 @@ def main(config_file):
     colnames = config["UW Inputs"]["colnames"]
     pCO2_dir = config["UW Outputs"]["pco2_directory"]
     # Stop if we don't have any files
-    if (len(uw_files) < 1):
+    if len(uw_files) < 1:
         raise Exception("There are no input files")
 
     for uw_file in uw_files:

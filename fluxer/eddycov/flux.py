@@ -1,3 +1,7 @@
+"""Core functionality for the package.
+
+"""
+
 
 import numpy as np
 from scipy import interpolate as itpl
@@ -107,18 +111,18 @@ def euler_rotate(X, euler):
     """Rotate vector matrix given Euler transformation matrix."""
     x, y, z = X[:, 0], X[:, 1], X[:, 2]
     phi, theta, psi = euler[:, 0], euler[:, 1], euler[:, 2]
-    x_new =  (x * np.cos(theta) * np.cos(psi) +
-              y * (np.sin(phi) * np.sin(theta) * np.cos(psi) -
-                   np.cos(phi) * np.sin(psi)) +
-              z * (np.cos(phi) * np.sin(theta) * np.cos(psi) +
-                   np.sin(phi) * np.sin(psi)))
-    y_new =  (x * np.cos(theta) * np.sin(psi) +
-              y * (np.sin(phi) * np.sin(theta) * np.sin(psi) +
-                   np.cos(phi) * np.cos(psi)) +
-              z * (np.cos(phi) * np.sin(theta) * np.sin(psi) -
-                   np.sin(phi) * np.cos(psi)))
-    z_new =  (x * (-np.sin(theta)) + y * ( np.cos(theta) * np.sin(phi)) +
-              z * (np.cos(theta) * np.cos(phi)))
+    x_new = (x * np.cos(theta) * np.cos(psi) +
+             y * (np.sin(phi) * np.sin(theta) * np.cos(psi) -
+                  np.cos(phi) * np.sin(psi)) +
+             z * (np.cos(phi) * np.sin(theta) * np.cos(psi) +
+                  np.sin(phi) * np.sin(psi)))
+    y_new = (x * np.cos(theta) * np.sin(psi) +
+             y * (np.sin(phi) * np.sin(theta) * np.sin(psi) +
+                  np.cos(phi) * np.cos(psi)) +
+             z * (np.cos(phi) * np.sin(theta) * np.sin(psi) -
+                  np.sin(phi) * np.cos(psi)))
+    z_new = (x * (-np.sin(theta)) + y * (np.cos(theta) * np.sin(phi)) +
+             z * (np.cos(theta) * np.cos(phi)))
     return np.column_stack((x_new, y_new, z_new))
 
 
@@ -462,7 +466,7 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
     # Set categorical x: 0 (ok), 1 (upper outlier), -1 (lower outlier)
     xcat = np.zeros(x.shape, dtype=np.int)
     xcat[isout_hi] = 1; xcat[isout_lo] = -1
-    if (n_outs > 0):
+    if n_outs > 0:
         # Create tuples for each sequence indicating whether it's outliers
         # and its length.
         grps = [(val, len(list(seq))) for val, seq in groupby(xcat)]
@@ -546,7 +550,7 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
     # Get a series of tuples with indices for each window
     idxl = window_indices(range(len(x)), width, step)
     nloops = 0
-    while (nloops < nreps):
+    while nloops < nreps:
         nspikes_loop = 0
         for w in idxl:
             winidx = [i for i in w] # indices of current window

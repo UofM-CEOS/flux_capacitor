@@ -13,7 +13,7 @@ __all__ = ["parse_config"]
 
 # We need to control names.  We leave the date time columns (always the
 # first two in input) up to pandas to determine, as they're always safe.
-_incols_all = dict(longitude=float, latitude=float, speed_over_ground=float,
+_INCOLS_ALL = dict(longitude=float, latitude=float, speed_over_ground=float,
                    course_over_ground=float, heading=float, pitch=float,
                    roll=float, heave=float, atmospheric_pressure=float,
                    air_temperature=float, relative_humidity=float,
@@ -72,7 +72,7 @@ _incols_all = dict(longitude=float, latitude=float, speed_over_ground=float,
                    bad_temperature_external_flag=bool)
 
 # Simple dictionary to list our defaults
-_dflts = {
+_DFLTS = {
     'ec_input_directory': getcwd(),
     'ec_file_pattern': "*[0-9].csv",
     'ec_colnames': ("time_20min,time_study,longitude,latitude," +
@@ -140,11 +140,11 @@ _dflts = {
     'uw_intake_depth': "5.0",
     'anemometer2d_height': "16.0"}
 # Scalar option names
-_scalar_opts = ["ec_sample_frequency", "ec_despike_win_width",
+_SCALAR_OPTS = ["ec_sample_frequency", "ec_despike_win_width",
                 "ec_despike_step", "ec_despike_nreps",
                 "ec_complementary_filter_period", "ec_accel_highpass_cutoff",
                 "anemometer2d_height", "uw_intake_depth"]
-_vector_opts = ["motion2anemometer_pos"]
+_VECTOR_OPTS = ["motion2anemometer_pos"]
 
 def parse_config(cfg_file):
     """Parse configuration file for essential variables during flux analysis.
@@ -165,48 +165,48 @@ def parse_config(cfg_file):
     dflt_dict = OrderedDict((
         ("EC Inputs",
          OrderedDict((
-             ("input_directory", _dflts["ec_input_directory"]),
-             ("file_pattern", _dflts["ec_file_pattern"]),
-             ("colnames", _dflts["ec_colnames"]),
-             ("sample_frequency", _dflts["ec_sample_frequency"]),
+             ("input_directory", _DFLTS["ec_input_directory"]),
+             ("file_pattern", _DFLTS["ec_file_pattern"]),
+             ("colnames", _DFLTS["ec_colnames"]),
+             ("sample_frequency", _DFLTS["ec_sample_frequency"]),
          ))
-     ),
+        ),
         ("EC Outputs",
          OrderedDict((
-             ("summary_file", _dflts["ec_summary_file"]),
+             ("summary_file", _DFLTS["ec_summary_file"]),
          ))
-     ),
+        ),
         ("EC Despiking",
          OrderedDict((
-             ("despike_win_width", _dflts["ec_despike_win_width"]),
-             ("despike_step", _dflts["ec_despike_step"]),
-             ("despike_nreps", _dflts["ec_despike_nreps"]),
+             ("despike_win_width", _DFLTS["ec_despike_win_width"]),
+             ("despike_step", _DFLTS["ec_despike_step"]),
+             ("despike_nreps", _DFLTS["ec_despike_nreps"]),
          ))
-     ),
+        ),
         ("EC Motion Correction",
          OrderedDict((
              ("motion2anemometer_pos",
-              _dflts["motion2anemometer_pos"]),
+              _DFLTS["motion2anemometer_pos"]),
              ("complementary_filter_period",
-              _dflts["ec_complementary_filter_period"]),
+              _DFLTS["ec_complementary_filter_period"]),
              ("accel_highpass_cutoff",
-              _dflts["ec_accel_highpass_cutoff"]),
+              _DFLTS["ec_accel_highpass_cutoff"]),
          ))
-     ),
+        ),
         ("UW Inputs",
          OrderedDict((
-             ("input_directory", _dflts["uw_input_directory"]),
-             ("file_pattern", _dflts["uw_file_pattern"]),
-             ("colnames", _dflts["uw_colnames"]),
-             ("uw_intake_depth", _dflts["uw_intake_depth"]),
-             ("anemometer2d_height", _dflts["anemometer2d_height"]),
+             ("input_directory", _DFLTS["uw_input_directory"]),
+             ("file_pattern", _DFLTS["uw_file_pattern"]),
+             ("colnames", _DFLTS["uw_colnames"]),
+             ("uw_intake_depth", _DFLTS["uw_intake_depth"]),
+             ("anemometer2d_height", _DFLTS["anemometer2d_height"]),
          ))
-     ),
+        ),
         ("UW Outputs",
          OrderedDict((
-             ("pco2_directory", _dflts["uw_pco2_directory"]),
+             ("pco2_directory", _DFLTS["uw_pco2_directory"]),
          ))
-     ),))
+        ),))
 
     # Set up the parser to interpolate across sections
     config = cfg.ConfigParser(interpolation=cfg.ExtendedInterpolation())
@@ -221,7 +221,7 @@ def parse_config(cfg_file):
         for opt in config.options(sec):
             opt_value = config.get(sec, opt)
             # Just replace and skip if we have the same as defaults
-            if (dflt_dict[sec][opt] == opt_value):
+            if dflt_dict[sec][opt] == opt_value:
                 py_dict[sec][opt] = opt_value.split(",")
             else:
                 # Otherwise move on and remove double quotes, newlines, and
@@ -233,29 +233,29 @@ def parse_config(cfg_file):
                 py_dict[sec][opt] = clean_opt.split(",")
             # Extract single elements, and convert to floats and arrays where
             # appropriate
-            if (len(py_dict[sec][opt]) == 1):
+            if len(py_dict[sec][opt]) == 1:
                 py_dict[sec][opt] = py_dict[sec][opt][0]
-            if (opt in _scalar_opts):
+            if opt in _SCALAR_OPTS:
                 py_dict[sec][opt] = float(py_dict[sec][opt])
-            elif (opt in _vector_opts):
+            elif opt in _VECTOR_OPTS:
                 py_dict[sec][opt] = [float(x) for x in py_dict[sec][opt]]
 
     # Check input directories exist
-    if (not osp.exists(py_dict["EC Inputs"]["input_directory"])):
+    if not osp.exists(py_dict["EC Inputs"]["input_directory"]):
         raise Exception("Input directory doesn't exist")
-    if (not osp.exists(py_dict["UW Inputs"]["input_directory"])):
+    if not osp.exists(py_dict["UW Inputs"]["input_directory"]):
         raise Exception("Input directory doesn't exist")
 
     # Check if we have a valid sampling frequency
-    if (py_dict["EC Inputs"]["sample_frequency"] <= 0):
+    if py_dict["EC Inputs"]["sample_frequency"] <= 0:
         raise Exception("Sampling frequency must be greater than zero")
 
     # Check if we have a valid despiking parameters
-    if (py_dict["EC Despiking"]["despike_win_width"] <= 0):
+    if py_dict["EC Despiking"]["despike_win_width"] <= 0:
         raise Exception("Despiking window width must be greater than zero")
-    if (py_dict["EC Despiking"]["despike_step"] <= 0):
+    if py_dict["EC Despiking"]["despike_step"] <= 0:
         raise Exception("Despiking step size must be greater than zero")
-    if (py_dict["EC Despiking"]["despike_nreps"] < 0):
+    if py_dict["EC Despiking"]["despike_nreps"] < 0:
         raise Exception("The number of despiking iterations cannot be negative")
 
     # Sort input file lists
@@ -272,15 +272,15 @@ def parse_config(cfg_file):
     # care about first 2 time columns).
     illegal_names = ((set(py_dict["EC Inputs"]["colnames"][2:]) |
                       set(py_dict["UW Inputs"]["colnames"][2:])) -
-                     set(_incols_all.keys()))
+                     set(_INCOLS_ALL.keys()))
     if len(illegal_names) > 0:
         raise Exception("There are illegal column names in config file:")
         print illegal_names
     else:
-        ec_dtypes = {key: _incols_all[key] for key in
+        ec_dtypes = {key: _INCOLS_ALL[key] for key in
                      py_dict["EC Inputs"]["colnames"][2:]}
         py_dict["EC Inputs"]["dtypes"] = ec_dtypes
-        uw_dtypes = {key: _incols_all[key] for key in
+        uw_dtypes = {key: _INCOLS_ALL[key] for key in
                      py_dict["UW Inputs"]["colnames"][2:]}
         py_dict["UW Inputs"]["dtypes"] = uw_dtypes
 
