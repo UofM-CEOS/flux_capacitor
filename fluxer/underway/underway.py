@@ -45,6 +45,8 @@ def underway_pCO2(period_file, config):
     colnames = config["UW Inputs"]["colnames"]
     dtypes = config["UW Inputs"]["dtypes"]
     uw_depth = config["UW Inputs"]["uw_intake_depth"]
+    calc_ext_temp = config["UW Inputs"]["uw_regress_temperature_external"]
+    ext_temp_coefs = config["UW Inputs"]["uw_temperature_external_coefs"]
     # Read, specifying the options matching what we get in our database
     # output files
     uw = pd.read_csv(period_file, dtype=dtypes, header=1,
@@ -151,11 +153,13 @@ def underway_pCO2(period_file, config):
     # Calculate pCO2_sw (apply temperature corrections)
 
     # Since 2014 we have an inline temperature sensor to measure seawater
-    # temperature continuously
-    Tsw = uw.temperature_external + 273.15
-    # # If above absent, we need regression coefficients from data (below is
-    # # from 2013 - as per Tonya):
-    # Tsw = (0.8866 * (T_eq - 273.15) - 0.7466) + 273.15
+    # temperature continuously.  Otherwise, we calculate a surrogate from
+    # equilibrator temperature
+    if calc_ext_temp:
+        Tsw = (ext_temp_coefs[0] + ext_temp_coefs[1] *
+               (T_eq - 273.15)) + 273.15
+    else:
+        Tsw = uw.temperature_external + 273.15
     # Now apply the temperature correction (Takahashi et al. 1993)
     pCO2_sw = pCO2_eq * np.exp(0.0423 * (Tsw - T_eq))
 

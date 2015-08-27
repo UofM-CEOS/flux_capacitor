@@ -138,13 +138,15 @@ _DFLTS = {
                     "bad_equ_temperature_flag," +
                     "bad_temperature_external_flag"),
     'uw_intake_depth': "5.0",
+    'uw_regress_temperature_external': False,
+    'uw_temperature_external_coefs': "0.0, 1.0",
     'anemometer2d_height': "16.0"}
 # Scalar option names
 _SCALAR_OPTS = ["ec_sample_frequency", "ec_despike_win_width",
                 "ec_despike_step", "ec_despike_nreps",
                 "ec_complementary_filter_period", "ec_accel_highpass_cutoff",
                 "anemometer2d_height", "uw_intake_depth"]
-_VECTOR_OPTS = ["motion2anemometer_pos"]
+_VECTOR_OPTS = ["motion2anemometer_pos", "uw_temperature_external_coefs"]
 
 def parse_config(cfg_file):
     """Parse configuration file for essential variables during flux analysis.
@@ -199,6 +201,10 @@ def parse_config(cfg_file):
              ("file_pattern", _DFLTS["uw_file_pattern"]),
              ("colnames", _DFLTS["uw_colnames"]),
              ("uw_intake_depth", _DFLTS["uw_intake_depth"]),
+             ("uw_regress_temperature_external",
+              _DFLTS["uw_regress_temperature_external"]),
+             ("uw_temperature_external_coefs",
+              _DFLTS["uw_temperature_external_coefs"]),
              ("anemometer2d_height", _DFLTS["anemometer2d_height"]),
          ))
         ),
