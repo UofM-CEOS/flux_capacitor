@@ -157,7 +157,7 @@ def underway_pCO2(period_file, config):
     # equilibrator temperature
     if calc_ext_temp:
         Tsw = (ext_temp_coefs[0] + ext_temp_coefs[1] *
-               (T_eq - 273.15)) + 273.15
+               uw.equ_temperature) + 273.15
     else:
         Tsw = uw.temperature_external + 273.15
     # Now apply the temperature correction (Takahashi et al. 1993)
