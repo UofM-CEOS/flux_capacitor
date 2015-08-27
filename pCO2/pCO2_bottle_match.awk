@@ -1,7 +1,7 @@
-#! /opt/local/bin/gawk -f
+#! /usr/bin/gawk -f
 # Author: Sebastian Luque
 # Created: 2013-11-21T13:40:36+0000
-# Last-Updated: 2015-06-30T20:14:51+0000
+# Last-Updated: 2015-08-27T20:25:17+0000
 #           By: Sebastian P. Luque
 # Version: 
 # copyright (c) 2013-2015 Sebastian P. Luque
@@ -49,7 +49,7 @@
 # Example:
 #
 # ./pCO2_bottle_match.awk -v max_time_diff=900 -v min_flow=1.5 \
-#     -v date_fld=3 -v time_fld=4 -v flow_fld=16
+#     -v date_fld=3 -v time_fld=4 -v flow_fld=16 bottle_2to7m.csv *
 # 
 # -------------------------------------------------------------------------
 # Code:
@@ -78,12 +78,12 @@ FNR > 1 && (tolower($1) == "equ") {   # matching "EQU" rows exactly
 	next
     }
     # Save all pCO2 data.  Just equilibration temperature for now.
-    pCO2[t_pCO2]=sprintf("%s, %s", $5, $flow_fld)
+    pCO2[t_pCO2]=sprintf("%s,%s", $5, $flow_fld)
 }
 
 END {
-    printf "%s, %s\n", "bottle_time, pCO2_time, bottle_number, depth",
-	"temperature, salinity, equ_temperature, H2O_flow"
+    printf "%s,%s\n", "bottle_time,pCO2_time,bottle_number,depth",
+	"temperature,salinity,equ_temperature,H2O_flow"
     # Loop through pCO2, compare time stamps with bottle.  Sort first.
     n=asorti(pCO2, pCO2_srt)	# now pCO2_srt contains sorted indices
     m=asorti(bottle, bottle_srt) # bottle_srt contains sorted indices
@@ -104,7 +104,7 @@ END {
 	# whether minimum is smaller than the maximum difference allowed,
 	# and if flow is greater than minimum, then print record
 	if ((tdiff_min < max_time_diff) && (p[2] > min_flow))
-	    printf "%s, %s,%s, %s\n",
+	    printf "%s,%s,%s,%s\n",
 		strftime("%F %T", bottle_t),
 	    	strftime("%F %T", pCO2_srt[i]), bottle_data,
 		pCO2[pCO2_srt[i]]

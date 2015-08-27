@@ -1,7 +1,7 @@
 #! /usr/bin/awk -f
 # Author: Sebastian P. Luque
 # Created: 2013-11-16T19:47:33+0000
-# Last-Updated: 2015-06-30T20:14:43+0000
+# Last-Updated: 2015-08-27T20:22:25+0000
 #           By: Sebastian P. Luque
 # Version: 
 # copyright (c) 2013-2015 Sebastian P. Luque
@@ -56,7 +56,7 @@ BEGIN {
     if (!depth_fld) depth_fld = 6
     if (!temperature_fld) temperature_fld = 7
     if (!salinity_fld) salinity_fld = 8
-    print "time, bottle_number, depth, temperature, salinity"
+    print "time,bottle_number,depth,temperature,salinity"
 }
 
 /^(\*|#)/ { data_beg=0; next }	# reset the start line, if on header lines
@@ -77,7 +77,7 @@ FNR < data_beg { next }		# skip header lines
     depth_dev=depth - target_depth
     abs_depth_dev=depth_dev < 0 ? -depth_dev : depth_dev
     if (abs_depth_dev < tol_diff) {
-    	printf "%s %s, %s, %s, %s, %s\n", date_str, $1, bottle_no,
+    	printf "%s %s,%s,%s,%s,%s\n", date_str, $1, bottle_no,
     	    depth, temperature, salinity
     }
 }
