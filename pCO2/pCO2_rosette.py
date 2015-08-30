@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 
 import argparse
 import matplotlib as mpl
@@ -11,10 +12,8 @@ from StringIO import StringIO
 plt.style.use('ggplot')
 
 # Programs
-subset_prog = ("/home/sluque/Scripts/Projects/CEOS/Flux_Capacitor/pCO2/" +
-               "subset_bottles.awk")
-match_prog = ("/home/sluque/Scripts/Projects/CEOS/Flux_Capacitor/pCO2/" +
-              "pCO2_bottle_match.awk")
+subset_prog = "subset_bottles.awk"
+match_prog = "pCO2_bottle_match.awk"
 
 _DESCRIPTION = ("Subset Rosette bottles around specified depth, and " +
                 "select underway pCO2 data with a matching time stamp " +
@@ -58,23 +57,24 @@ parser.add_argument("--flow_fld", default=16, type=int,
                           "pCO2 files."))
 args = parser.parse_args()
 
-subset_cmd = ([subset_prog, "-v", "target_depth=" + str(args.target_depth),
-              "-v", "tol_diff=" + str(args.tol_diff),
-              "-v", "depth_fld=" + str(args.depth_fld),
-              "-v", "temperature_fld=" + str(args.temperature_fld),
+subset_cmd = (["gawk", "-f", subset_prog,
+               "-v", "target_depth=" + str(args.target_depth),
+               "-v", "tol_diff=" + str(args.tol_diff),
+               "-v", "depth_fld=" + str(args.depth_fld),
+               "-v", "temperature_fld=" + str(args.temperature_fld),
                "-v", "salinity_fld=" + str(args.salinity_fld)] +
-               glob.glob(args.bottle_files))
-match_cmd = ([match_prog, "-v", "max_time_diff=" + str(args.max_time_diff),
+              glob.glob(args.bottle_files))
+match_cmd = (["gawk", "-f", match_prog,
+              "-v", "max_time_diff=" + str(args.max_time_diff),
               "-v", "min_flow=" + str(args.min_flow),
               "-v", "date_fld=" + str(args.date_fld),
               "-v", "time_fld=" + str(args.time_fld),
               "-v", "flow_fld=" + str(args.flow_fld), "--", "-"] +
-              glob.glob(args.uw_files))
+             glob.glob(args.uw_files))
 bottles = Popen(subset_cmd, stdout=PIPE)
 bottle_matches = Popen(match_cmd, stdin=bottles.stdout, stdout=PIPE)
 rosette = pd.read_csv(StringIO(bottle_matches.communicate()[0]))
 
-# plt.switch_backend("Agg")
 plt.figure(figsize=(7, 6))
 temp_fit = np.polyfit(rosette.equ_temperature, rosette.temperature, 1)
 temp_predict = np.poly1d(temp_fit)
