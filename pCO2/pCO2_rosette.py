@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import os.path as osp
 import argparse
 import matplotlib as mpl
 mpl.use("Agg")
@@ -12,6 +13,9 @@ from StringIO import StringIO
 plt.style.use('ggplot')
 
 # Programs
+
+# Scripts' directory
+_SCRIPTS_DIR = osp.dirname(osp.realpath(__file__))
 subset_prog = "subset_bottles.awk"
 match_prog = "pCO2_bottle_match.awk"
 
@@ -71,8 +75,9 @@ match_cmd = (["gawk", "-f", match_prog,
               "-v", "time_fld=" + str(args.time_fld),
               "-v", "flow_fld=" + str(args.flow_fld), "--", "-"] +
              glob.glob(args.uw_files))
-bottles = Popen(subset_cmd, stdout=PIPE)
-bottle_matches = Popen(match_cmd, stdin=bottles.stdout, stdout=PIPE)
+bottles = Popen(subset_cmd, stdout=PIPE, env={"AWKPATH": _SCRIPTS_DIR})
+bottle_matches = Popen(match_cmd, stdin=bottles.stdout, stdout=PIPE,
+                       env={"AWKPATH": _SCRIPTS_DIR})
 rosette = pd.read_csv(StringIO(bottle_matches.communicate()[0]))
 
 plt.figure(figsize=(7, 6))
