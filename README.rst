@@ -65,6 +65,17 @@ The main interface for this package is the two functions: ``main`` and
       config = parse_config("ec_config.cfg")
       eddycov.flux_period("YYYYMMDD_100000_10hz.csv", config)
 
+A third alternative is offered to allow execution from a shell command
+line:
+
+.. code:: shell
+
+      db_flux.py ec_config.cfg
+
+However, this requires ensuring that the shebang (first line of the
+script/module) on ``db_flux.py`` is appropriate for the system running
+it.
+
 =underway= package
 ==================
 
@@ -85,4 +96,10 @@ and ``underway_pCO2``.
       from fluxer.flux_config import parse_config
       config = parse_config("uw_config.cfg")
       eddycov.underway_pCO2("YYYYMMDD_100000_20min.csv", config)
+
+It is also possible to perform the analysis from the shell command line:
+
+.. code:: shell
+
+      underway.py ec_config.cfg
 

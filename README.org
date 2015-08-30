@@ -71,6 +71,16 @@ The main interface for this package is the two functions: =main= and
   eddycov.flux_period("YYYYMMDD_100000_10hz.csv", config)
 #+END_SRC
 
+A third alternative is offered to allow execution from a shell command
+line:
+
+#+BEGIN_SRC shell :results silent :exports code
+  db_flux.py ec_config.cfg
+#+END_SRC
+
+However, this requires ensuring that the shebang (first line of the
+script/module) on =db_flux.py= is appropriate for the system running it.
+
 * =underway= package
 
 Consistent with =eddycov=, this package offers two functions: =main= and
@@ -89,4 +99,10 @@ Consistent with =eddycov=, this package offers two functions: =main= and
   from fluxer.flux_config import parse_config
   config = parse_config("uw_config.cfg")
   eddycov.underway_pCO2("YYYYMMDD_100000_20min.csv", config)
+#+END_SRC
+
+It is also possible to perform the analysis from the shell command line:
+
+#+BEGIN_SRC shell :results silent :exports code
+  underway.py ec_config.cfg
 #+END_SRC
