@@ -14,6 +14,8 @@ setup(name="fluxer",
       author_email="sebastian.luque@umanitoba.ca",
       url="https://github.com/UofM-CEOS/flux_capacitor",
       packages=["fluxer", "fluxer.eddycov", "fluxer.underway"],
+      scripts=["pCO2/pCO2_rosette.py", "pCO2/subset_bottles.awk",
+               "pCO2/pCO2_bottle_match.awk"]
       # package_data={'fluxer': FLUXER_CONFIGS},
       # data_files=[('config', ['config/flux_default.cfg',
       #                         'config/underway_default.cfg'])],
