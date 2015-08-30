@@ -14,7 +14,10 @@ plt.style.use('ggplot')
 
 # Programs
 
-# Scripts' directory
+# Scripts' directory -- we set AWKPATH to directory where this script is
+# located, and then specify the programs loosely so that awk finds them via
+# its normal search path.  This ensures we find the programs in the most
+# natural way, and avoid hard-coding any location.
 _SCRIPTS_DIR = osp.dirname(osp.realpath(__file__))
 subset_prog = "subset_bottles.awk"
 match_prog = "pCO2_bottle_match.awk"
@@ -23,6 +26,7 @@ _DESCRIPTION = ("Subset Rosette bottles around specified depth, and " +
                 "select underway pCO2 data with a matching time stamp " +
                 "plus/minus specified time difference.")
 parser = argparse.ArgumentParser(description=_DESCRIPTION)
+# We have to specify every argument to the underlying programs.
 parser.add_argument("output_file", type=argparse.FileType("w"),
                     help="Path to output figure file.")
 parser.add_argument("bottle_files",
