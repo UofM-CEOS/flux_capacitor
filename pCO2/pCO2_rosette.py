@@ -52,14 +52,8 @@ def main(subset_prog, match_prog, bottle_files, uw_files, ofigure_file,
     plt.xlabel("Equilibrator Temperature (C)")
     plt.ylabel("Rosette Temperature (C)")
     plt.title("y={0[1]:.4f} + {0[0]:.4f}x".format(temp_fit))
-    # leg = plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), frameon=False,
-    #                  borderaxespad=0, ncol=2)
-    # leg.get_texts()[0].set_text("Tim")
-    # leg.get_texts()[1].set_text("Database")
     plt.tight_layout()
     plt.savefig(ofigure_file, bbox_inches='tight')
-    # plt.savefig("external_temperature_2010.png", bbox_extra_artists=(leg,),
-    #             bbox_inches='tight')
     plt.close()
 
 
