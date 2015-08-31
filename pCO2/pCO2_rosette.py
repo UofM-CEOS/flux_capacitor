@@ -83,13 +83,14 @@ bottles = Popen(subset_cmd, stdout=PIPE, env={"AWKPATH": _SCRIPTS_DIR})
 bottle_matches = Popen(match_cmd, stdin=bottles.stdout, stdout=PIPE,
                        env={"AWKPATH": _SCRIPTS_DIR})
 rosette = pd.read_csv(StringIO(bottle_matches.communicate()[0]))
-
-plt.figure(figsize=(7, 6))
+# Fit model
 temp_fit = np.polyfit(rosette.equ_temperature, rosette.temperature, 1)
 temp_predict = np.poly1d(temp_fit)
-x = np.linspace(np.min(rosette.equ_temperature),
+
+plt.figure(figsize=(7, 6))
+x_new = np.linspace(np.min(rosette.equ_temperature),
                 np.max(rosette.equ_temperature))
-plt.plot(x, temp_predict(x))
+plt.plot(x_new, temp_predict(x_new))
 plt.scatter(rosette.equ_temperature, rosette.temperature)
 plt.xlabel("Equilibrator Temperature (C)")
 plt.ylabel("Rosette Temperature (C)")
@@ -103,4 +104,3 @@ plt.savefig(args.output_file, bbox_inches='tight')
 # plt.savefig("external_temperature_2010.png", bbox_extra_artists=(leg,),
 #             bbox_inches='tight')
 plt.close()
-
