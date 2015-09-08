@@ -98,9 +98,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=_DESCRIPTION)
     group = parser.add_argument_group("required arguments")
     # We have to specify every argument to the underlying programs.
-    parser.add_argument("bottle-files",
+    parser.add_argument("bottle_files", metavar="bottle-files",
                         help="Glob pattern for location of bottle files.")
-    parser.add_argument("uw-files",
+    parser.add_argument("uw_files", metavar="uw-files",
                         help=("Glob pattern for location of underway pCO2 "
                               "files (including suffix)."))
     group.add_argument("--ofigure-file", required=True,
