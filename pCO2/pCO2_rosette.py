@@ -24,6 +24,8 @@ import glob
 from StringIO import StringIO
 plt.style.use('ggplot')
 
+__version__ = "0.1.0"
+
 def main(bottle_files, uw_files, **kwargs):
     """Perform subsetting and matching of rosette and pCO2 data.
 
@@ -133,6 +135,8 @@ if __name__ == "__main__":
     parser.add_argument("--flow-fld", default=16, type=int,
                         help=("Field where flow rate is located in "
                               "underway pCO2 files."))
+    parser.add_argument("--version", action="version",
+                        version="%(prog)s {}".format(__version__))
     args = parser.parse_args()
     main(args.bottle_files, args.uw_files, ofigure_file=args.ofigure_file,
          subset_prog=_SUBSET_PROG, match_prog=_MATCH_PROG,
