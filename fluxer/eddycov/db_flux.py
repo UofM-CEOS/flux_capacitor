@@ -329,7 +329,7 @@ def main(config_file):
 
     # Now we have the summary DataFrame filled up and can work with it.
     osummary.to_csv(summary_file, index_label="input_file")
-    print("Summary of fluxes written to " + summary_file)
+    print "Summary of fluxes written to " + summary_file
 
 
 if __name__ == "__main__":
