@@ -2,7 +2,6 @@
 
 """
 
-
 import numpy as np
 from scipy import interpolate as itpl
 from scipy import signal
