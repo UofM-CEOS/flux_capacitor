@@ -1,6 +1,4 @@
-"""Core functionality for the package.
-
-"""
+"""Core functionality for the package."""
 
 import numpy as np
 from scipy import interpolate as itpl
@@ -26,7 +24,6 @@ def decompose(angle, vmagnitude):
     Returns
     -------
     Tuple with ndarrays `x` and `y`, in that order.
-
     """
     x = vmagnitude * np.cos(np.radians(angle))
     y = vmagnitude * np.sin(np.radians(angle))
@@ -46,7 +43,6 @@ def recompose(x, y):
     Returns
     -------
     Tuple with ndarrays `angle` and `vmagnitude`, in that order.
-
     """
     vmag = np.sqrt((x ** 2) + (y ** 2))
     ang = np.arctan2(y, x)
@@ -84,7 +80,6 @@ def smooth_angle(angle, vmagnitude=1, kernel_width=21):
     Returns
     -------
     Tuple with ndarrays `angle` and `vmagnitude`, in that order.
-
     """
     x, y = decompose(angle, vmagnitude)
     x_smooth = convolve(x, Box1DKernel(kernel_width), boundary="extend")
@@ -93,16 +88,12 @@ def smooth_angle(angle, vmagnitude=1, kernel_width=21):
 
 
 def level3D_motion(accel, ang_rate, roll_range, pitch_range):
-    """Level 3D acceleration and angular rate measured by motion sensor.
-
-    """
+    """Level 3D acceleration and angular rate measured by motion sensor."""
     pass                        # IMPLEMENT THIS?
 
 
 def level3D_anemometer(wind_speed, roll, pitch):
-    """Level 3D anemometer measurements, given mean roll and pitch.
-
-    """
+    """Level 3D anemometer measurements, given mean roll and pitch."""
     pass                        # IMPLEMENT THIS?
 
 
@@ -212,7 +203,6 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
         Platform Motion Effects on Measurements of Turbulence and Air-Sea
         Exchange Over the Open Ocean, J. Atmo. Ocean. Tech. 25(9),
         1683-1694, DOI: 10.1175/2008JTECHO547.1.
-
     """
     if len([Ta]) == 1:
         Ta = Ta * np.ones((3, 1))
@@ -423,7 +413,6 @@ def window_indices(idxs, width, step=None):
     Returns
     -------
     List of tuples, each with the indices for a window.
-
     """
     return zip(*(idxs[i::step] for i in range(width)))
 
@@ -456,7 +445,6 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
         `k` for each measurement. k=0: measurement within plausibility
         range, k=[-1 or 1]: measurement outside plausibility range, abs(k)
         > 1: measurement is part of an outlier trend.
-
     """
     z = zscore(x)
     # Discern between outliers above and below the threshold
@@ -538,7 +526,6 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         Number of outlier trends detected.
     numpy.int [2]
         Number of iterations performed.
-
     """
     if step is None:            # set default step as
         step = width / 2        # one-half window size

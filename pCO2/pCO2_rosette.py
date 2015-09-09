@@ -11,7 +11,6 @@ For help using this script, type:
 pCO2_rosette.py -h
 
 at command line.
-
 """
 
 import matplotlib as mpl
@@ -33,7 +32,6 @@ def main(bottle_files, uw_files, **kwargs):
     equilibrator temperature.
 
     See parser help message for description of arguments.
-
     """
     ofigure_file = kwargs.get("ofigure_file")
     subset_prog = kwargs.get("subset_prog")

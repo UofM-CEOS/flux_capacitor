@@ -24,7 +24,6 @@ bad_temperature_external (boolean)
 bad_temperature_analyzer (boolean)
 bad_pressure_analyzer_flag (boolean)
 bad_equ_temperature_flag (boolean)
-
 """
 
 __all__ = ["main", "underway_pCO2"]

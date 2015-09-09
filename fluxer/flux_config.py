@@ -161,7 +161,6 @@ def parse_config(cfg_file):
     Ordered dictionary with variables for each section.  A list of input
     files found, given the input directory and file pattern, is also
     appended to the 'Inputs' section.
-
     """
     # Ordered dictionary based on dflts to give to the parser
     dflt_dict = OrderedDict((

@@ -6,7 +6,6 @@ database.
 It takes a single argument, which should be the path to a configuration
 file containing necessary set up information such as location of input
 files and variables.
-
 """
 
 __all__ = ["main", "flux_period"]
