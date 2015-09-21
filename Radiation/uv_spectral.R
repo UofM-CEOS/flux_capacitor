@@ -1,7 +1,7 @@
 ### uv_spectral.R --- calibrate UV based on independent data
 ## Author: Sebastian Luque
 ## Created: 2014-01-28T16:45:03+0000
-## Last-Updated: 2015-09-17T20:06:53+0000
+## Last-Updated: 2015-09-17T20:54:40+0000
 ##           By: Sebastian P. Luque
 ## copyright (c) 2014-2015 Sebastian P. Luque
 ## 
@@ -343,6 +343,46 @@ rad.int.daily <- do.call(rbind, rad.int.daily)
 
 write.csv(rad.int, file="uv_integrals.csv", row.names=FALSE)
 write.csv(rad.int.daily, file="uv_daily_means.csv", row.names=FALSE)
+
+
+## Simplest case without extrapolation
+
+rad <- read.csv("~/Dropbox/CEOS/RAD_geo/Resolute_UV_2010_2011.csv")
+rad <- within(rad, {
+    uv <- cut(wavelength, breaks=c(0, 315, 400), labels=c("B", "A"))
+    timer <- as.POSIXct(as.character(time), format="%H:%M:%S", tz="GMT")
+    date.time <- as.POSIXct(strptime(paste(as.character(date),
+                                           as.character(time)),
+                                     format="%Y-%m-%d %H:%M:%S"),
+                            tz="GMT")
+})
+
+"wave.integrate" <- function(x) {
+    ## nrow(x)
+    ## simple linear interpolating function
+    irr.linfun <- approxfun(x$wavelength, x$s_irradiance)
+    ## Integrate between the corresponding end points
+    irr.linint <- integrate(irr.linfun,
+                            min(x$wavelength), max(x$wavelength))
+    data.frame(x[1, ], s_irradiance_integral=irr.linint$value)
+}
+
+
+rad.int <- by(rad, list(rad$date, rad$time, rad$uv), wave.integrate)
+rad.int <- Filter(Negate(is.null), rad.int)
+rad.int <- do.call(rbind, rad.int)
+rad.int <- rad.int[order(rad.int$date.time), ]
+
+write.csv(rad.int, file="uv_integrals.csv", row.names=FALSE)
+
+xyplot(s_irradiance_integral ~ timer |
+       cut(date.time, breaks="year", labels=c("2010", "2011")),
+       data=rad.int, groups=uv, type="p", pch=".", auto.key=TRUE,
+       panel=panel.superpose, nrpoints=Inf,
+       panel.groups=function(x, y, ...) {
+           panel.xyplot(x, y, ...)
+           panel.smoothScatter(x, y, ...)
+       })
 
 
 ### uv_spectral.R ends here
