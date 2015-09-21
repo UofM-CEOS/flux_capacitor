@@ -16,3 +16,8 @@ venv/
 *.xls*
 /pCO2/UNESCO_1983.pdf
 /Radiation/*.pdf
+/pCO2/bulkTemplate.sav
+/pCO2/bulk_averaging_AN14.pro
+/pCO2/pCO2_processing_*.pro
+/pCO2/pCO2_AN11_rev2.pro
+/pCO2/pCO2_AN13.pro
