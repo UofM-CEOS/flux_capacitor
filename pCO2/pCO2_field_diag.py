@@ -70,7 +70,7 @@ pCO2_names = ["time", "record_type", "uw_diag", "equ_temperature",
 tsw_names = ["time", "battery_voltage", "logger_temperature",
              "water_temperature", "battery_voltage_sd",
              "logger_temperature_sd", "water_temperature_sd"]
-                                                 
+
 # CSV file
 pCO2 = pd.read_csv("/home/sluque/Data/ArcticNet/2015/UW_pCO2/"
                    "UW_pCO2.csv", header=None, names=pCO2_names,
@@ -105,67 +105,77 @@ axs[3].set_xlabel('')
 pCO2_equ[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, legend=False)
 axs[4].set_ylabel('Flow rate analyzer\n(ml/min)')
 axs[4].set_xlabel('')
-plt.savefig("licor_equ.png", bbox_inches="tight")
+plt.savefig("licor_equ.png", bbox_inches="tight"); plt.close()
 # LICOR STD2 plots
 fig, axs = plt.subplots(5, 1, sharex=True)
 fig.set_size_inches((11.5, 12.5))
 pCO2_std2[["uw_CO2_fraction"]].plot(ax=axs[0], title="STD2 samples",
-                                    legend=False)
+                                    style=".-", legend=False)
 axs[0].set_ylabel('CO2 fraction\n($\mu$mol/mol)')
 axs[0].set_xlabel('')
-pCO2_std2[["uw_H2O_fraction"]].plot(ax=axs[1], legend=False)
+pCO2_std2[["uw_H2O_fraction"]].plot(ax=axs[1], style=".-", legend=False)
 axs[1].set_ylabel('H2O fraction\n(mmol/mol)')
 axs[1].set_xlabel('')
-pCO2_std2[["uw_temperature_analyzer"]].plot(ax=axs[2], legend=False)
+pCO2_std2[["uw_temperature_analyzer"]].plot(ax=axs[2], style=".-",
+                                            legend=False)
 axs[2].set_ylabel('Temperature analyzer\n(C$^\circ$)')
 axs[2].set_xlabel('')
-pCO2_std2[["uw_pressure_analyzer"]].plot(ax=axs[3], legend=False)
+pCO2_std2[["uw_pressure_analyzer"]].plot(ax=axs[3], style=".-",
+                                         legend=False)
 axs[3].set_ylabel('Pressure analyzer\n(mbar)')
 axs[3].set_xlabel('')
-pCO2_std2[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, legend=False)
+pCO2_std2[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, style=".-",
+                                      legend=False)
 axs[4].set_ylabel('Flow rate analyzer\n(ml/min)')
 axs[4].set_xlabel('')
-plt.savefig("licor_std2.png", bbox_inches="tight")
+plt.savefig("licor_std2.png", bbox_inches="tight"); plt.close()
 # LICOR STD3 plots
 fig, axs = plt.subplots(5, 1, sharex=True)
 fig.set_size_inches((11.5, 12.5))
 pCO2_std3[["uw_CO2_fraction"]].plot(ax=axs[0], title="STD3 samples",
-                                    legend=False)
+                                    style=".-", legend=False)
 axs[0].set_ylabel('CO2 fraction\n($\mu$mol/mol)')
 axs[0].set_xlabel('')
-pCO2_std3[["uw_H2O_fraction"]].plot(ax=axs[1], legend=False)
+pCO2_std3[["uw_H2O_fraction"]].plot(ax=axs[1], style=".-",
+                                    legend=False)
 axs[1].set_ylabel('H2O fraction (mmol/mol)')
 axs[1].set_xlabel('')
-pCO2_std3[["uw_temperature_analyzer"]].plot(ax=axs[2], legend=False)
+pCO2_std3[["uw_temperature_analyzer"]].plot(ax=axs[2], style=".-",
+                                            legend=False)
 axs[2].set_ylabel('Temperature analyzer\n(C$^\circ$)')
 axs[2].set_xlabel('')
-pCO2_std3[["uw_pressure_analyzer"]].plot(ax=axs[3], legend=False)
+pCO2_std3[["uw_pressure_analyzer"]].plot(ax=axs[3], style=".-",
+                                         legend=False)
 axs[3].set_ylabel('Pressure analyzer\n(mbar)')
 axs[3].set_xlabel('')
-pCO2_std3[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, legend=False)
+pCO2_std3[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, style=".-",
+                                      legend=False)
 axs[4].set_ylabel('Flow rate analyzer\n(ml/min)')
 axs[4].set_xlabel('')
-plt.savefig("licor_std3.png", bbox_inches="tight")
+plt.savefig("licor_std3.png", bbox_inches="tight"); plt.close()
 # LICOR STD4 plots
 fig, axs = plt.subplots(5, 1, sharex=True)
 fig.set_size_inches((11.5, 12.5))
 pCO2_std4[["uw_CO2_fraction"]].plot(ax=axs[0], title="STD4 samples",
-                                    legend=False)
+                                    style=".-", legend=False)
 axs[0].set_ylabel('CO2 fraction\n($\mu$mol/mol)')
 axs[0].set_xlabel('')
-pCO2_std4[["uw_H2O_fraction"]].plot(ax=axs[1], legend=False)
+pCO2_std4[["uw_H2O_fraction"]].plot(ax=axs[1], style=".-", legend=False)
 axs[1].set_ylabel('H2O fraction\n(mmol/mol)')
 axs[1].set_xlabel('')
-pCO2_std4[["uw_temperature_analyzer"]].plot(ax=axs[2], legend=False)
+pCO2_std4[["uw_temperature_analyzer"]].plot(ax=axs[2], style=".-",
+                                            legend=False)
 axs[2].set_ylabel('Temperature analyzer (C$^\circ$)')
 axs[2].set_xlabel('')
-pCO2_std4[["uw_pressure_analyzer"]].plot(ax=axs[3], legend=False)
+pCO2_std4[["uw_pressure_analyzer"]].plot(ax=axs[3], style=".-",
+                                         legend=False)
 axs[3].set_ylabel('Pressure analyzer\n(mbar)')
 axs[3].set_xlabel('')
-pCO2_std4[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, legend=False)
+pCO2_std4[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, style=".-",
+                                      legend=False)
 axs[4].set_ylabel('Flow rate analyzer\n(ml/min)')
 axs[4].set_xlabel('')
-plt.savefig("licor_std4.png", bbox_inches="tight")
+plt.savefig("licor_std4.png", bbox_inches="tight"); plt.close()
 
 # Equilibrator plots
 fig, axs = plt.subplots(3, 1, sharex=True)
@@ -179,7 +189,7 @@ axs[1].set_xlabel('')
 pCO2_equ[["condensation_equ"]].plot(ax=axs[2], rot=0, legend=False)
 axs[2].set_ylabel('Equilibrator condensation')
 axs[2].set_xlabel('')
-plt.savefig("equilibrator_equ.png", bbox_inches="tight")
+plt.savefig("equilibrator_equ.png", bbox_inches="tight"); plt.close()
 
 # CTD plots
 fig, axs = plt.subplots(3, 1, sharex=True)
@@ -193,7 +203,7 @@ axs[1].set_xlabel('')
 pCO2_equ[["ctd_conductivity"]].plot(ax=axs[2], rot=0, legend=False)
 axs[2].set_ylabel('CTD conductivity\n(ms/cm)')
 axs[2].set_xlabel('')
-plt.savefig("ctd_equ.png", bbox_inches="tight")
+plt.savefig("ctd_equ.png", bbox_inches="tight"); plt.close()
 
 # External temperature plots
 fig, axs = plt.subplots(2, 1, sharex=True)
@@ -204,7 +214,7 @@ axs[0].set_xlabel('')
 tsw[["water_temperature_sd"]].plot(ax=axs[1], rot=0, legend=False)
 axs[1].set_ylabel('Water temperature SD\n(C$^\circ$)')
 axs[1].set_xlabel('')
-plt.savefig("external_temperature.png", bbox_inches="tight")
+plt.savefig("external_temperature.png", bbox_inches="tight"); plt.close()
 
 # # And here's the reason: temperature_external constant until mid-september
 # # in the database, whereas Tim's data vary; why?
