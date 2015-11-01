@@ -72,13 +72,17 @@ tsw_names = ["time", "battery_voltage", "logger_temperature",
              "logger_temperature_sd", "water_temperature_sd"]
 
 # CSV file
-pCO2 = pd.read_csv("/home/sluque/Data/ArcticNet/2015/UW_pCO2/"
+pCO2 = pd.read_csv("/media/sluque/Data_2015/Data/ArcticNet/2015/UW_pCO2/"
                    "UW_pCO2.csv", header=None, names=pCO2_names,
                    parse_dates=["time"], index_col="time")
-pCO2["record_type"] = pCO2["record_type"].astype("category")
+# pCO2["record_type"] = pCO2["record_type"].astype("category")
 
-tsw = pd.read_csv("/home/sluque/Data/ArcticNet/2015/UW_pCO2/"
+tsw = pd.read_csv("/media/sluque/Data_2015/Data/ArcticNet/2015/UW_pCO2/"
                   "UW_water_temperature.csv",
+                  parse_dates=["time"], index_col="time")
+# Alternative from TSG
+tsg = pd.read_csv("/media/sluque/Data_2015/Data/ArcticNet/2015/UW_pCO2/"
+                  "TSG.csv",
                   parse_dates=["time"], index_col="time")
 
 pCO2_equ = pCO2[pCO2.record_type == "EQU"]
@@ -86,23 +90,44 @@ pCO2_std2 = pCO2[pCO2.record_type == "STD2"]
 pCO2_std3 = pCO2[pCO2.record_type == "STD3"]
 pCO2_std4 = pCO2[pCO2.record_type == "STD4"]
 
+# Y-limits
+CO2_lims = (100, 1000)
+CO2zero_lims = (-1, 2)
+CO2std3_lims = (445, 465)
+CO2std4_lims = (600, 605)
+H2O_lims = (2, 18)
+H2Ozero_lims = (-0.1, 0.3)
+analyzer_temp_lims = (5, 40)
+pressure_lims = (970, 1040)
+gasflow_lims = (50, 120)
+
+equ_temp_lims = (-5, 15)
+equ_pressure_lims = (-5, 5)
+equ_cond_lims = (0, 20)
+
+H2O_temp_lims = (-5, 30)
+
 # LICOR EQU plots
 fig, axs = plt.subplots(5, 1, sharex=True)
 fig.set_size_inches((11.5, 12.5))
 pCO2_equ[["uw_CO2_fraction"]].plot(ax=axs[0], title="EQU samples",
-                                   legend=False)
+                                   ylim=CO2_lims, legend=False)
 axs[0].set_ylabel('CO2 fraction\n($\mu$mol/mol)')
 axs[0].set_xlabel('')
-pCO2_equ[["uw_H2O_fraction"]].plot(ax=axs[1], legend=False)
+pCO2_equ[["uw_H2O_fraction"]].plot(ax=axs[1], ylim=H2O_lims, legend=False)
 axs[1].set_ylabel('H2O fraction\n(mmol/mol)')
 axs[1].set_xlabel('')
-pCO2_equ[["uw_temperature_analyzer"]].plot(ax=axs[2], legend=False)
+pCO2_equ[["uw_temperature_analyzer"]].plot(ax=axs[2],
+                                           ylim=analyzer_temp_lims,
+                                           legend=False)
 axs[2].set_ylabel('Temperature analyzer\n(C$^\circ$)')
 axs[2].set_xlabel('')
-pCO2_equ[["uw_pressure_analyzer"]].plot(ax=axs[3], legend=False)
+pCO2_equ[["uw_pressure_analyzer"]].plot(ax=axs[3], ylim=pressure_lims,
+                                        legend=False)
 axs[3].set_ylabel('Pressure analyzer\n(mbar)')
 axs[3].set_xlabel('')
-pCO2_equ[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, legend=False)
+pCO2_equ[["air_flow_analyzer"]].plot(ax=axs[4], rot=0,
+                                     ylim=gasflow_lims, legend=False)
 axs[4].set_ylabel('Flow rate analyzer\n(ml/min)')
 axs[4].set_xlabel('')
 plt.savefig("licor_equ.png", bbox_inches="tight"); plt.close()
@@ -110,22 +135,25 @@ plt.savefig("licor_equ.png", bbox_inches="tight"); plt.close()
 fig, axs = plt.subplots(5, 1, sharex=True)
 fig.set_size_inches((11.5, 12.5))
 pCO2_std2[["uw_CO2_fraction"]].plot(ax=axs[0], title="STD2 samples",
-                                    style=".-", legend=False)
+                                    ylim=CO2zero_lims, style=".-",
+                                    legend=False)
 axs[0].set_ylabel('CO2 fraction\n($\mu$mol/mol)')
 axs[0].set_xlabel('')
-pCO2_std2[["uw_H2O_fraction"]].plot(ax=axs[1], style=".-", legend=False)
+pCO2_std2[["uw_H2O_fraction"]].plot(ax=axs[1], ylim=H2Ozero_lims,
+                                    style=".-", legend=False)
 axs[1].set_ylabel('H2O fraction\n(mmol/mol)')
 axs[1].set_xlabel('')
-pCO2_std2[["uw_temperature_analyzer"]].plot(ax=axs[2], style=".-",
-                                            legend=False)
+pCO2_std2[["uw_temperature_analyzer"]].plot(ax=axs[2],
+                                            ylim=analyzer_temp_lims,
+                                            style=".-", legend=False)
 axs[2].set_ylabel('Temperature analyzer\n(C$^\circ$)')
 axs[2].set_xlabel('')
-pCO2_std2[["uw_pressure_analyzer"]].plot(ax=axs[3], style=".-",
-                                         legend=False)
+pCO2_std2[["uw_pressure_analyzer"]].plot(ax=axs[3], ylim=pressure_lims,
+                                         style=".-", legend=False)
 axs[3].set_ylabel('Pressure analyzer\n(mbar)')
 axs[3].set_xlabel('')
-pCO2_std2[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, style=".-",
-                                      legend=False)
+pCO2_std2[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, ylim=gasflow_lims,
+                                      style=".-", legend=False)
 axs[4].set_ylabel('Flow rate analyzer\n(ml/min)')
 axs[4].set_xlabel('')
 plt.savefig("licor_std2.png", bbox_inches="tight"); plt.close()
@@ -133,23 +161,25 @@ plt.savefig("licor_std2.png", bbox_inches="tight"); plt.close()
 fig, axs = plt.subplots(5, 1, sharex=True)
 fig.set_size_inches((11.5, 12.5))
 pCO2_std3[["uw_CO2_fraction"]].plot(ax=axs[0], title="STD3 samples",
-                                    style=".-", legend=False)
+                                    ylim=CO2std3_lims, style=".-",
+                                    legend=False)
 axs[0].set_ylabel('CO2 fraction\n($\mu$mol/mol)')
 axs[0].set_xlabel('')
 pCO2_std3[["uw_H2O_fraction"]].plot(ax=axs[1], style=".-",
-                                    legend=False)
-axs[1].set_ylabel('H2O fraction (mmol/mol)')
+                                    ylim=H2Ozero_lims, legend=False)
+axs[1].set_ylabel('H2O fraction\n(mmol/mol)')
 axs[1].set_xlabel('')
 pCO2_std3[["uw_temperature_analyzer"]].plot(ax=axs[2], style=".-",
+                                            ylim=analyzer_temp_lims,
                                             legend=False)
 axs[2].set_ylabel('Temperature analyzer\n(C$^\circ$)')
 axs[2].set_xlabel('')
 pCO2_std3[["uw_pressure_analyzer"]].plot(ax=axs[3], style=".-",
-                                         legend=False)
+                                         ylim=pressure_lims, legend=False)
 axs[3].set_ylabel('Pressure analyzer\n(mbar)')
 axs[3].set_xlabel('')
 pCO2_std3[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, style=".-",
-                                      legend=False)
+                                      ylim=gasflow_lims, legend=False)
 axs[4].set_ylabel('Flow rate analyzer\n(ml/min)')
 axs[4].set_xlabel('')
 plt.savefig("licor_std3.png", bbox_inches="tight"); plt.close()
@@ -157,22 +187,25 @@ plt.savefig("licor_std3.png", bbox_inches="tight"); plt.close()
 fig, axs = plt.subplots(5, 1, sharex=True)
 fig.set_size_inches((11.5, 12.5))
 pCO2_std4[["uw_CO2_fraction"]].plot(ax=axs[0], title="STD4 samples",
-                                    style=".-", legend=False)
+                                    ylim=CO2std4_lims, style=".-",
+                                    legend=False)
 axs[0].set_ylabel('CO2 fraction\n($\mu$mol/mol)')
 axs[0].set_xlabel('')
-pCO2_std4[["uw_H2O_fraction"]].plot(ax=axs[1], style=".-", legend=False)
+pCO2_std4[["uw_H2O_fraction"]].plot(ax=axs[1], style=".-",
+                                    ylim=H2Ozero_lims, legend=False)
 axs[1].set_ylabel('H2O fraction\n(mmol/mol)')
 axs[1].set_xlabel('')
 pCO2_std4[["uw_temperature_analyzer"]].plot(ax=axs[2], style=".-",
+                                            ylim=analyzer_temp_lims,
                                             legend=False)
-axs[2].set_ylabel('Temperature analyzer (C$^\circ$)')
+axs[2].set_ylabel('Temperature analyzer\n(C$^\circ$)')
 axs[2].set_xlabel('')
 pCO2_std4[["uw_pressure_analyzer"]].plot(ax=axs[3], style=".-",
-                                         legend=False)
+                                         ylim=pressure_lims, legend=False)
 axs[3].set_ylabel('Pressure analyzer\n(mbar)')
 axs[3].set_xlabel('')
 pCO2_std4[["air_flow_analyzer"]].plot(ax=axs[4], rot=0, style=".-",
-                                      legend=False)
+                                      ylim=gasflow_lims, legend=False)
 axs[4].set_ylabel('Flow rate analyzer\n(ml/min)')
 axs[4].set_xlabel('')
 plt.savefig("licor_std4.png", bbox_inches="tight"); plt.close()
@@ -180,13 +213,16 @@ plt.savefig("licor_std4.png", bbox_inches="tight"); plt.close()
 # Equilibrator plots
 fig, axs = plt.subplots(3, 1, sharex=True)
 fig.set_size_inches((11, 9))
-pCO2_equ[["equ_temperature"]].plot(ax=axs[0], legend=False)
+pCO2_equ[["equ_temperature"]].plot(ax=axs[0], ylim=equ_temp_lims,
+                                   legend=False)
 axs[0].set_ylabel('Equilibrator temperature\n(C$^\circ$)')
 axs[0].set_xlabel('')
-pCO2_equ[["equ_pressure"]].plot(ax=axs[1], legend=False)
+pCO2_equ[["equ_pressure"]].plot(ax=axs[1], ylim=equ_pressure_lims,
+                                legend=False)
 axs[1].set_ylabel('Equilibrator pressure\n(mbar)')
 axs[1].set_xlabel('')
-pCO2_equ[["condensation_equ"]].plot(ax=axs[2], rot=0, legend=False)
+pCO2_equ[["condensation_equ"]].plot(ax=axs[2], rot=0,
+                                    ylim=equ_cond_lims, legend=False)
 axs[2].set_ylabel('Equilibrator condensation')
 axs[2].set_xlabel('')
 plt.savefig("equilibrator_equ.png", bbox_inches="tight"); plt.close()
@@ -194,9 +230,13 @@ plt.savefig("equilibrator_equ.png", bbox_inches="tight"); plt.close()
 # CTD plots
 fig, axs = plt.subplots(3, 1, sharex=True)
 fig.set_size_inches((11, 9))
-pCO2_equ[["ctd_temperature"]].plot(ax=axs[0], legend=False)
+pCO2_equ[["ctd_temperature"]].plot(ax=axs[0], style=".-",
+                                   ylim=equ_temp_lims,
+                                   legend=False)
 axs[0].set_ylabel('CTD temperature\n(C$^\circ$)')
 axs[0].set_xlabel('')
+pCO2_equ[["equ_temperature"]].plot(ax=axs[0], ylim=equ_temp_lims,
+                                   legend=True)
 pCO2_equ[["ctd_pressure"]].plot(ax=axs[1], legend=False)
 axs[1].set_ylabel('CTD pressure\n(dbar)')
 axs[1].set_xlabel('')
@@ -208,10 +248,14 @@ plt.savefig("ctd_equ.png", bbox_inches="tight"); plt.close()
 # External temperature plots
 fig, axs = plt.subplots(2, 1, sharex=True)
 fig.set_size_inches((11, 7))
-tsw[["water_temperature"]].plot(ax=axs[0], legend=False)
+tsw[["water_temperature"]].plot(ax=axs[0], style=".-", ylim=H2O_temp_lims,
+                                legend=False)
+tsg[["water_temperature"]].plot(ax=axs[0], ylim=H2O_temp_lims, legend=False)
+axs[0].legend(axs[0].get_lines(), ["CR23X", "TSG"])
 axs[0].set_ylabel('Water temperature\n(C$^\circ$)')
 axs[0].set_xlabel('')
-tsw[["water_temperature_sd"]].plot(ax=axs[1], rot=0, legend=False)
+tsw[["water_temperature_sd"]].plot(ax=axs[1], rot=0,
+                                   ylim=(0, 3), legend=False)
 axs[1].set_ylabel('Water temperature SD\n(C$^\circ$)')
 axs[1].set_xlabel('')
 plt.savefig("external_temperature.png", bbox_inches="tight"); plt.close()
