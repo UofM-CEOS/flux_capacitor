@@ -75,7 +75,7 @@ tsw_names = ["time", "battery_voltage", "logger_temperature",
 pCO2 = pd.read_csv("/media/sluque/Data_2015/Data/ArcticNet/2015/UW_pCO2/"
                    "UW_pCO2.csv", header=None, names=pCO2_names,
                    parse_dates=["time"], index_col="time")
-# pCO2["record_type"] = pCO2["record_type"].astype("category")
+pCO2["record_type"] = pCO2["record_type"].astype("category")
 
 tsw = pd.read_csv("/media/sluque/Data_2015/Data/ArcticNet/2015/UW_pCO2/"
                   "UW_water_temperature.csv",
