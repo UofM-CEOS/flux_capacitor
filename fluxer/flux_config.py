@@ -1,13 +1,12 @@
 
 """Utility for configuring user variables for flux analyses."""
 
-import configparser as cfg
 from collections import OrderedDict
 from os import getcwd
 import os.path as osp
 import glob
 import re
-
+import configparser as cfg
 
 __all__ = ["parse_config"]
 

@@ -8,17 +8,17 @@ file containing necessary set up information such as location of input
 files and variables.
 """
 
-__all__ = ["main", "flux_period"]
-
+import os.path as osp
 import numpy as np
 import pandas as pd
-import os.path as osp
 # import psycopg2 as pg
 # from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 from fluxer.flux_config import parse_config
 from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
                                  despike_VickersMahrt)
+
+__all__ = ["main", "flux_period"]
 
 plt.style.use("ggplot")
 

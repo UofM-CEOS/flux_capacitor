@@ -26,8 +26,6 @@ bad_pressure_analyzer_flag (boolean)
 bad_equ_temperature_flag (boolean)
 """
 
-__all__ = ["main", "underway_pCO2"]
-
 import os.path as osp
 import glob
 import numpy as np
@@ -36,6 +34,8 @@ from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 plt.style.use("ggplot")
 from fluxer import parse_config
+
+__all__ = ["main", "underway_pCO2"]
 
 def underway_pCO2(period_file, config):
     """Perform pCO2 computations on period."""

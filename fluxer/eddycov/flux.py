@@ -1,11 +1,11 @@
 """Core functionality for the package."""
 
+from itertools import groupby
 import numpy as np
 from scipy import interpolate as itpl
 from scipy import signal
-from astropy.convolution import convolve, Box1DKernel
 from scipy.stats import zscore
-from itertools import groupby
+from astropy.convolution import convolve, Box1DKernel
 
 
 __all__ = ["smooth_angle", "wind3D_correct", "despike_VickersMahrt"]
