@@ -138,7 +138,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     angle_rate : numpy.ndarray
         A 2-D (Nx3) array with angular rates (radians/s) vectors.
     heading : array_like
-        A vector with ship heading measurements (deg).
+        A vector with ship heading measurements (deg) in right-hand
+        coordinate system.
     speed : array_like
         A vector with ship speed (m/s).
     anemometer_pos : array_like
@@ -233,9 +234,9 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                 signal.filtfilt(bc, ac, np.arctan2(-ax * np.cos(phi), g),
                                 padlen=pdl))
 
-    gyro = np.unwrap(-np.radians(heading)) # Put heading in radians and RHS
-    heading_rhs = gyro[0]               # Initial heading
-    gyro = gyro - heading_rhs           # Remove the intial heading
+    gyro = np.unwrap(np.radians(heading)) # Put heading in radians
+    gyro0 = gyro[0]               # Initial heading
+    gyro = gyro - gyro0           # Remove initial heading
     # Low-pass filter to retain low-frequency content, but not the offset
     psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
 
@@ -384,7 +385,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     EA_fast = np.column_stack((phi_hf, theta_hf, psi_hf))
     u_ea = np.column_stack((np.zeros((n, 1)),
                             np.zeros((n, 1)),
-                            (heading_rhs + np.pi / 2) * np.ones((n, 1))))
+                            (gyro0 + np.pi / 2) * np.ones((n, 1))))
     U_ship = euler_rotate(Us, u_ea)
     U_earth = euler_rotate(UVW, u_ea)
     # Platform displacement
