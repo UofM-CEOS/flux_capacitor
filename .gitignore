@@ -4,10 +4,7 @@
 *.pro
 *.png
 auto/
-EddyUH/
-Lotte/
-Wickstrom/
-miller_jotech2008/
+EddyCovariance/
 flux_[0-9]*.cfg
 motion.m
 /build
