@@ -66,7 +66,7 @@ def main(base, source, **kwargs):
         if not src_m:
             # match_cmd = match_cmd_pre + [basef] + [basef]
             continue
-        else:
+        else:                   # we have matching files so do replacements
             match_cmd = match_cmd_pre + [basef] + src_m
 
         # Write stdout to file
@@ -85,7 +85,8 @@ if __name__ == "__main__":
     # in the most natural way, and avoid hard-coding any location
     _SCRIPTS_DIR = osp.dirname(osp.realpath(__file__))
     _MATCH_PROG = osp.join(_SCRIPTS_DIR, "match_replace_cols.awk")
-    parser = argparse.ArgumentParser(description=_DESCRIPTION)
+    parser = argparse.ArgumentParser(description=_DESCRIPTION,
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     group = parser.add_argument_group("required arguments")
     # We have to specify every argument to the underlying program
     parser.add_argument("base",
