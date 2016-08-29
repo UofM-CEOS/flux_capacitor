@@ -42,13 +42,19 @@ def main(base, source, **kwargs):
     skip_source = str(kwargs.get("skip_source"))
     cols_base = ",".join(str(v) for v in kwargs.get("cols_base"))
     cols_source = ",".join(str(v) for v in kwargs.get("cols_source"))
+    nomatch_val = str(kwargs.get("nomatch_val"))
     match_cmd_pre = ["gawk", "-f", match_prog,
                      "-v", "timecols_a=" + timecols_base,
                      "-v", "timecols_b=" + timecols_source,
                      "-v", "skip_a=" + skip_base,
                      "-v", "skip_b=" + skip_source,
                      "-v", "cols_a=" + cols_base,
-                     "-v", "cols_b=" + cols_source, "--"]
+                     "-v", "cols_b=" + cols_source]
+    if (kwargs.get("nomatch_null")):
+            match_cmd_pre.extend(["-v", "nomatch_null=1"])
+    if (nomatch_val):
+            match_cmd_pre.extend(["-v", "nomatch_val=" + nomatch_val])
+    match_cmd_pre.append("--")
     src_files = glob.glob(source)
     for basef in glob.glob(base):
         # Get a file name prefix to be shared by the output file
@@ -114,6 +120,11 @@ if __name__ == "__main__":
     parser.add_argument("--cols-source", nargs='+', type=int,
                         default=[14, 15, 16, 17],
                         help="Columns to replace in source set of files")
+    parser.add_argument("--nomatch-null", action="store_true",
+                        help="Nullify cols_a columns if no match is found")
+    parser.add_argument("--nomatch-val", type=int,
+                        help=("Integer value to use when no match is found. "
+                              "Default is original value"))
     parser.add_argument("--version", action="version",
                         version="%(prog)s {}".format(__version__))
     args = parser.parse_args()
@@ -121,4 +132,5 @@ if __name__ == "__main__":
          timecols_base=args.timecols_base,
          timecols_source=args.timecols_source,
          skip_base=args.skip_base, skip_source=args.skip_source,
-         cols_base=args.cols_base, cols_source=args.cols_source)
+         cols_base=args.cols_base, cols_source=args.cols_source,
+         nomatch_null=args.nomatch_null, nomatch_val=args.nomatch_val)

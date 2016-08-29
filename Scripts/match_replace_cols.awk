@@ -1,8 +1,8 @@
 #! /usr/bin/gawk -f
 # Author: Sebastian Luque
 # Created: 2016-08-21T13:40:36+0000
-# Last-Updated: 2016-08-24T22:35:19+0000
-#           By: Sebastian Luque
+# Last-Updated: 2016-08-29T18:23:11+0000
+#           By: Sebastian P. Luque
 # copyright (c) 2016 Sebastian P. Luque
 # -------------------------------------------------------------------------
 # This program is Free Software; you can redistribute it and/or modify
@@ -31,12 +31,14 @@
 #
 # Variables required (passed via -v switches):
 #
-#     timecols_a: Date and time column(s) in first set of files
-#     timecols_b: Date and time column(s) in second set of files
-#     skip_a:     Number of initial lines to skip in first set of files
-#     skip_b:     Number of initial lines to skip in second set of files
-#     cols_a:     Columns to replace in first set of files
-#     cols_b:     Columns to replace in second set of files
+#     timecols_a:   Date and time column(s) in first set of files
+#     timecols_b:   Date and time column(s) in second set of files
+#     skip_a:       Number of initial lines to skip in first set of files
+#     skip_b:       Number of initial lines to skip in second set of files
+#     cols_a:       Columns to replace in first set of files
+#     cols_b:       Columns to replace with from second set of files
+#     nomatch_null: Nullify cols_a columns if no match is found
+#     nomatch_val:  Integer value to use when no match is found
 #
 # We assume:
 #
@@ -122,7 +124,13 @@ END {
 		irow_a[colsarr_a[col]]=irow_b[colsarr_b[col]]
 	    }
 	    replaced_flag=1
-	} else replaced_flag=0
+	} else {
+	    for (col in colsarr_a) {
+		if (nomatch_null) irow_a[colsarr_a[col]]=""
+		if (nomatch_val) irow_a[colsarr_a[col]]=nomatch_val
+	    }
+	    replaced_flag=0
+	}
 	for (j=1; j <= length(irow_a); j++) { # print all columns
 	    printf "%s,", irow_a[j]
 	}
@@ -141,9 +149,11 @@ function usage(pn) {
 	"timecols_b", "Date and time column(s) in second set of files (Default: 6,7)",
 	"skip_a", "Number of initial lines to skip in first set of files (Default: 7)",
 	"skip_b", "Number of initial lines to skip in second set of files (Default: 7)"
-    printf "\t%-12s %s\n\t%-12s %s\n\n",
+    printf "\t%-12s %s\n\t%-12s %s\n\t%-12s %s\n\t%-12s %s\n\n",
 	"cols_a", "Columns to replace in first set of files (Default: 19,20,21,22)",
-	"cols_b", "Columns to replace in second set of files (Default: 14,15,16,17)"
+	"cols_b", "Columns to replace in second set of files (Default: 14,15,16,17)",
+	"nomatch_null", "Nullify cols_a columns if no match is found (Default: false)",
+	"nomatch_val", "Integer value to use when no match is found (Default: original)"
     printf "%s\n", "DETAILS:"
     printf "\t%s\n", "Replace data in first file with matching data from rest of files."
 }
