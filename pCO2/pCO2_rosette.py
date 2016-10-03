@@ -13,14 +13,16 @@ pCO2_rosette.py -h
 at command line.
 """
 
+import argparse
+import os.path as osp
+from subprocess import Popen, PIPE
+import glob
+from StringIO import StringIO
 import matplotlib as mpl
 mpl.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from subprocess import Popen, PIPE
-import glob
-from StringIO import StringIO
 plt.style.use('ggplot')
 
 __version__ = "0.1.0"
@@ -81,8 +83,6 @@ def main(bottle_files, uw_files, **kwargs):
 
 
 if __name__ == "__main__":
-    import argparse
-    import os.path as osp
     _DESCRIPTION = ("Subset Rosette bottles around specified depth, and "
                     "select underway pCO2 data with a matching time stamp "
                     "plus/minus specified time difference.")

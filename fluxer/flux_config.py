@@ -1,5 +1,4 @@
-
-"""Utility for configuring user variables for flux analyses."""
+"""Utility for configuring user variables for flux analyses"""
 
 from collections import OrderedDict
 from os import getcwd

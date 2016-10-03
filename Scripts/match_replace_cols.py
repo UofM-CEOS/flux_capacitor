@@ -50,10 +50,10 @@ def main(base, source, **kwargs):
                      "-v", "skip_b=" + skip_source,
                      "-v", "cols_a=" + cols_base,
                      "-v", "cols_b=" + cols_source]
-    if (kwargs.get("nomatch_null")):
-            match_cmd_pre.extend(["-v", "nomatch_null=1"])
-    if (nomatch_val):
-            match_cmd_pre.extend(["-v", "nomatch_val=" + nomatch_val])
+    if kwargs.get("nomatch_null"):
+        match_cmd_pre.extend(["-v", "nomatch_null=1"])
+    if nomatch_val:
+        match_cmd_pre.extend(["-v", "nomatch_val=" + nomatch_val])
     match_cmd_pre.append("--")
     src_files = glob.glob(source)
     for basef in glob.glob(base):

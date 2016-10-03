@@ -1,3 +1,5 @@
+# pylint: disable=too-many-locals,invalid-name,no-member
+
 """Core functionality for the package."""
 
 from itertools import groupby
@@ -8,10 +10,14 @@ from scipy.stats import zscore
 from astropy.convolution import convolve, Box1DKernel
 
 
-__all__ = ["smooth_angle", "wind3D_correct", "despike_VickersMahrt"]
+__all__ = ["smooth_angle", "planarfit_coef", "rotate_vectors",
+           "wind3D_correct", "despike_VickersMahrt"]
+
+# Valid 3-D wind rotation methods
+_VECTOR_ROTATION_METHODS = {"DR", "TR", "PF"}
 
 def decompose(angle, vmagnitude):
-    """Decompose angle and magnitude into `x` and `y` vector(s).
+    """Decompose angle and magnitude into `x` and `y` vector(s)
 
     Parameters
     ----------
@@ -24,6 +30,19 @@ def decompose(angle, vmagnitude):
     Returns
     -------
     Tuple with ndarrays `x` and `y`, in that order.
+
+    Examples
+    --------
+    >>> angles = np.arange(0, 360, 36)
+    >>> vmags = np.arange(10)
+    >>> decompose(angles, vmags)  # doctest: +NORMALIZE_WHITESPACE
+    (array([ 0. , 0.80901699, 0.61803399, -0.92705098, -3.23606798,
+            -5. , -4.85410197, -2.16311896, 2.47213595, 7.28115295]),
+     array([  0.00000000e+00, 5.87785252e-01, 1.90211303e+00,
+              2.85316955e+00, 2.35114101e+00, 6.12323400e-16,
+             -3.52671151e+00, -6.65739561e+00, -7.60845213e+00,
+             -5.29006727e+00]))
+
     """
     x = vmagnitude * np.cos(np.radians(angle))
     y = vmagnitude * np.sin(np.radians(angle))
@@ -31,7 +50,7 @@ def decompose(angle, vmagnitude):
 
 
 def recompose(x, y):
-    """Recompose angles and associated magnitudes from `x` and `y` vectors.
+    """Recompose angles and associated magnitudes from `x` and `y` vectors
 
     Parameters
     ----------
@@ -42,7 +61,8 @@ def recompose(x, y):
 
     Returns
     -------
-    Tuple with ndarrays `angle` and `vmagnitude`, in that order.
+    Tuple with ndarrays `angle` and `vmagnitude`, in that order
+
     """
     vmag = np.sqrt((x ** 2) + (y ** 2))
     ang = np.arctan2(y, x)
@@ -62,7 +82,7 @@ def recompose(x, y):
 
 
 def smooth_angle(angle, vmagnitude=1, kernel_width=21):
-    """Smooth angles by decomposing them, applying a boxcar average.
+    """Smooth angles by decomposing them, applying a boxcar average
 
     Smoothing is done by using a 1D kernel smoothing filter of a given
     width.
@@ -88,17 +108,143 @@ def smooth_angle(angle, vmagnitude=1, kernel_width=21):
 
 
 def level3D_motion(accel, ang_rate, roll_range, pitch_range):
-    """Level 3D acceleration and angular rate measured by motion sensor."""
+    """Level 3D acceleration and angular rate measured by motion sensor"""
     pass                        # IMPLEMENT THIS?
 
 
 def level3D_anemometer(wind_speed, roll, pitch):
-    """Level 3D anemometer measurements, given mean roll and pitch."""
+    """Level 3D anemometer measurements, given mean roll and pitch"""
     pass                        # IMPLEMENT THIS?
 
 
+def planarfit_coef(vectors):
+    """Calculate planar fit coefficients for coordinate rotation
+
+    See Handbook of Micrometeorology (Lee et al. 2004).  Ported from
+    getPlanarCoeffs.m from Patric Sturm <pasturm@ethz.ch>.
+
+    Parameters
+    ----------
+    vectors : numpy.ndarray
+        A 2-D (Nx3) array with x, y, and z vectors, expressed in a
+        right-handed coordinate system.  These vectors may correspond to u,
+        v, and w wind speed vectors, or inertial acceleration components.
+
+    Returns
+    -------
+    Tuple with (index in brackets):
+    numpy.ndarray [0]
+        1-D array (1x3) unit vector parallel to the new z-axis.
+    numpy.ndarray [1]
+        1-D array (1x3) Tilt coefficients.
+
+    """
+    vct_u = vectors[:, 0]
+    vct_v = vectors[:, 1]
+    vct_w = vectors[:, 2]
+    vct_nrows = vectors.shape[0]
+    sum_u = sum(vct_u)
+    sum_v = sum(vct_v)
+    sum_w = sum(vct_w)
+    sum_uv = np.dot(vct_u, vct_v)
+    sum_uw = np.dot(vct_u, vct_w)
+    sum_vw = np.dot(vct_v, vct_w)
+    sum_u2 = np.dot(vct_u, vct_u)
+    sum_v2 = np.dot(vct_v, vct_v)
+    H_arr = np.array([[vct_nrows, sum_u, sum_v],
+                      [sum_u, sum_u2, sum_uv],
+                      [sum_v, sum_uv, sum_v2]])
+    g_arr = np.array([sum_w, sum_uw, sum_vw])
+    tilt_coef = np.linalg.solve(H_arr, g_arr)
+    # Determine unit vector parellel to new z-axis
+    k_2 = 1 / np.sqrt(1 + tilt_coef[1] ** 2 + tilt_coef[2] ** 2)
+    k_0 = -tilt_coef[1] * k_2
+    k_1 = -tilt_coef[2] * k_2
+    k_vct = np.array([k_0, k_1, k_2])
+    return (k_vct, tilt_coef)
+
+
+def rotate_vectors(vectors, method="PF", **kwargs):
+    """Transform vectors to reference mean streamline coordinate system
+
+    Use double rotation, triple rotation, or planar fit methods (Wilczak et
+    al. 2001; Handbook of Micrometeorology).
+
+    This is a general coordinate rotation tool, so can handle inputs such
+    as wind speed and acceleration from inertial measurement units.
+
+    Parameters
+    ----------
+    vectors : numpy.ndarray
+        A 2-D (Nx3) array with x, y, and z vector components, expressed in
+        a right-handed coordinate system.  These may represent u, v, and w
+        wind speed vectors, or inertial acceleration.
+    method : str
+        One of: "DR", "TR", "PF" for double rotation, triple rotation, or
+        planar fit.
+    k_vector : numpy.ndarray (optional)
+        1-D array (1x3) unit vector parallel to the new z-axis, when
+        "method" is "PF" (planar fit).  If not supplied, then it is
+        calculated.
+
+    Returns
+    -------
+    Tuple with (index in brackets):
+    numpy.ndarray [0]
+        2-D array (Nx3) Array with rotated vectors
+    numpy.ndarray [1]
+        1-D array (1x2) Theta (pitch) and Phi (roll) rotation angles
+
+    """
+    if method not in _VECTOR_ROTATION_METHODS:
+        msg = "method must be one of "
+        raise ValueError(msg + ', '.join("\"{}\"".format(m) for m in
+                                         _VECTOR_ROTATION_METHODS))
+
+    if method == "PF":
+        if "k_vector" in kwargs:
+            k_vct = kwargs.get("k_vector")
+        else:
+            k_vct, tilt_coef = planarfit_coef(vectors)
+        j_vct = np.cross(k_vct, np.mean(vectors, 0))
+        j_vct = j_vct / np.sqrt(np.sum(j_vct ** 2))
+        i_vct = np.cross(j_vct, k_vct)
+        vcts_mat = np.column_stack((i_vct, j_vct, k_vct))
+        vcts_new = np.dot(vectors, vcts_mat)
+        phi = np.arccos(np.dot(k_vct, np.array([0, 0, 1])))
+        theta = np.arctan2(np.mean(-vectors[:, 1], 0),
+                           np.mean(vectors[:, 0], 0))
+    else:
+        # First rotation to set mean v to 0
+        theta = np.arctan2(np.mean(vectors[:, 1]),
+                           np.mean(vectors[:, 0]))
+        rot1 = np.array([[np.cos(theta), -np.sin(theta), 0],
+                         [np.sin(theta), np.cos(theta), 0],
+                         [0, 0, 1]])
+        vcts1 = np.dot(vectors, rot1)
+        # Second rotation to set mean w to 0
+        phi = np.arctan2(np.mean(vcts1[:, 2]),
+                         np.mean(vcts1[:, 0]))
+        rot2 = np.array([[np.cos(phi), 0, -np.sin(phi)],
+                         [0, 1, 0],
+                         [np.sin(phi), 0, np.cos(phi)]])
+        vcts_new = np.dot(vcts1, rot2)
+        # Third rotation to set mean vw to 0
+        if method == "TR":
+            mean_vw = np.mean(vcts_new[:, 1] * vcts_new[:, 2])
+            psi = 0.5 * np.arctan2(2 * mean_vw,
+                                   np.mean(vcts_new[:, 1] ** 2) -
+                                   np.mean(vcts_new[:, 2] ** 2))
+            rot3 = np.array([[1, 0, 0],
+                             [0, np.cos(psi), -np.sin(psi)],
+                             [0, np.sin(psi), np.cos(psi)]])
+            vcts_new = np.dot(vcts_new, rot3)
+
+    return(vcts_new, np.array([theta, phi]))
+
+
 def euler_rotate(X, euler):
-    """Rotate vector matrix given Euler transformation matrix."""
+    """Rotate vector matrix given Euler transformation matrix"""
     x, y, z = X[:, 0], X[:, 1], X[:, 2]
     phi, theta, psi = euler[:, 0], euler[:, 1], euler[:, 2]
     x_new = (x * np.cos(theta) * np.cos(psi) +
@@ -119,7 +265,7 @@ def euler_rotate(X, euler):
 def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                    anemometer_pos, sample_freq, Tcf, Ta,
                    tilt_motion, tilt_anemometer):
-    """Correct wind vector measurements from a moving platform.
+    """Correct wind vector measurements from a moving platform
 
     This is a port of Scott Miller's `motion` Matlab function, which
     implements Miller et al. (2008) approach.  Coordinate frame is assumed
@@ -204,6 +350,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
         Platform Motion Effects on Measurements of Turbulence and Air-Sea
         Exchange Over the Open Ocean, J. Atmo. Ocean. Tech. 25(9),
         1683-1694, DOI: 10.1175/2008JTECHO547.1.
+
     """
     if len([Ta]) == 1:
         Ta = Ta * np.ones((3, 1))
@@ -400,7 +547,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
 
 def window_indices(idxs, width, step=None):
-    """List of sliding window indices across an index vector.
+    """List of sliding window indices across an index vector
 
     Parameters
     ----------
@@ -414,12 +561,13 @@ def window_indices(idxs, width, step=None):
     Returns
     -------
     List of tuples, each with the indices for a window.
+
     """
     return zip(*(idxs[i::step] for i in range(width)))
 
 
 def get_VickersMahrt(x, zscore_thr, nrep_thr):
-    """Vickers Mahrt computations in a window.
+    """Vickers Mahrt computations in a window
 
     Parameters
     ----------
@@ -446,6 +594,7 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
         `k` for each measurement. k=0: measurement within plausibility
         range, k=[-1 or 1]: measurement outside plausibility range, abs(k)
         > 1: measurement is part of an outlier trend.
+
     """
     z = zscore(x)
     # Discern between outliers above and below the threshold
@@ -489,7 +638,7 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
 
 def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
                          nrep_thr=None, interp_nan=True):
-    """Vickers and Mahrt (1997) signal despiking procedure.
+    """Vickers and Mahrt (1997) signal despiking procedure
 
     The interpolating function is created by the
     InterpolatedUnivariateSpline function from the scipy package, and uses
@@ -525,8 +674,9 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         Number of spikes detected.
     numpy.int [2]
         Number of outlier trends detected.
-    numpy.int [2]
+    numpy.int [3]
         Number of iterations performed.
+
     """
     if step is None:            # set default step as
         step = width / 2        # one-half window size

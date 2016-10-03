@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# pylint: disable=too-many-locals,invalid-name,no-member
 
 """Processing of underway pCO2 system data.
 
@@ -26,6 +27,7 @@ bad_pressure_analyzer_flag (boolean)
 bad_equ_temperature_flag (boolean)
 """
 
+import argparse
 import os.path as osp
 import glob
 import numpy as np
@@ -235,7 +237,6 @@ def main(config_file):
 
 
 if __name__ == "__main__":
-    import argparse
     description = ("Perform underway pCO2 calculations, " +
                    "given a configuration file.")
     parser = argparse.ArgumentParser(description=description)
