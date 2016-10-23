@@ -1,10 +1,9 @@
 #! /usr/bin/awk -f
 # Author: Sebastian P. Luque
 # Created: 2013-11-16T19:47:33+0000
-# Last-Updated: 2015-08-27T20:22:25+0000
+# Last-Updated: 2016-10-23T13:16:00+0000
 #           By: Sebastian P. Luque
-# Version: 
-# copyright (c) 2013-2015 Sebastian P. Luque
+# copyright (c) 2013-2016 Sebastian P. Luque
 # ------------------------------------------------------------------------
 # This program is Free Software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +18,7 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 # ------------------------------------------------------------------------
-# Commentary: 
+# Commentary:
 #
 # Variables to pass to this script:
 #
@@ -32,11 +31,11 @@
 # We assume data consist of alternating average and standard deviation
 # rows, in that order, and:
 #
-#     bottle#= 1st field
-#     year=    4th field
-#     month=   2nd field
-#     day=     3rd field
-# 
+#     bottle# -> 1st field
+#     year    -> 4th field
+#     month   -> 2nd field
+#     day     -> 3rd field
+#
 ## -----------------------------------------------------------------------
 # Code:
 

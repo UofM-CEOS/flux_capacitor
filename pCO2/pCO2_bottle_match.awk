@@ -1,10 +1,9 @@
 #! /usr/bin/gawk -f
 # Author: Sebastian Luque
 # Created: 2013-11-21T13:40:36+0000
-# Last-Updated: 2015-08-27T20:25:17+0000
+# Last-Updated: 2016-10-23T13:16:10+0000
 #           By: Sebastian P. Luque
-# Version: 
-# copyright (c) 2013-2015 Sebastian P. Luque
+# copyright (c) 2013-2016 Sebastian P. Luque
 # -------------------------------------------------------------------------
 # This program is Free Software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,8 +18,8 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 # -------------------------------------------------------------------------
-# Commentary: 
-# 
+# Commentary:
+#
 # Watch shebang and make sure it matches system!
 #
 # This script takes a bottle file, like those returned by
@@ -41,7 +40,7 @@
 #
 # We assume:
 #
-#     o Bottle and pCO2 files have a single header line. 
+#     o Bottle and pCO2 files have a single header line.
 #     o Full time stamp is available in bottle file, as single field (1st).
 #     o The first field in pCO2 files is an identifier, and we select only
 #       records matching the string "EQU" (case irrelavant).
@@ -50,7 +49,7 @@
 #
 # ./pCO2_bottle_match.awk -v max_time_diff=900 -v min_flow=1.5 \
 #     -v date_fld=3 -v time_fld=4 -v flow_fld=16 bottle_2to7m.csv *
-# 
+#
 # -------------------------------------------------------------------------
 # Code:
 
