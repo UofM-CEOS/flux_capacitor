@@ -70,7 +70,7 @@ def recompose(x, y):
         ang[ang < 0] = ang[ang < 0] + (2 * np.pi) # output range 0 - 2*pi
         ang[vmag == 0] = 0        # when magnitude is 0 the angle is also 0
         ang[ang == 0] = 2 * np.pi # convention
-    except IndexError:            # then check if scalar inputs
+    except (IndexError, TypeError):  # then check if scalar inputs
         if np.isscalar(ang) and ang < 0:
             ang = ang + (2 * np.pi)
         elif np.isscalar(ang) and vmag == 0:
