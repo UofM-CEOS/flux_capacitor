@@ -73,9 +73,9 @@ def recompose(x, y):
     except (IndexError, TypeError):  # then check if scalar inputs
         if np.isscalar(ang) and ang < 0:
             ang = ang + (2 * np.pi)
-        elif np.isscalar(ang) and vmag == 0:
+        if np.isscalar(ang) and vmag == 0:
             ang = 0
-        elif np.isscalar(ang) and ang == 0:
+        if np.isscalar(ang) and ang == 0:
             ang = 2 * np.pi
 
     return np.degrees(ang), vmag
