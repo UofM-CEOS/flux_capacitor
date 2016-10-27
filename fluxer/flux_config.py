@@ -105,14 +105,17 @@ _DFLTS = {
     'ec_despike_win_width': "3000",
     'ec_despike_step': "1500",
     'ec_despike_nreps': "20",
-    'motion2anemometer_pos': "0.0, 0.0, 0.0",
+    'imu2anemometer_pos': "0.0, 0.0, 0.0",
+    'imu_xyz_idx': "0, 1, 2",
+    'imu2rhs_linaccel_mult': "1.0, 1.0, 1.0",
+    'imu2rhs_angaccel_mult': "1.0, 1.0, 1.0",
     'ec_complementary_filter_period': "10.0",
     'ec_accel_highpass_cutoff': "20.0",
     'uw_input_directory': getcwd(),
     'uw_file_pattern': "*[0-9].csv",
     'uw_pco2_directory': getcwd(),
     'uw_colnames': ("time_30min,time_study,longitude,latitude," +
-                    "speed_over_ground,course_over_ground,heading" +
+                    "speed_over_ground,course_over_ground,heading," +
                     "atmospheric_pressure,air_temperature," +
                     "relative_humidity,surface_temperature,wind_speed," +
                     "wind_direction,true_wind_speed,true_wind_direction," +
@@ -144,7 +147,9 @@ _SCALAR_OPTS = ["ec_sample_frequency", "ec_despike_win_width",
                 "ec_despike_step", "ec_despike_nreps",
                 "ec_complementary_filter_period", "ec_accel_highpass_cutoff",
                 "anemometer2d_height", "uw_intake_depth"]
-_VECTOR_OPTS = ["motion2anemometer_pos", "uw_temperature_external_coefs"]
+_VECTOR_OPTS = ["imu2anemometer_pos", "imu2rhs_linaccel_mult", "imu_xyz_idx",
+                "imu2rhs_angaccel_mult", "uw_temperature_external_coefs"]
+
 
 def parse_config(cfg_file):
     """Parse configuration file for essential variables during flux analysis.
@@ -184,8 +189,14 @@ def parse_config(cfg_file):
         ),
         ("EC Motion Correction",
          OrderedDict((
-             ("motion2anemometer_pos",
-              _DFLTS["motion2anemometer_pos"]),
+             ("imu2anemometer_pos",
+              _DFLTS["imu2anemometer_pos"]),
+             ("imu_xyz_idx",
+              _DFLTS["imu_xyz_idx"]),
+             ("imu2rhs_linaccel_mult",
+              _DFLTS["imu2rhs_linaccel_mult"]),
+             ("imu2rhs_angaccel_mult",
+              _DFLTS["imu2rhs_angaccel_mult"]),
              ("complementary_filter_period",
               _DFLTS["ec_complementary_filter_period"]),
              ("accel_highpass_cutoff",

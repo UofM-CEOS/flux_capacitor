@@ -24,11 +24,16 @@ __all__ = ["main", "flux_period"]
 
 plt.style.use("ggplot")
 
+
 def flux_period(period_file, config):
     """Perform required calculations on period."""
     # Extract all the config pieces
     colnames = config["EC Inputs"]["colnames"]
-    mot2anem_pos = config["EC Motion Correction"]["motion2anemometer_pos"]
+    imu2anem_pos = config["EC Motion Correction"]["imu2anemometer_pos"]
+    imu_xyz_idx = np.array(config["EC Motion Correction"]["imu_xyz_idx"],
+                           dtype=int)
+    imu2rhs_linmult = config["EC Motion Correction"]["imu2rhs_linaccel_mult"]
+    imu2rhs_angmult = config["EC Motion Correction"]["imu2rhs_angaccel_mult"]
     sample_freq_hz = config["EC Inputs"]["sample_frequency"]
     Tcf = config["EC Motion Correction"]["complementary_filter_period"]
     Ta = config["EC Motion Correction"]["accel_highpass_cutoff"]
@@ -47,12 +52,35 @@ def flux_period(period_file, config):
     # Put acceleration components in 3-column array and make copy to keep
     # uncorrected data.  Original comment: read in angular rates in RH
     # coordinate system, convert to rad/s.
-    motion3d = pd.DataFrame({'acceleration_x' : ec["acceleration_z"] * 9.81,
-                             'acceleration_y' : -ec["acceleration_x"] * 9.81,
-                             'acceleration_z' : -ec["acceleration_y"] * 9.81,
-                             'rate_phi' : np.radians(ec["rate_z"]),
-                             'rate_theta' : np.radians(ec["rate_x"]),
-                             'rate_shi' : np.radians(ec["rate_y"])})
+    imu_linaccel_names = ["acceleration_x", "acceleration_y",
+                          "acceleration_z"]
+    imu_lin_xname = imu_linaccel_names[imu_xyz_idx[0]]
+    imu_lin_yname = imu_linaccel_names[imu_xyz_idx[1]]
+    imu_lin_zname = imu_linaccel_names[imu_xyz_idx[2]]
+    imu_angaccel_names = ["rate_x", "rate_y", "rate_z"]
+    imu_ang_xname = imu_angaccel_names[imu_xyz_idx[0]]
+    imu_ang_yname = imu_angaccel_names[imu_xyz_idx[1]]
+    imu_ang_zname = imu_angaccel_names[imu_xyz_idx[2]]
+    # Preliminary data frame with input ordering
+    motion3d_pre = pd.DataFrame({'acceleration_x' : ec["acceleration_x"],
+                                 'acceleration_y' : ec["acceleration_y"],
+                                 'acceleration_z' : ec["acceleration_y"],
+                                 'rate_phi' : ec["rate_z"],
+                                 'rate_theta' : ec["rate_x"],
+                                 'rate_shi' : ec["rate_y"]})
+    # Now we can reorder in to RHS and scale units
+    motion3d = pd.DataFrame({'acceleration_x' : (imu2rhs_linmult[0] *
+                                                 ec[imu_lin_xname] * 9.81),
+                             'acceleration_y' : (imu2rhs_linmult[1] *
+                                                 ec[imu_lin_yname] * 9.81),
+                             'acceleration_z' : (imu2rhs_linmult[2] *
+                                                 ec[imu_lin_zname] * 9.81),
+                             'rate_phi' : (imu2rhs_angmult[0] *
+                                           np.radians(ec[imu_ang_xname])),
+                             'rate_theta' : (imu2rhs_angmult[1] *
+                                             np.radians(ec[imu_ang_yname])),
+                             'rate_shi' : (imu2rhs_angmult[2] *
+                                           np.radians(ec[imu_ang_zname]))})
     wind = ec[["wind_speed_u", "wind_speed_v", "wind_speed_w"]].copy()
     # [Original comment: check for any significant number of 'NAN's (not
     # worried about the odd one scattered here and there)].  [Original
@@ -226,7 +254,7 @@ def flux_period(period_file, config):
     #                                            np.reshape(heading,
     #                                                       (len(heading), 1)),
     #                                            np.reshape(sog, (len(sog), 1)),
-    #                                            mot2anem_pos,
+    #                                            imu2anem_pos,
     #                                            sample_freq_hz, Tcf, Ta,
     #                                            [0.0, 0.0], [0.0, 0.0],
     #                                            {"uearth"})
@@ -236,7 +264,7 @@ def flux_period(period_file, config):
     UVW = wind3D_correct(wind.values,
                          motion3d.loc[:, :"acceleration_z"].values,
                          motion3d.loc[:, "rate_phi":].values,
-                         heading.values, sog.values, mot2anem_pos,
+                         heading.values, sog.values, imu2anem_pos,
                          sample_freq_hz, Tcf, Ta, [0.0, 0.0], [0.0, 0.0])
     # Ship-referenced speeds
     UVW_ship = UVW[0]
@@ -292,6 +320,7 @@ def flux_period(period_file, config):
                               sonic_flag=sonic_flag, motion_flag=motion_flag,
                               bad_navigation_flag=bad_navigation_flag,
                               bad_meteorology_flag=bad_meteorology_flag)
+
 
 def main(config_file):
     # Parse configuration file
