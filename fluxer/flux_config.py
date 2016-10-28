@@ -142,13 +142,20 @@ _DFLTS = {
     'uw_regress_temperature_external': False,
     'uw_temperature_external_coefs': "0.0, 1.0",
     'anemometer2d_height': "16.0"}
+
 # Scalar option names
-_SCALAR_OPTS = ["ec_sample_frequency", "ec_despike_win_width",
-                "ec_despike_step", "ec_despike_nreps",
-                "ec_complementary_filter_period", "ec_accel_highpass_cutoff",
-                "anemometer2d_height", "uw_intake_depth"]
-_VECTOR_OPTS = ["imu2anemometer_pos", "imu2rhs_linaccel_mult", "imu_xyz_idx",
-                "imu2rhs_angaccel_mult", "uw_temperature_external_coefs"]
+_SCALAR_OPTS = {
+    'EC Inputs': ["sample_frequency"],
+    'EC Despiking': ["despike_win_width",
+                     "despike_step", "despike_nreps"],
+    'EC Motion Correction': ["complementary_filter_period",
+                             "accel_highpass_cutoff"],
+    'UW Inputs': ["anemometer2d_height", "uw_intake_depth"]}
+_VECTOR_OPTS = {
+    'EC Motion Correction': ["imu2anemometer_pos", "imu_xyz_idx",
+                             "imu2rhs_linaccel_mult",
+                             "imu2rhs_angaccel_mult"],
+    'UW Inputs': ["uw_temperature_external_coefs"]}
 
 
 def parse_config(cfg_file):
@@ -249,9 +256,9 @@ def parse_config(cfg_file):
             # appropriate
             if len(py_dict[sec][opt]) == 1:
                 py_dict[sec][opt] = py_dict[sec][opt][0]
-            if opt in _SCALAR_OPTS:
+            if sec in _SCALAR_OPTS and opt in _SCALAR_OPTS[sec]:
                 py_dict[sec][opt] = float(py_dict[sec][opt])
-            elif opt in _VECTOR_OPTS:
+            if sec in _VECTOR_OPTS and opt in _VECTOR_OPTS[sec]:
                 py_dict[sec][opt] = [float(x) for x in py_dict[sec][opt]]
 
     # Check input directories exist
