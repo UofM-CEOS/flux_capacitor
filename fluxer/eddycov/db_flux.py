@@ -18,7 +18,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from fluxer.flux_config import parse_config
 from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
-                                 despike_VickersMahrt)
+                                 despike_VickersMahrt, planarfit_coef,
+                                 rotate_vectors)
 
 __all__ = ["main", "flux_period"]
 
@@ -81,6 +82,7 @@ def flux_period(period_file, config):
                                              np.radians(ec[imu_ang_yname])),
                              'rate_shi' : (imu2rhs_angmult[2] *
                                            np.radians(ec[imu_ang_zname]))})
+    del motion3d_pre
     wind = ec[["wind_speed_u", "wind_speed_v", "wind_speed_w"]].copy()
     # [Original comment: check for any significant number of 'NAN's (not
     # worried about the odd one scattered here and there)].  [Original
@@ -238,6 +240,14 @@ def flux_period(period_file, config):
                                          zscore_thr=3.5, nreps=nreps)
         motion3d[col] = motcol_VM[0]
 
+    # Tilt angles for sonic and IMU
+    wnd_k, wnd_kcoefs = planarfit_coef(wind.values)
+    mot3d_k, mot3d_kcoefs = planarfit_coef(motion3d.values)
+    wndrot_dummy, wnd_phitheta = rotate_vectors(wind.values,
+                                                k_vector=wnd_k)
+    mot3d_dummy, mot3d_phitheta = rotate_vectors(motion3d.values[:, 0:3],
+                                                 k_vector=mot3d_k)
+
     # # Output to Octave for debugging
     # import scipy.io as sio
     # sio.savemat(iname_prefix + "_wind_motion.mat",
@@ -271,9 +281,18 @@ def flux_period(period_file, config):
     # Earth-referenced speeds
     UVW_earth = UVW[11]
     # Append corrected wind vectors to DataFrame
-    wind_corr_names = ["wind_speed_u_ship", "wind_speed_v_ship",
-                       "wind_speed_w_ship", "wind_speed_u_earth",
-                       "wind_speed_v_earth", "wind_speed_w_earth"]
+    wind_corr_names = ["wind_speed_u_ship_notilt",
+                       "wind_speed_v_ship_notilt",
+                       "wind_speed_w_ship_notilt",
+                       "wind_speed_u_earth_notilt",
+                       "wind_speed_v_earth_notilt",
+                       "wind_speed_w_earth_notilt",
+                       "wind_speed_u_ship_tilt",
+                       "wind_speed_v_ship_tilt",
+                       "wind_speed_w_ship_tilt",
+                       "wind_speed_u_earth_tilt",
+                       "wind_speed_v_earth_tilt",
+                       "wind_speed_w_earth_tilt"]
     wind[wind_corr_names[0]] = pd.Series(UVW_ship[:, 0], index=wind.index)
     wind[wind_corr_names[1]] = pd.Series(UVW_ship[:, 1], index=wind.index)
     wind[wind_corr_names[2]] = pd.Series(UVW_ship[:, 2], index=wind.index)
@@ -283,6 +302,28 @@ def flux_period(period_file, config):
                                          index=wind.index)
     wind[wind_corr_names[5]] = pd.Series(UVW_earth[:, 2],
                                          index=wind.index)
+    # Repeat applying instrument tilt angle correction, assuming both sonic
+    # and IMU have the same angles
+    UVW_tilt = wind3D_correct(wind.values,
+                              motion3d.loc[:, :"acceleration_z"].values,
+                              motion3d.loc[:, "rate_phi":].values,
+                              heading.values, sog.values, imu2anem_pos,
+                              sample_freq_hz, Tcf, Ta, mot3d_phitheta,
+                              mot3d_phitheta)
+    UVW_ship_tilt = UVW_tilt[0]
+    UVW_earth_tilt = UVW_tilt[11]
+    wind[wind_corr_names[6]] = pd.Series(UVW_ship_tilt[:, 0],
+                                         index=wind.index)
+    wind[wind_corr_names[7]] = pd.Series(UVW_ship_tilt[:, 1],
+                                         index=wind.index)
+    wind[wind_corr_names[8]] = pd.Series(UVW_ship_tilt[:, 2],
+                                         index=wind.index)
+    wind[wind_corr_names[9]] = pd.Series(UVW_earth_tilt[:, 0],
+                                         index=wind.index)
+    wind[wind_corr_names[10]] = pd.Series(UVW_earth_tilt[:, 1],
+                                          index=wind.index)
+    wind[wind_corr_names[11]] = pd.Series(UVW_earth_tilt[:, 2],
+                                          index=wind.index)
 
     # # Plots comparing with Octave output
     # fig, axs = plt.subplots(3, 2, sharex = True)
