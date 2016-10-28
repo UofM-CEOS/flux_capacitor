@@ -1,5 +1,6 @@
 from setuptools import setup
 
+
 def readme():
     with open('README.rst') as f:
         return f.read()
@@ -8,7 +9,8 @@ def readme():
 #                   "fluxer/config/underway_default.cfg"]
 setup(name="fluxer",
       version="0.1.0",
-      description="Tools to process flux (eddy covariance) data collected by CEOS.",
+      description=("Tools to process flux (eddy covariance) data"
+                   "collected by CEOS."),
       long_description=readme(),
       author="Sebastian Luque",
       author_email="sebastian.luque@umanitoba.ca",

@@ -16,6 +16,7 @@ __all__ = ["smooth_angle", "planarfit_coef", "rotate_vectors",
 # Valid 3-D wind rotation methods
 _VECTOR_ROTATION_METHODS = {"DR", "TR", "PF"}
 
+
 def decompose(angle, vmagnitude):
     """Decompose angle and magnitude into `x` and `y` vector(s)
 

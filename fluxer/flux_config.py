@@ -277,7 +277,8 @@ def parse_config(cfg_file):
     if py_dict["EC Despiking"]["despike_step"] <= 0:
         raise Exception("Despiking step size must be greater than zero")
     if py_dict["EC Despiking"]["despike_nreps"] < 0:
-        raise Exception("The number of despiking iterations cannot be negative")
+        raise Exception(("The number of despiking iterations"
+                         "cannot be negative"))
 
     # Sort input file lists
     ec_input_files = glob.glob(osp.join(config["EC Inputs"]["input_directory"],

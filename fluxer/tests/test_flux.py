@@ -7,6 +7,7 @@ from fluxer.eddycov import flux
 import numpy as np
 from numpy import testing as npt
 
+
 class TestAngleVectorFuncs (ut.TestCase):
     def setUp(self):
         angles = np.linspace(0, 360, 10, dtype=int)

@@ -63,25 +63,25 @@ def flux_period(period_file, config):
     imu_ang_yname = imu_angaccel_names[imu_xyz_idx[1]]
     imu_ang_zname = imu_angaccel_names[imu_xyz_idx[2]]
     # Preliminary data frame with input ordering
-    motion3d_pre = pd.DataFrame({'acceleration_x' : ec["acceleration_x"],
-                                 'acceleration_y' : ec["acceleration_y"],
-                                 'acceleration_z' : ec["acceleration_y"],
-                                 'rate_phi' : ec["rate_z"],
-                                 'rate_theta' : ec["rate_x"],
-                                 'rate_shi' : ec["rate_y"]})
+    motion3d_pre = pd.DataFrame({'acceleration_x': ec["acceleration_x"],
+                                 'acceleration_y': ec["acceleration_y"],
+                                 'acceleration_z': ec["acceleration_y"],
+                                 'rate_phi': ec["rate_z"],
+                                 'rate_theta': ec["rate_x"],
+                                 'rate_shi': ec["rate_y"]})
     # Now we can reorder in to RHS and scale units
-    motion3d = pd.DataFrame({'acceleration_x' : (imu2rhs_linmult[0] *
-                                                 ec[imu_lin_xname] * 9.81),
-                             'acceleration_y' : (imu2rhs_linmult[1] *
-                                                 ec[imu_lin_yname] * 9.81),
-                             'acceleration_z' : (imu2rhs_linmult[2] *
-                                                 ec[imu_lin_zname] * 9.81),
-                             'rate_phi' : (imu2rhs_angmult[0] *
-                                           np.radians(ec[imu_ang_xname])),
-                             'rate_theta' : (imu2rhs_angmult[1] *
-                                             np.radians(ec[imu_ang_yname])),
-                             'rate_shi' : (imu2rhs_angmult[2] *
-                                           np.radians(ec[imu_ang_zname]))})
+    motion3d = pd.DataFrame({'acceleration_x': (imu2rhs_linmult[0] *
+                                                ec[imu_lin_xname] * 9.81),
+                             'acceleration_y': (imu2rhs_linmult[1] *
+                                                ec[imu_lin_yname] * 9.81),
+                             'acceleration_z': (imu2rhs_linmult[2] *
+                                                ec[imu_lin_zname] * 9.81),
+                             'rate_phi': (imu2rhs_angmult[0] *
+                                          np.radians(ec[imu_ang_xname])),
+                             'rate_theta': (imu2rhs_angmult[1] *
+                                            np.radians(ec[imu_ang_yname])),
+                             'rate_shi': (imu2rhs_angmult[2] *
+                                          np.radians(ec[imu_ang_zname]))})
     del motion3d_pre
     wind = ec[["wind_speed_u", "wind_speed_v", "wind_speed_w"]].copy()
     # [Original comment: check for any significant number of 'NAN's (not

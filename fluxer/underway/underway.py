@@ -27,17 +27,16 @@ bad_pressure_analyzer_flag (boolean)
 bad_equ_temperature_flag (boolean)
 """
 
+from fluxer import parse_config
 import argparse
 import os.path as osp
-import glob
 import numpy as np
 import pandas as pd
-from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 plt.style.use("ggplot")
-from fluxer import parse_config
 
 __all__ = ["main", "underway_pCO2"]
+
 
 def underway_pCO2(period_file, config):
     """Perform pCO2 computations on period."""
@@ -54,7 +53,7 @@ def underway_pCO2(period_file, config):
                      parse_dates=[0, 1], index_col=1, names=colnames,
                      na_values=["NAN"], true_values=["t"],
                      false_values=["f"])
-    uw_nrows = len(uw.index)
+    # uw_nrows = len(uw.index)
 
     # Convert from molar concentration to dry air mixing ratio
 
