@@ -193,7 +193,7 @@ def rotate_vectors(vectors, method="PF", **kwargs):
     numpy.ndarray [0]
         2-D array (Nx3) Array with rotated vectors
     numpy.ndarray [1]
-        1-D array (1x2) Theta (pitch) and Phi (roll) rotation angles
+        1-D array (1x2) Phi (roll) and Theta (pitch) rotation angles
 
     """
     if method not in _VECTOR_ROTATION_METHODS:
@@ -240,7 +240,7 @@ def rotate_vectors(vectors, method="PF", **kwargs):
                              [0, np.sin(psi), np.cos(psi)]])
             vcts_new = np.dot(vcts_new, rot3)
 
-    return(vcts_new, np.array([theta, phi]))
+    return(vcts_new, np.array([phi, theta]))
 
 
 def euler_rotate(X, euler):
