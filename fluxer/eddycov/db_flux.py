@@ -286,6 +286,16 @@ def flux_period(period_file, config):
     UVW_ship = UVW[0]
     # Earth-referenced speeds
     UVW_earth = UVW[11]
+    # Repeat applying instrument tilt angle correction, assuming both sonic
+    # and IMU have the same angles
+    UVW_tilt = wind3D_correct(wind.values,
+                              motion3d.loc[:, :"acceleration_z"].values,
+                              motion3d.loc[:, "rate_phi":].values,
+                              heading.values, sog.values, imu2anem_pos,
+                              sample_freq_hz, Tcf, Ta, mot3d_phitheta,
+                              mot3d_phitheta)
+    UVW_ship_tilt = UVW_tilt[0]
+    UVW_earth_tilt = UVW_tilt[11]
     # Append corrected wind vectors to DataFrame
     wind_corr_names = ["wind_speed_u_ship_notilt",
                        "wind_speed_v_ship_notilt",
@@ -308,16 +318,6 @@ def flux_period(period_file, config):
                                          index=wind.index)
     wind[wind_corr_names[5]] = pd.Series(UVW_earth[:, 2],
                                          index=wind.index)
-    # Repeat applying instrument tilt angle correction, assuming both sonic
-    # and IMU have the same angles
-    UVW_tilt = wind3D_correct(wind.values,
-                              motion3d.loc[:, :"acceleration_z"].values,
-                              motion3d.loc[:, "rate_phi":].values,
-                              heading.values, sog.values, imu2anem_pos,
-                              sample_freq_hz, Tcf, Ta, mot3d_phitheta,
-                              mot3d_phitheta)
-    UVW_ship_tilt = UVW_tilt[0]
-    UVW_earth_tilt = UVW_tilt[11]
     wind[wind_corr_names[6]] = pd.Series(UVW_ship_tilt[:, 0],
                                          index=wind.index)
     wind[wind_corr_names[7]] = pd.Series(UVW_ship_tilt[:, 1],
