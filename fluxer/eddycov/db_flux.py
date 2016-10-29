@@ -13,8 +13,6 @@ import argparse
 import os.path as osp
 import numpy as np
 import pandas as pd
-# import psycopg2 as pg
-# from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 from fluxer.flux_config import parse_config
 from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
@@ -246,34 +244,10 @@ def flux_period(period_file, config):
                                          zscore_thr=3.5, nreps=nreps)
         motion3d[col] = motcol_VM[0]
 
-    # Tilt angles for sonic and IMU
-    wnd_k, wnd_kcoefs = planarfit_coef(wind.values)
+    # Tilt angles from IMU
     mot3d_k, mot3d_kcoefs = planarfit_coef(motion3d.values)
-    wndrot_dummy, wnd_phitheta = rotate_vectors(wind.values,
-                                                k_vector=wnd_k)
     mot3d_dummy, mot3d_phitheta = rotate_vectors(motion3d.values[:, 0:3],
                                                  k_vector=mot3d_k)
-
-    # # Output to Octave for debugging
-    # import scipy.io as sio
-    # sio.savemat(iname_prefix + "_wind_motion.mat",
-    #             {'wind_speed': wind.values,
-    #              'acceleration': motion3d.loc[:, :"acceleration_z"].values,
-    #              'angular_rate': motion3d.loc[:, "rate_phi":].values,
-    #              'heading': np.reshape(heading, (len(heading), 1)),
-    #              'sog': np.reshape(sog, (len(sog), 1))})
-    # # OR do a round-trip via Oct2Py!
-    # from oct2py import octave
-    # uvw_ship, uvw_earth = octave.motion_octave(wind.values,
-    #                                            motion3d.values[:, :3],
-    #                                            motion3d.values[:, 3:],
-    #                                            np.reshape(heading,
-    #                                                       (len(heading), 1)),
-    #                                            np.reshape(sog, (len(sog), 1)),
-    #                                            imu2anem_pos,
-    #                                            sample_freq_hz, Tcf, Ta,
-    #                                            [0.0, 0.0], [0.0, 0.0],
-    #                                            {"uearth"})
 
     # Save full tuple output and select later. Note that we the use the
     # interpolated, smoothed heading and speed over ground.
@@ -292,8 +266,7 @@ def flux_period(period_file, config):
                               motion3d.loc[:, :"acceleration_z"].values,
                               motion3d.loc[:, "rate_phi":].values,
                               heading.values, sog.values, imu2anem_pos,
-                              sample_freq_hz, Tcf, Ta, mot3d_phitheta,
-                              mot3d_phitheta)
+                              sample_freq_hz, Tcf, Ta, mot3d_phitheta)
     UVW_ship_tilt = UVW_tilt[0]
     UVW_earth_tilt = UVW_tilt[11]
     # Append corrected wind vectors to DataFrame
@@ -330,35 +303,6 @@ def flux_period(period_file, config):
                                           index=wind.index)
     wind[wind_corr_names[11]] = pd.Series(UVW_earth_tilt[:, 2],
                                           index=wind.index)
-
-    # # Plots comparing with Octave output
-    # fig, axs = plt.subplots(3, 2, sharex = True)
-    # axs[0, 0].plot(uvw_ship[:, 0], UVW_ship[:, 0])
-    # # etc, etc.
-    # # Plot smoothed and corrected data for each vector. Turned off for
-    # # production of output files.
-    # fig, axs = plt.subplots(3, 1, sharex=True)
-    # fig.set_size_inches((11, 9))
-    # wind[["wind_speed_u", "wind_speed_u_corr"]].plot(ax=axs[0],
-    #                                                  legend=False)
-    # axs[0].set_title("U"); axs[0].set_xlabel("")
-    # wind[["wind_speed_v", "wind_speed_v_corr"]].plot(ax=axs[1],
-    #                                                  legend=False)
-    # axs[1].set_title("V")
-    # axs[1].set_ylabel("Wind speed [m/s/s]"); axs[1].set_xlabel("")
-    # wind[["wind_speed_w", "wind_speed_w_corr"]].plot(ax=axs[2],
-    #                                                  rot=0,
-    #                                                  legend=False)
-    # axs[2].set_title("W"); axs[2].set_xlabel("")
-    # leg = axs[2].legend(loc=9, bbox_to_anchor=(0.5, -0.1),
-    #                     title=iname_prefix, frameon=False,
-    #                     borderaxespad=0, ncol=3)
-    # leg.get_texts()[0].set_text("Measured (de-spiked)")
-    # leg.get_texts()[1].set_text("Corrected (ship reference)")
-    # # axs[1].set_xticklabels(wind.index, rotation=0, ha="center")
-    # fig.tight_layout()
-    # fig.savefig(iname_prefix + ".png", bbox_extra_artists=(leg,),
-    #             bbox_inches="tight")
 
     # Append results
     ec_wind_corr = pd.concat((ec, wind.loc[:, wind_corr_names[0]:]),
