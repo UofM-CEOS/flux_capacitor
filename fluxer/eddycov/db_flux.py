@@ -26,6 +26,12 @@ __all__ = ["main", "flux_period"]
 plt.style.use("ggplot")
 
 
+# Exception classes for catching our problems
+class FluxError(Exception):
+    """Base class for Exceptions in this module"""
+    pass
+
+
 def flux_period(period_file, config):
     """Perform required calculations on period."""
     # Extract all the config pieces
@@ -199,12 +205,12 @@ def flux_period(period_file, config):
     if ((nbad_vertical_wind / float(ec_nrows)) > 0.5 or
         (nbad_air_temp_sonic / float(ec_nrows)) > 0.5):
         sonic_flag = True
-        raise Exception("Bad sonic anemometer data.")
+        raise FluxError("Bad sonic anemometer data")
     # [Original comment: check critical low frequency variabiles]
     if not (np.isfinite(air_temp_avg) or
             np.isfinite(ec.relative_humidity[0])):
         bad_meteorology_flag = True
-        raise Exception("RH or average air temperature unavailable.")
+        raise FluxError("RH or average air temperature unavailable")
     # # Below will be needed at some point
     # sw_avg = ec.K_down[0]
     # lw_avg = ec.LW_down[0]
@@ -230,7 +236,7 @@ def flux_period(period_file, config):
     # If we have no good COG, SOG, or heading, then we cannot continue.
     if cog.count() < 1 or sog.count() < 1 or heading.count() < 1:
         bad_navigation_flag = True
-        raise Exception("Unusable COG, SOG, or heading records.")
+        raise FluxError("Unusable COG, SOG, or heading records")
     # [Original comment: shot filter the motion channels... this helps with
     # a problem where unreasonably high accelerations cause a 'NaN'
     # calculation]
@@ -372,7 +378,7 @@ def main(config_file):
     summary_file = config["EC Outputs"]["summary_file"]
     # Stop if we don't have any files
     if len(ec_files) < 1:
-        raise Exception("There are no input files")
+        raise FluxError("There are no input files")
 
     # [Original comment: create flags for the 4 possible sources of "bad"
     # data, flag=0 means data good]
@@ -391,12 +397,17 @@ def main(config_file):
         # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
         iname = osp.basename(ec_file)
         iname_prefix = osp.splitext(iname)[0]
-        ec_wind_corr, ec_flags = flux_period(ec_file, config)
-        # Save to file with suffix "_mc.csv"
-        ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + "_mc.csv"),
-                            index_label=colnames[1])
-        for k, v in ec_flags.iteritems():
-            osummary.loc[iname, k] = v
+
+        try:
+            ec_wind_corr, ec_flags = flux_period(ec_file, config)
+        except FluxError as e:
+            print("{0}: {1}".format(ec_file, e.message))
+        else:
+            # Save to file with suffix "_mc.csv"
+            ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + "_mc.csv"),
+                                index_label=colnames[1])
+            for k, v in ec_flags.iteritems():
+                osummary.loc[iname, k] = v
 
     # Now we have the summary DataFrame filled up and can work with it.
     osummary.to_csv(summary_file, index_label="input_file")
