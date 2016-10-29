@@ -361,7 +361,7 @@ def flux_period(period_file, config):
     #             bbox_inches="tight")
 
     # Append results
-    ec_wind_corr = pd.concat((ec, wind.loc[:, "wind_speed_u_ship":]),
+    ec_wind_corr = pd.concat((ec, wind.loc[:, wind_corr_names[0]:]),
                              axis=1)
     return ec_wind_corr, dict(open_flag=open_flag, closed_flag=closed_flag,
                               sonic_flag=sonic_flag, motion_flag=motion_flag,
@@ -370,6 +370,20 @@ def flux_period(period_file, config):
 
 
 def main(config_file):
+    """Perform flux analyses, given a configuration file
+
+    Parameters
+    ----------
+    config_file : str
+        Path to configuration file.
+
+    Returns
+    -------
+    None
+
+    Writes summary file and prints messages from process.
+
+    """
     # Parse configuration file
     config = parse_config(config_file)
     ec_idir = config["EC Inputs"]["input_directory"]
@@ -415,7 +429,7 @@ def main(config_file):
 
 
 if __name__ == "__main__":
-    description = "Perform flux analyses, given a configuration file."
+    description = "Perform flux analyses, given a configuration file"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("config_file", type=str,
                         help="Path to configuration file")
