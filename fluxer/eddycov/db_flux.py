@@ -22,12 +22,36 @@ from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
 __all__ = ["main", "flux_period"]
 
 plt.style.use("ggplot")
+_FLUX_FLAGS = ["open_flag", "closed_flag", "sonic_flag",
+               "motion_flag", "bad_navigation_flag",
+               "bad_meteorology_flag"]
 
 
-# Exception classes for catching our problems
+# Exception classes for catching our conditions
 class FluxError(Exception):
     """Base class for Exceptions in this module"""
     pass
+
+
+class SonicError(FluxError):
+    """Critical sonic anemometer Exception"""
+    def __init__(self, message, flags):
+        self.message = message
+        self.flags = flags
+
+
+class NavigationError(FluxError):
+    """Critical navigation Exception"""
+    def __init__(self, message, flags):
+        self.message = message
+        self.flags = flags
+
+
+class MeteorologyError(FluxError):
+    """Critical meteorology Exception"""
+    def __init__(self, message, flags):
+        self.message = message
+        self.flags = flags
 
 
 def flux_period(period_file, config):
@@ -51,9 +75,7 @@ def flux_period(period_file, config):
                      false_values=["f"])
     ec_nrows = len(ec.index)
     # Initial values for flags
-    open_flag, closed_flag = False, False
-    sonic_flag, motion_flag = False, False
-    bad_navigation_flag, bad_meteorology_flag = False, False
+    period_flags = dict.fromkeys(_FLUX_FLAGS, False)
     # Put acceleration components in 3-column array and make copy to keep
     # uncorrected data.  Original comment: read in angular rates in RH
     # coordinate system, convert to rad/s.
@@ -88,43 +110,52 @@ def flux_period(period_file, config):
                                           np.radians(ec[imu_ang_zname]))})
     del motion3d_pre
     wind = ec[["wind_speed_u", "wind_speed_v", "wind_speed_w"]].copy()
+
     # [Original comment: check for any significant number of 'NAN's (not
     # worried about the odd one scattered here and there)].  [Original
     # comment: set open flag if gt 2% of records are 'NAN']
+    win_width = np.int(config["EC Despiking"]["despike_win_width"])
+    win_step = np.int(config["EC Despiking"]["despike_step"])
+    nreps = np.int(config["EC Despiking"]["despike_nreps"])
     if (((ec.op_CO2_density.count() / float(ec_nrows)) < 0.98) or
         ((ec.op_H2O_density.count() / float(ec_nrows)) < 0.98) or
         ((ec.op_analyzer_status.count() / float(ec_nrows)) < 0.98)):
-        open_flag = True
+        period_flags["open_flag"] = True
+    # TODO: Here we need to prepare our check for the diagnostics from the
+    # open path analyzers.  For now, keep using the rule of thumb
+    elif (ec.op_analyzer_status.gt(249) |
+        ec.op_analyzer_status.lt(240)).sum() > 0.02:
+        period_flags["open_flag"] = True
+    else:
+        op_CO2_VM = despike_VickersMahrt(ec.op_CO2_density,
+                                         width=win_width, step=win_step,
+                                         zscore_thr=3.5, nreps=nreps)
+        ec.op_CO2_density = op_CO2_VM[0]
+        op_H2O_VM = despike_VickersMahrt(ec.op_H2O_density,
+                                         width=win_width, step=win_step,
+                                         zscore_thr=3.5, nreps=nreps)
+        ec.op_H2O_density = op_H2O_VM[0]
+        op_Pr_VM = despike_VickersMahrt(ec.op_pressure,
+                                        width=win_width, step=win_step,
+                                        zscore_thr=3.5, nreps=nreps)
+        ec.op_pressure = op_Pr_VM[0]
+        if (((op_CO2_VM[1] / ec.op_CO2_density.count()) > 0.01) or
+            ((op_H2O_VM[1] / ec.op_H2O_density.count()) > 0.01) or
+            ((op_Pr_VM[1] / ec.op_pressure.count()) > 0.01)):
+            period_flags["open_flag"] = True
+
     # [Original comment: set wind flag if gt 2% of records are 'NAN']
     if (((wind.wind_speed_u.count() / float(ec_nrows)) < 0.98) or
         ((wind.wind_speed_v.count() / float(ec_nrows)) < 0.98) or
         ((wind.wind_speed_w.count() / float(ec_nrows)) < 0.98) or
         ((ec.air_temperature_sonic.count() / float(ec_nrows)) < 0.98)):
-        sonic_flag = True
-    # [Original comment: set motion flag if gt 2% of records are 'NAN']
-    if (((motion3d.acceleration_x.count() / float(ec_nrows)) < 0.98) or
-        ((motion3d.acceleration_y.count() / float(ec_nrows)) < 0.98) or
-        ((motion3d.acceleration_z.count() / float(ec_nrows)) < 0.98) or
-        ((motion3d.rate_phi.count() / float(ec_nrows)) < 0.98) or
-        ((motion3d.rate_theta.count() / float(ec_nrows)) < 0.98) or
-        ((motion3d.rate_shi.count() / float(ec_nrows)) < 0.98)):
-        motion_flag = True
-    # Set closed flag is more than 2% of records are NaN.
-    if (((ec.cp_CO2_fraction.count() / float(ec_nrows)) < 0.98) or
-        ((ec.cp_H2O_fraction.count() / float(ec_nrows)) < 0.98) or
-        ((ec.cp_pressure.count() / float(ec_nrows)) < 0.98)):
-        closed_flag = True
-
-    # [Original comment: now that we have looked for NANs, we may as
-    # well fill in the NANs and any spikes using the shot filter].
-    # [SPL: these changes are done outside the WIND array, which is
-    # the one that is used later for motion correction, etc., so they
-    # are lost.]
-    win_width = np.int(config["EC Despiking"]["despike_win_width"])
-    win_step = np.int(config["EC Despiking"]["despike_step"])
-    nreps = np.int(config["EC Despiking"]["despike_nreps"])
-
-    if not sonic_flag:
+        period_flags["sonic_flag"] = True
+    else:
+        # [Original comment: now that we have looked for NANs, we may as
+        # well fill in the NANs and any spikes using the shot filter].
+        # [SPL: these changes are done outside the WIND array, which is the
+        # one that is used later for motion correction, etc., so they are
+        # lost.]
         wind_u_VM = despike_VickersMahrt(wind.wind_speed_u,
                                          width=win_width, step=win_step,
                                          zscore_thr=3.5, nreps=nreps)
@@ -146,27 +177,32 @@ def flux_period(period_file, config):
             ((wind_v_VM[1] / wind.wind_speed_v.count()) > 0.01) or
             ((wind_w_VM[1] / wind.wind_speed_w.count()) > 0.01) or
             ((sonic_T_VM[1] / ec.air_temperature_sonic.count()) > 0.01)):
-            sonic_flag = True
+            period_flags["sonic_flag"] = True
 
-    if not open_flag:
-        op_CO2_VM = despike_VickersMahrt(ec.op_CO2_density,
-                                         width=win_width, step=win_step,
-                                         zscore_thr=3.5, nreps=nreps)
-        ec.op_CO2_density = op_CO2_VM[0]
-        op_H2O_VM = despike_VickersMahrt(ec.op_H2O_density,
-                                         width=win_width, step=win_step,
-                                         zscore_thr=3.5, nreps=nreps)
-        ec.op_H2O_density = op_H2O_VM[0]
-        op_Pr_VM = despike_VickersMahrt(ec.op_pressure,
-                                        width=win_width, step=win_step,
-                                        zscore_thr=3.5, nreps=nreps)
-        ec.op_pressure = op_Pr_VM[0]
-        if (((op_CO2_VM[1] / ec.op_CO2_density.count()) > 0.01) or
-            ((op_H2O_VM[1] / ec.op_H2O_density.count()) > 0.01) or
-            ((op_Pr_VM[1] / ec.op_pressure.count()) > 0.01)):
-            open_flag = True
+    # [Original comment: set motion flag if gt 2% of records are 'NAN']
+    if (((motion3d.acceleration_x.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.acceleration_y.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.acceleration_z.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.rate_phi.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.rate_theta.count() / float(ec_nrows)) < 0.98) or
+        ((motion3d.rate_shi.count() / float(ec_nrows)) < 0.98)):
+        period_flags["motion_flag"] = True
+    else:
+        # [Original comment: shot filter the motion channels... this helps with
+        # a problem where unreasonably high accelerations cause a 'NaN'
+        # calculation]
+        for col in motion3d.columns:
+            motcol_VM = despike_VickersMahrt(motion3d[col],
+                                             width=win_width, step=win_step,
+                                             zscore_thr=3.5, nreps=nreps)
+            motion3d[col] = motcol_VM[0]
 
-    if not closed_flag:
+    # Set closed flag is more than 2% of records are NaN.
+    if (((ec.cp_CO2_fraction.count() / float(ec_nrows)) < 0.98) or
+        ((ec.cp_H2O_fraction.count() / float(ec_nrows)) < 0.98) or
+        ((ec.cp_pressure.count() / float(ec_nrows)) < 0.98)):
+        period_flags["closed_flag"] = True
+    else:
         cp_CO2_VM = despike_VickersMahrt(ec.cp_CO2_fraction,
                                          width=win_width, step=win_step,
                                          zscore_thr=3.5, nreps=nreps)
@@ -182,13 +218,24 @@ def flux_period(period_file, config):
         if (((cp_CO2_VM[1] / ec.cp_CO2_fraction.count()) > 0.01) or
             ((cp_H2O_VM[1] / ec.cp_H2O_fraction.count()) > 0.01) or
             ((cp_Pr_VM[1] / ec.cp_pressure.count()) > 0.01)):
-            closed_flag = True
+            period_flags["closed_flag"] = True
 
-    # TODO: Here we need to prepare our check for the diagnostics from the
-    # open path analyzers.  For now, keep using the rule of thumb
-    if (ec.op_analyzer_status.gt(249) |
-        ec.op_analyzer_status.lt(240)).sum() > 0.02:
-        open_flag = True
+    # [Original comment: now fill in the gaps by applying a moving
+    # average... In this case, we use a 100 sample window (10 sec) moving
+    # average... may need to tweak this value].  [SPL: perhaps a simple
+    # linear interpolation is better; I don't know why this moving average
+    # is used, where a window must be specified and may be introducing
+    # bias.  Perhaps it doesn't matter.  Why aren't latitude and longitude
+    # similarly interpolated?]
+    cog, sog = smooth_angle(ec["course_over_ground"].values,
+                            ec["speed_over_ground"].values, 21)
+    cog = pd.Series(cog, index=ec.index)
+    sog = pd.Series(sog, index=ec.index)
+    heading, _ = smooth_angle(ec["heading"].values, 1, 21)
+    heading = pd.Series(heading, index=ec.index)
+    if ((cog.count() < len(cog)) or (sog.count() < len(sog)) or
+        (heading.count < len(heading))):
+        period_flags["motion_flag"] = True
 
     # [Original comment: check for bad wind data: bad wind data can
     # usually be diagnosed by unusually high wind speeds.  This is
@@ -199,50 +246,29 @@ def flux_period(period_file, config):
     nbad_vertical_wind = abs(wind["wind_speed_w"]).gt(7).sum()
     nbad_air_temp_sonic = abs(ec["air_temperature_sonic"] -
                               air_temp_avg).gt(7).sum()
-    # Set wind flag high if gt 0.5% of records are frost contaminated
-    if ((nbad_vertical_wind / float(ec_nrows)) > 0.5 or
-        (nbad_air_temp_sonic / float(ec_nrows)) > 0.5):
-        sonic_flag = True
-        raise FluxError("Bad sonic anemometer data")
-    # [Original comment: check critical low frequency variabiles]
     if not (np.isfinite(air_temp_avg) or
             np.isfinite(ec.relative_humidity[0])):
-        bad_meteorology_flag = True
-        raise FluxError("RH or average air temperature unavailable")
+        period_flags["bad_meteorology_flag"] = True
+
+    # Now raise Exceptions to signal rest of analyses cannot continue.
+    # Return flags so they can be caught and used later.
+
+    # Set wind flag high if gt 0.5% of records are frost contaminated
+    # [Original comment: check critical low frequency variables]
+    if ((nbad_vertical_wind / float(ec_nrows)) > 0.05 or
+        (nbad_air_temp_sonic / float(ec_nrows)) > 0.05):
+        period_flags["sonic_flag"] = True
+        raise SonicError("Bad sonic anemometer data", period_flags)
     # # Below will be needed at some point
     # sw_avg = ec.K_down[0]
     # lw_avg = ec.LW_down[0]
     # sog_avg = ec["speed_over_ground"].mean()
 
-    # [Original comment: now fill in the gaps by applying a moving
-    # average... In this case, we use a 100 sample window (10 sec) moving
-    # average... may need to tweak this value].  [SPL: perhaps a simple
-    # linear interpolation is better; I don't know why this moving average
-    # is used, where a window must be specified and may be introducing
-    # bias.  Perhaps it doesn't matter.  Why aren't latitude and longitude
-    # not similarly interpolated?]
-    cog, sog = smooth_angle(ec["course_over_ground"].values,
-                            ec["speed_over_ground"].values, 21)
-    cog = pd.Series(cog, index=ec.index)
-    sog = pd.Series(sog, index=ec.index)
-    heading, _ = smooth_angle(ec["heading"].values, 1, 21)
-    heading = pd.Series(heading, index=ec.index)
-
-    if ((cog.count() < len(cog)) or (sog.count() < len(sog)) or
-        (heading.count < len(heading))):
-        motion_flag = True
     # If we have no good COG, SOG, or heading, then we cannot continue.
     if cog.count() < 1 or sog.count() < 1 or heading.count() < 1:
-        bad_navigation_flag = True
-        raise FluxError("Unusable COG, SOG, or heading records")
-    # [Original comment: shot filter the motion channels... this helps with
-    # a problem where unreasonably high accelerations cause a 'NaN'
-    # calculation]
-    for col in motion3d.columns:
-        motcol_VM = despike_VickersMahrt(motion3d[col],
-                                         width=win_width, step=win_step,
-                                         zscore_thr=3.5, nreps=nreps)
-        motion3d[col] = motcol_VM[0]
+        period_flags["bad_navigation_flag"] = True
+        raise NavigationError("Unusable COG, SOG, or heading records",
+                              period_flags)
 
     # Tilt angles from IMU
     mot3d_k, mot3d_kcoefs = planarfit_coef(motion3d.values)
@@ -307,10 +333,7 @@ def flux_period(period_file, config):
     # Append results
     ec_wind_corr = pd.concat((ec, wind.loc[:, wind_corr_names[0]:]),
                              axis=1)
-    return ec_wind_corr, dict(open_flag=open_flag, closed_flag=closed_flag,
-                              sonic_flag=sonic_flag, motion_flag=motion_flag,
-                              bad_navigation_flag=bad_navigation_flag,
-                              bad_meteorology_flag=bad_meteorology_flag)
+    return ec_wind_corr, period_flags
 
 
 def main(config_file):
@@ -338,11 +361,9 @@ def main(config_file):
     if len(ec_files) < 1:
         raise FluxError("There are no input files")
 
-    # [Original comment: create flags for the 4 possible sources of "bad"
+    # [Original comment: create flags for the 6 possible sources of "bad"
     # data, flag=0 means data good]
-    flags = dict.fromkeys(["open_flag", "closed_flag", "sonic_flag",
-                           "motion_flag", "bad_navigation_flag",
-                           "bad_meteorology_flag"], False)
+    flags = dict.fromkeys(_FLUX_FLAGS, False)
     # We set up a dataframe with all files to process as index, and all the
     # flags as columns.  This is the basis for our summary output file;
     # other columns (such as flux summary calculations for the period)
@@ -358,8 +379,10 @@ def main(config_file):
 
         try:
             ec_wind_corr, ec_flags = flux_period(ec_file, config)
-        except FluxError as e:
-            print("{0}: {1}".format(ec_file, e.message))
+        except (NavigationError, SonicError) as err:
+            for k, v in err.flags.items():
+                osummary.loc[iname, k] = v
+            print("{0}: {1}".format(ec_file, err.message))
         else:
             # Save to file with suffix "_mc.csv"
             ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + "_mc.csv"),

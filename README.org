@@ -116,7 +116,11 @@ The first step is to correct data for ship motion effects:
   title Motion correction flow chart
   :Transform IMU data to RHS;
   partition OpenPath {
-  if (> 2% records missing open path CO2, H2O, or analyzer status measurements?) then (yes)
+  if (> 2% records missing open path CO2,
+  H2O, or analyzer status measurements?) then (yes)
+    #GoldenRod:open_flag=True>
+  elseif (> 2% open path records with
+  bad analyzer status) then (yes)
     #GoldenRod:open_flag=True>
   else
     :Vickers-Mahrt despike;
@@ -150,21 +154,18 @@ The first step is to correct data for ship motion effects:
     endif
   endif
   }
-  if (> 2% open path records with bad analyzer status) then (yes)
-    #GoldenRod:open_flag=True>
+  :Gap fill COG, SOG, and heading via smoothing;
+  if (Any missing navigation COG, SOG, or heading?) then (yes)
+    #GoldenRod:motion_flag=True>
+  endif
+  if (Missing mean air temperature or relative humidity?) then (yes)
+    #GoldenRod:bad_meteorology_flag=True>
   endif
   if (> 0.5% sonic W wind records > 7 m/s or
   > 0.5% sonic temperature records > 7 deg
   difference from mean MET temperature?) then (yes)
     #GoldenRod:sonic_flag=True>
     stop
-  endif
-  if (Missing mean air temperature or relative humidity?) then (yes)
-    #GoldenRod:bad_meteorology_flag=True>
-  endif
-  :Gap fill COG, SOG, and heading via smoothing;
-  if (Any missing COG or SOG?) then (yes)
-    #GoldenRod:motion_flag=True>
   endif
   if (All COG, SOG, or heading missing?) then (yes)
     #GoldenRod:bad_navigation_flag=True>
