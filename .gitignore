@@ -3,6 +3,8 @@
 *.[Rr]history
 *.pro
 *.png
+!/motion_correction_flowchart.png
+*.html
 *.pdf
 *.csv
 *.xls*

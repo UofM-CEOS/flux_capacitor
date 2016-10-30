@@ -106,3 +106,73 @@ It is also possible to perform the analysis from the shell command line:
 #+BEGIN_SRC shell :results silent :exports code
   underway.py ec_config.cfg
 #+END_SRC
+
+* Eddy covariance processing
+
+The first step is to correct data for ship motion effects:
+
+#+BEGIN_SRC plantuml :file motion_correction_flowchart.png :exports results
+  start
+  title Motion correction flow chart
+  :Transform IMU data to RHS;
+  partition OpenPath {
+  if (> 2% records missing open path CO2, H2O, or analyzer status measurements?) then (yes)
+    #GoldenRod:open_flag=True>
+  else
+    :Vickers-Mahrt despike;
+    if (>1% despiked records) then (yes)
+    #GoldenRod:open_flag=True>
+    endif
+  endif
+  }
+  partition Sonic {
+  if (> 2% records missing sonic measurements?) then (yes)
+    #GoldenRod:sonic_flag=True>
+  else
+    :Vickers-Mahrt despike;
+    if (>1% despiked records) then (yes)
+    #GoldenRod:sonic_flag=True>
+    endif
+  endif
+  }
+  partition IMU {
+  if (> 2% records missing IMU measurements?) then (yes)
+    #GoldenRod:motion_flag=True>
+  endif
+  }
+  partition ClosedPath {
+  if (> 2% records missing closed path CO2, H2O or pressure measurements?) then (yes)
+    #GoldenRod:closed_flag=True>
+  else (no)
+    :Vickers-Mahrt despike;
+    if (>1% despiked records) then (yes)
+    #GoldenRod:closed_flag=True>
+    endif
+  endif
+  }
+  if (> 2% open path records with bad analyzer status) then (yes)
+    #GoldenRod:open_flag=True>
+  endif
+  if (> 0.5% sonic W wind records > 7 m/s or
+  > 0.5% sonic temperature records > 7 deg
+  difference from mean MET temperature?) then (yes)
+    #GoldenRod:sonic_flag=True>
+    stop
+  endif
+  if (Missing mean air temperature or relative humidity?) then (yes)
+    #GoldenRod:bad_meteorology_flag=True>
+  endif
+  :Gap fill COG, SOG, and heading via smoothing;
+  if (Any missing COG or SOG?) then (yes)
+    #GoldenRod:motion_flag=True>
+  endif
+  if (All COG, SOG, or heading missing?) then (yes)
+    #GoldenRod:bad_navigation_flag=True>
+    stop
+  endif
+  :Compute IMU tilt angles (roll and pitch) from linear acceleration;
+  :Correct sonic wind speed for ship motion, with and without IMU tilt angles;
+  end
+#+END_SRC
+
+[[file:motion_correction_flowchart.png]]
