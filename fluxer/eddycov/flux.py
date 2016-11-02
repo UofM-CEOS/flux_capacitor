@@ -265,7 +265,8 @@ def euler_rotate(X, euler):
 
 def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                    anemometer_pos, sample_freq, Tcf, Ta,
-                   tilt_motion, tilt_anemometer):
+                   tilt_motion=np.array([0.0, 0.0]),
+                   tilt_anemometer=np.array([0.0, 0.0])):
     """Correct wind vector measurements from a moving platform
 
     This is a port of Scott Miller's `motion` Matlab function, which
