@@ -18,7 +18,10 @@ setup(name="fluxer",
       packages=["fluxer", "fluxer.eddycov", "fluxer.underway"],
       scripts=["pCO2/pCO2_rosette.py", "pCO2/subset_bottles.awk",
                "pCO2/pCO2_bottle_match.awk"],
-      test_suite="fluxer.tests"
+      test_suite="fluxer.tests",
+      entry_points={
+          "console_scripts": ["get_fluxes = fluxer.eddycov.__main__:main"]
+      }
       # package_data={'fluxer': FLUXER_CONFIGS},
       # data_files=[('config', ['config/flux_default.cfg',
       #                         'config/underway_default.cfg'])],

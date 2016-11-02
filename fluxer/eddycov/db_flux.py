@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # pylint: disable=too-many-locals,invalid-name,no-member
 
 """Steps towards CO2 flux analyses, using data files output from PostgreSQL
@@ -9,7 +8,6 @@ file containing necessary set up information such as location of input
 files and variables.
 """
 
-import argparse
 import os.path as osp
 import numpy as np
 import pandas as pd
@@ -393,12 +391,3 @@ def main(config_file):
     # Now we have the summary DataFrame filled up and can work with it.
     osummary.to_csv(summary_file, index_label="input_file")
     print "Summary of fluxes written to " + summary_file
-
-
-if __name__ == "__main__":
-    description = "Perform flux analyses, given a configuration file"
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("config_file", type=str,
-                        help="Path to configuration file")
-    args = parser.parse_args()
-    main(args.config_file)

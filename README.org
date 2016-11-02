@@ -71,15 +71,11 @@ The main interface for this package is the two functions: =main= and
   eddycov.flux_period("YYYYMMDD_100000_10hz.csv", config)
 #+END_SRC
 
-A third alternative is offered to allow execution from a shell command
-line:
+A third alternative is offered to allow execution from a command line:
 
 #+BEGIN_SRC shell :results silent :exports code
-  db_flux.py ec_config.cfg
+  get_fluxes ec_config.cfg
 #+END_SRC
-
-However, this requires ensuring that the shebang (first line of the
-script/module) on =db_flux.py= is appropriate for the system running it.
 
 * =underway= package
 
@@ -116,11 +112,12 @@ The first step is to correct data for ship motion effects:
   title Motion correction flow chart
   :Transform IMU data to RHS;
   partition OpenPath {
-  if (> 2% records missing open path CO2,
-  H2O, or analyzer status measurements?) then (yes)
+  if (> 2% records missing
+  open path CO2, H2O, or
+  analyzer status measurements?) then (yes)
     #GoldenRod:open_flag=True>
-  elseif (> 2% open path records with
-  bad analyzer status) then (yes)
+  elseif (> 2% open path records
+  with bad analyzer status) then (yes)
     #GoldenRod:open_flag=True>
   else
     :Vickers-Mahrt despike;
