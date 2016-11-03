@@ -3,8 +3,7 @@
 This function is run via an executable script via setuptools.
 
 """
-
-
+import logging
 import argparse
 import fluxer.eddycov.db_flux as db_flux
 
@@ -15,7 +14,10 @@ def main():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("config_file", type=str,
                         help="Path to configuration file")
+    parser.add_argument("--log-file", type=str, default="eddycov.log",
+                        help="Path to log file")
     args = parser.parse_args()
+    logging.basicConfig(filename=args.log_file, level=logging.DEBUG)
     db_flux.main(args.config_file)
 
 
