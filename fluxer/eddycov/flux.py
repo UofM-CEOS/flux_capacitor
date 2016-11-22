@@ -686,18 +686,26 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         nrep_thr = 3
     nspikes, ntrends = 0, 0
     xout = x.copy()
+    # Following EddyUH implementation, fill missing values with nearest
+    # value for the purpose of spike and trend detection.  This ensures
+    # that we can always calculate zscores.
+    is_missing = np.isnan(np.array(xout))  # need to coerce to np array
+    xidx = np.arange(len(xout))            # simple index along x
+    f_itpl = itpl.interp1d(xidx[~ is_missing], xout[~ is_missing],
+                           kind="nearest", fill_value="extrapolate")
+    x_nonan = f_itpl(xidx)
     # Get a series of tuples with indices for each window
     idxl = window_indices(range(len(x)), width, step)
     nloops = 0
     while nloops < nreps:
         nspikes_loop = 0
         for w in idxl:
-            winidx = [i for i in w] # indices of current window
-            xwin = xout[winidx] # values for the current window
+            winidx = [i for i in w]  # indices of current window
+            xwin = x_nonan[winidx]   # values for the current window
             xnew, nsp, ntr, xmask = get_VickersMahrt(xwin, zscore_thr,
                                                      nrep_thr)
             nspikes_loop += nsp; ntrends += ntr
-            xout[winidx] = xnew
+            x_nonan[winidx] = xnew
         nloops += 1
         # Increase zscore_thr by 0.3, instead of 0.1 as in V&M (1997),
         # following EddyUH implementation
@@ -707,10 +715,8 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         else:                   # Stop if we haven't found any new spikes
             break
     # Interpolate through missing values, if requested (default).
-    is_missing = np.isnan(np.array(xout)) # need to coerce to np array
     nmissing = np.count_nonzero(is_missing)
     if (nmissing > 0) and interp_nan:
-        xidx = np.arange(len(xout)) # simple index along x
         s = itpl.InterpolatedUnivariateSpline(xidx[~ is_missing],
                                               xout[~ is_missing], k=1)
         x_itpl = s(xidx[is_missing])
