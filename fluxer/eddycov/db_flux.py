@@ -20,6 +20,7 @@ from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
 
 __all__ = ["main", "flux_period"]
 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 _FLUX_FLAGS = ["open_flag", "closed_flag", "sonic_flag",
                "motion_flag", "bad_navigation_flag",
