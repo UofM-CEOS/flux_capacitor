@@ -68,9 +68,9 @@ def recompose(x, y):
     vmag = np.sqrt((x ** 2) + (y ** 2))
     ang = np.arctan2(y, x)
     try:                        # first assume array inputs
-        ang[ang < 0] = ang[ang < 0] + (2 * np.pi) # output range 0 - 2*pi
+        ang[ang < 0] = ang[ang < 0] + (2 * np.pi)  # output range 0 - 2*pi
         ang[vmag == 0] = 0        # when magnitude is 0 the angle is also 0
-        ang[ang == 0] = 2 * np.pi # convention
+        ang[ang == 0] = 2 * np.pi   # convention
     except (IndexError, TypeError):  # then check if scalar inputs
         if np.isscalar(ang) and ang < 0:
             ang = ang + (2 * np.pi)
@@ -374,7 +374,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
               signal.filtfilt(bc, ac, np.arctan2(ay, g), padlen=pdl))
     # High frequency angles using angle rates
     rm = signal.detrend(angle_rate, 0)
-    rx, ry, rz = rm[:, 0], rm[:, 1], rm[:, 2] # don't do this in ipdb!
+    rx, ry, rz = rm[:, 0], rm[:, 1], rm[:, 2]  # don't do this in ipdb!
     phi_hf = signal.filtfilt(bc, ac,
                              ((np.cumsum(rx) - 0.5 * rx - 0.5 * rx[0]) /
                               sample_freq), padlen=pdl)
@@ -383,7 +383,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                 signal.filtfilt(bc, ac, np.arctan2(-ax * np.cos(phi), g),
                                 padlen=pdl))
 
-    gyro = np.unwrap(np.radians(heading)) # Put heading in radians
+    gyro = np.unwrap(np.radians(heading))  # Put heading in radians
     gyro0 = gyro[0]               # Initial heading
     gyro = gyro - gyro0           # Remove initial heading
     # Low-pass filter to retain low-frequency content, but not the offset
@@ -419,10 +419,10 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     theta_dot = ry * F22 - rz * F23
     psi_dot = ry * F32 + rz * F33
 
-    # The angular rates phi_dot, theta_dot, and psi_dot are now in the earth based
-    # frame, which is what we want for creating the rotation-transformation
-    # matrix. Re-integrate and high pass filter these angular rates to get
-    # the fast angles.
+    # The angular rates phi_dot, theta_dot, and psi_dot are now in the
+    # earth based frame, which is what we want for creating the
+    # rotation-transformation matrix. Re-integrate and high pass filter
+    # these angular rates to get the fast angles.
     phi_hf = signal.filtfilt(bc, ac,
                              (np.cumsum(phi_dot) -
                               0.5 * phi_dot -
@@ -475,7 +475,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                            anemometer_pos[2] * rx,
                            anemometer_pos[1] * rx -
                            anemometer_pos[0] * ry))
-    Ua = euler_rotate(uam, EA) # rotate to earth frame
+    Ua = euler_rotate(uam, EA)  # rotate to earth frame
 
     ## PLATFORM LINEAR VELOCITY
     # High-pass filters for accelerometers
@@ -508,11 +508,11 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                           signal.filtfilt(bay, aay, up[:, 1], padlen=pdly),
                           signal.filtfilt(baz, aaz, up[:, 2], padlen=pdlz)))
 
-    ## SHIP SPEED: this is in the positive x-direction (assuming the bow is
-    ## positive x direction).  We low-pass filter this signal so there isnt
-    ## double counting of linear motion from the integrated accelerometers.
-    ## Also, the y- and z-components are zero (ie, captured by the
-    ## integrated accelerometers).
+    # SHIP SPEED: this is in the positive x-direction (assuming the bow is
+    # positive x direction).  We low-pass filter this signal so there isnt
+    # double counting of linear motion from the integrated accelerometers.
+    # Also, the y- and z-components are zero (ie, captured by the
+    # integrated accelerometers).
     n = len(speed)
     Us = np.column_stack((speed -
                           signal.filtfilt(bax, aax, speed, padlen=pdlx),
@@ -627,8 +627,8 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
                 xcat[(i[2] - i[1]):i[2]] = i[0] * 2
         # Now we are left with true outliers to interpolate
         x_new = x.copy()
-        xidx = np.arange(len(x)) # simple index along x
-        isok = (xcat == 0) | (abs(xcat) > 1) # ok if 0 or trend
+        xidx = np.arange(len(x))             # simple index along x
+        isok = (xcat == 0) | (abs(xcat) > 1)  # ok if 0 or trend
         s = itpl.InterpolatedUnivariateSpline(xidx[isok],
                                               x[isok], k=1)
         x_itpl = s(xidx[~ isok])

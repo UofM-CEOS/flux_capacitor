@@ -4,7 +4,6 @@
 #+OPTIONS: ^:{}
 #+OPTIONS: toc:nil
 
-
 Routines and tools to process flux (eddy covariance) data as collected by
 our group.
 
@@ -41,7 +40,6 @@ Or
 
 thus avoiding having to use the =fluxer.= prefix.
 
-
 * Project configuration
 
 The easiest way to use the packages is to set up a configuration for any
@@ -49,7 +47,6 @@ given project.  The source for =fluxer= includes the default configuration
 settings required by each sub-package (under the =config/= directory).
 These settings are specified in a =*.cfg= file (syntax instructions are
 given in the default files).
-
 
 * =eddycov= package
 
