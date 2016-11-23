@@ -18,7 +18,7 @@ from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
                                  despike_VickersMahrt, planarfit_coef,
                                  rotate_vectors)
 
-__all__ = ["main", "flux_period"]
+__all__ = ["main", "prepare_period", "wind_correct_period"]
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -55,18 +55,14 @@ class MeteorologyError(FluxError):
         self.flags = flags
 
 
-def flux_period(period_file, config):
-    """Perform required calculations on period."""
+def prepare_period(period_file, config):
+    """Parse input period file and set up data for flux analyses"""
     # Extract all the config pieces
     colnames = config["EC Inputs"]["colnames"]
-    imu2anem_pos = config["EC Motion Correction"]["imu2anemometer_pos"]
     imu_xyz_idx = np.array(config["EC Motion Correction"]["imu_xyz_idx"],
                            dtype=int)
     imu2rhs_linmult = config["EC Motion Correction"]["imu2rhs_linaccel_mult"]
     imu2rhs_angmult = config["EC Motion Correction"]["imu2rhs_angaccel_mult"]
-    sample_freq_hz = config["EC Inputs"]["sample_frequency"]
-    Tcf = config["EC Motion Correction"]["complementary_filter_period"]
-    Ta = config["EC Motion Correction"]["accel_highpass_cutoff"]
     dtypes = config["EC Inputs"]["dtypes"]
     # Read, specifying the options matching what we get in our database
     # output files
@@ -77,9 +73,8 @@ def flux_period(period_file, config):
     ec_nrows = len(ec.index)
     # Initial values for flags
     period_flags = dict.fromkeys(_FLUX_FLAGS, False)
-    # Put acceleration components in 3-column array and make copy to keep
-    # uncorrected data.  Original comment: read in angular rates in RH
-    # coordinate system, convert to rad/s.
+    # Put acceleration components in 3-column array.  Original comment:
+    # read in angular rates in RH coordinate system, convert to rad/s.
     imu_linaccel_names = ["acceleration_x", "acceleration_y",
                           "acceleration_z"]
     imu_lin_xname = imu_linaccel_names[imu_xyz_idx[0]]
@@ -89,14 +84,7 @@ def flux_period(period_file, config):
     imu_ang_xname = imu_angaccel_names[imu_xyz_idx[0]]
     imu_ang_yname = imu_angaccel_names[imu_xyz_idx[1]]
     imu_ang_zname = imu_angaccel_names[imu_xyz_idx[2]]
-    # Preliminary data frame with input ordering
-    motion3d_pre = pd.DataFrame({'acceleration_x': ec["acceleration_x"],
-                                 'acceleration_y': ec["acceleration_y"],
-                                 'acceleration_z': ec["acceleration_y"],
-                                 'rate_phi': ec["rate_z"],
-                                 'rate_theta': ec["rate_x"],
-                                 'rate_shi': ec["rate_y"]})
-    # Now we can reorder in to RHS and scale units
+    # Now we can reorder input to RHS and scale units
     motion3d = pd.DataFrame({'acceleration_x': (imu2rhs_linmult[0] *
                                                 ec[imu_lin_xname] * 9.81),
                              'acceleration_y': (imu2rhs_linmult[1] *
@@ -109,8 +97,7 @@ def flux_period(period_file, config):
                                             np.radians(ec[imu_ang_yname])),
                              'rate_shi': (imu2rhs_angmult[2] *
                                           np.radians(ec[imu_ang_zname]))})
-    del motion3d_pre
-    wind = ec[["wind_speed_u", "wind_speed_v", "wind_speed_w"]].copy()
+    wind = ec.loc[:, ["wind_speed_u", "wind_speed_v", "wind_speed_w"]]
 
     # [Original comment: check for any significant number of 'NAN's (not
     # worried about the odd one scattered here and there)].  [Original
@@ -122,15 +109,13 @@ def flux_period(period_file, config):
         ((ec.op_H2O_density.count() / float(ec_nrows)) < 0.98) or
         ((ec.op_analyzer_status.count() / float(ec_nrows)) < 0.98)):
         period_flags["open_flag"] = True
-        logger.debug("%s: setting open_flag -> too many missing records",
-                     osp.basename(period_file))
+        logger.debug("Setting open_flag -> too many missing records")
     # TODO: Here we need to prepare our check for the diagnostics from the
     # open path analyzers.  For now, keep using the rule of thumb
     elif (ec.op_analyzer_status.gt(249) |
           ec.op_analyzer_status.lt(240)).sum() > 0.02:
         period_flags["open_flag"] = True
-        logger.debug(("%s: setting open_flag -> too many bad analyzer "
-                      "status"), osp.basename(period_file))
+        logger.debug("Setting open_flag -> too many bad analyzer status")
     else:
         op_CO2_VM = despike_VickersMahrt(ec.op_CO2_density,
                                          width=win_width, step=win_step,
@@ -148,8 +133,7 @@ def flux_period(period_file, config):
             ((op_H2O_VM[1] / ec.op_H2O_density.count()) > 0.01) or
             ((op_Pr_VM[1] / ec.op_pressure.count()) > 0.01)):
             period_flags["open_flag"] = True
-            logger.debug(("%s: setting open_flag -> too many despiked "
-                          "records"), osp.basename(period_file))
+            logger.debug("Setting open_flag -> too many despiked records")
 
     # [Original comment: set wind flag if gt 2% of records are 'NAN']
     if (((wind.wind_speed_u.count() / float(ec_nrows)) < 0.98) or
@@ -157,8 +141,7 @@ def flux_period(period_file, config):
         ((wind.wind_speed_w.count() / float(ec_nrows)) < 0.98) or
         ((ec.air_temperature_sonic.count() / float(ec_nrows)) < 0.98)):
         period_flags["sonic_flag"] = True
-        logger.debug("%s: setting sonic_flag -> too many missing records",
-                     osp.basename(period_file))
+        logger.debug("Setting sonic_flag -> too many missing records")
     else:
         # [Original comment: now that we have looked for NANs, we may as
         # well fill in the NANs and any spikes using the shot filter].
@@ -187,8 +170,7 @@ def flux_period(period_file, config):
             ((wind_w_VM[1] / wind.wind_speed_w.count()) > 0.01) or
             ((sonic_T_VM[1] / ec.air_temperature_sonic.count()) > 0.01)):
             period_flags["sonic_flag"] = True
-            logger.debug(("%s: setting sonic_flag -> too many despiked "
-                          "records"), osp.basename(period_file))
+            logger.debug("Setting sonic_flag -> too many despiked records")
 
     # [Original comment: set motion flag if gt 2% of records are 'NAN']
     if (((motion3d.acceleration_x.count() / float(ec_nrows)) < 0.98) or
@@ -198,25 +180,26 @@ def flux_period(period_file, config):
         ((motion3d.rate_theta.count() / float(ec_nrows)) < 0.98) or
         ((motion3d.rate_shi.count() / float(ec_nrows)) < 0.98)):
         period_flags["motion_flag"] = True
-        logger.debug("%s: setting motion_flag -> too many missing records",
-                     osp.basename(period_file))
+        logger.debug("Setting motion_flag -> too many missing records")
     else:
         # [Original comment: shot filter the motion channels... this helps with
         # a problem where unreasonably high accelerations cause a 'NaN'
         # calculation]
         for col in motion3d.columns:
-            motcol_VM = despike_VickersMahrt(motion3d[col],
-                                             width=win_width, step=win_step,
-                                             zscore_thr=3.5, nreps=nreps)
+            motcol_VM = despike_VickersMahrt(motion3d[col], width=win_width,
+                                             step=win_step, zscore_thr=3.5,
+                                             nreps=nreps)
             motion3d[col] = motcol_VM[0]
+    # Ready to assign to main dataframe
+    ec[[imu_lin_xname, imu_lin_yname, imu_lin_zname]] = motion3d.iloc[:, 0:3]
+    ec[[imu_ang_xname, imu_ang_yname, imu_ang_zname]] = motion3d.iloc[:, 3:]
 
     # Set closed flag is more than 2% of records are NaN.
     if (((ec.cp_CO2_fraction.count() / float(ec_nrows)) < 0.98) or
         ((ec.cp_H2O_fraction.count() / float(ec_nrows)) < 0.98) or
         ((ec.cp_pressure.count() / float(ec_nrows)) < 0.98)):
         period_flags["closed_flag"] = True
-        logger.debug("%s: setting closed_flag -> too many missing records",
-                     osp.basename(period_file))
+        logger.debug("Setting closed_flag -> too many missing records")
     else:
         cp_CO2_VM = despike_VickersMahrt(ec.cp_CO2_fraction,
                                          width=win_width, step=win_step,
@@ -234,8 +217,7 @@ def flux_period(period_file, config):
             ((cp_H2O_VM[1] / ec.cp_H2O_fraction.count()) > 0.01) or
             ((cp_Pr_VM[1] / ec.cp_pressure.count()) > 0.01)):
             period_flags["closed_flag"] = True
-            logger.debug(("%s: setting closed_flag -> too many despiked "
-                          "records"), osp.basename(period_file))
+            logger.debug("Setting closed_flag -> too many despiked records")
 
     # [Original comment: now fill in the gaps by applying a moving
     # average... In this case, we use a 100 sample window (10 sec) moving
@@ -246,16 +228,16 @@ def flux_period(period_file, config):
     # similarly interpolated?]
     cog, sog = smooth_angle(ec["course_over_ground"].values,
                             ec["speed_over_ground"].values, 21)
-    cog = pd.Series(cog, index=ec.index)
-    sog = pd.Series(sog, index=ec.index)
+    ec["course_over_ground"] = cog
+    ec["speed_over_ground"] = sog
     heading, _ = smooth_angle(ec["heading"].values, 1, 21)
-    heading = pd.Series(heading, index=ec.index)
-    if ((cog.count() < len(cog)) or (sog.count() < len(sog)) or
-        (heading.count < len(heading))):
+    ec["heading"] = heading
+    if ((ec["course_over_ground"].count() < len(cog)) or
+        (ec["speed_over_ground"].count() < len(sog)) or
+        (ec["heading"].count < len(heading))):
         period_flags["motion_flag"] = True
-        logger.debug(("%s: setting motion_flag -> missing records"
-                      "in COG, SOG, or heading"),
-                     osp.basename(period_file))
+        logger.debug(("Setting motion_flag -> missing records"
+                      "in COG, SOG, or heading"))
 
     # [Original comment: check for bad wind data: bad wind data can
     # usually be diagnosed by unusually high wind speeds.  This is
@@ -269,9 +251,8 @@ def flux_period(period_file, config):
     if not (np.isfinite(air_temp_avg) or
             np.isfinite(ec.relative_humidity[0])):
         period_flags["bad_meteorology_flag"] = True
-        logger.debug(("%s: setting bad_meteorology_flag -> missing mean "
-                      "air temperature or relative_humidity"),
-                     osp.basename(period_file))
+        logger.debug(("Setting bad_meteorology_flag -> missing mean "
+                      "air temperature or relative_humidity"))
 
     # Now raise Exceptions to signal rest of analyses cannot continue.
     # Return flags so they can be caught and used later.
@@ -281,10 +262,9 @@ def flux_period(period_file, config):
     if ((nbad_vertical_wind / float(ec_nrows)) > 0.05 or
         (nbad_air_temp_sonic / float(ec_nrows)) > 0.05):
         period_flags["sonic_flag"] = True
-        logger.error(("%s: setting sonic_flag -> Too many "
+        logger.error(("Setting sonic_flag -> Too many "
                       "records where vertical wind was too high or "
-                      "where sonic air temperature was aberrant "),
-                     osp.basename(period_file))
+                      "where sonic air temperature was aberrant "))
         raise SonicError("Bad sonic anemometer data", period_flags)
     # # Below will be needed at some point
     # sw_avg = ec.K_down[0]
@@ -292,23 +272,55 @@ def flux_period(period_file, config):
     # sog_avg = ec["speed_over_ground"].mean()
 
     # If we have no good COG, SOG, or heading, then we cannot continue.
-    if cog.count() < 1 or sog.count() < 1 or heading.count() < 1:
+    if (ec["course_over_ground"].count() < 1 or
+        ec["speed_over_ground"].count() < 1 or
+        ec["heading"].count() < 1):
         period_flags["bad_navigation_flag"] = True
-        logger.error(("%s: setting bad_navigation_flag -> COG, "
-                      "SOG, or heading are all missing "),
-                     osp.basename(period_file))
+        logger.error(("Setting bad_navigation_flag -> COG, "
+                      "SOG, or heading are all missing "))
         raise NavigationError("Unusable COG, SOG, or heading records",
                               period_flags)
 
+    return ec, period_flags
+
+
+def wind_correct_period(ec_prep, config):
+    """Perform wind motion correction on period dataframe.
+
+    Parameters
+    ----------
+    ec_prep: pandas.DataFrame
+        Pandas DataFrame with prepared flux data.
+    config : OrderedDict
+        Dictionary with parsed configuration file.
+
+    Returns
+    -------
+    pandas.DataFrame with wind corrected flux data.
+
+    """
+    # Extract all the config pieces
+    imu2anem_pos = config["EC Motion Correction"]["imu2anemometer_pos"]
+    sample_freq_hz = config["EC Inputs"]["sample_frequency"]
+    Tcf = config["EC Motion Correction"]["complementary_filter_period"]
+    Ta = config["EC Motion Correction"]["accel_highpass_cutoff"]
+    # Extract needed components from ec_prepared -- Note we use .loc access
+    # method to avoid confusion about working with copies. Unnecessary for
+    # extracted components we won't be replacing.
+    wind = ec_prep.loc[:, ["wind_speed_u", "wind_speed_v", "wind_speed_w"]]
+    motion3d_names = ["acceleration_x", "acceleration_y", "acceleration_z",
+                      "rate_x", "rate_y", "rate_z"]
+    motion3d = ec_prep[motion3d_names]
+    heading = ec_prep["heading"]
+    sog = ec_prep["speed_over_ground"]
     # Save full tuple output and select later. Note that we the use the
     # interpolated, smoothed heading and speed over ground.
     UVW = wind3D_correct(wind.values,
                          motion3d.loc[:, :"acceleration_z"].values,
-                         motion3d.loc[:, "rate_phi":].values,
+                         motion3d.loc[:, "rate_x":].values,
                          heading.values, sog.values, imu2anem_pos,
                          sample_freq_hz, Tcf, Ta)
-    logger.debug("%s: Motion corrected with unknown tilt angles",
-                 osp.basename(period_file))
+    logger.debug("Motion corrected with unknown tilt angles")
     # Ship-referenced speeds
     UVW_ship = UVW[0]
     # Earth-referenced speeds
@@ -317,20 +329,18 @@ def flux_period(period_file, config):
     # Repeat applying instrument tilt angle correction, assuming both sonic
     # and IMU have the same angles
     mot3d_k, mot3d_kcoefs = planarfit_coef(motion3d.values)
-    logger.debug("%s: Tilt K=%s  K_coefs=%s", osp.basename(period_file),
-                 mot3d_k, mot3d_kcoefs)
+    logger.debug("Tilt K=%s  K_coefs=%s", mot3d_k, mot3d_kcoefs)
     mot3d_dummy, mot3d_phitheta = rotate_vectors(motion3d.values[:, 0:3],
                                                  k_vector=mot3d_k)
-    logger.debug("%s: Tilt phi=%s  theta=%s", osp.basename(period_file),
-                 mot3d_phitheta[0], mot3d_phitheta[1])
+    logger.debug("Tilt phi=%s  theta=%s", mot3d_phitheta[0],
+                 mot3d_phitheta[1])
 
     UVW_tilt = wind3D_correct(wind.values,
                               motion3d.loc[:, :"acceleration_z"].values,
-                              motion3d.loc[:, "rate_phi":].values,
+                              motion3d.loc[:, "rate_x":].values,
                               heading.values, sog.values, imu2anem_pos,
                               sample_freq_hz, Tcf, Ta, mot3d_phitheta)
-    logger.debug("%s: Motion corrected with calculated tilt angles",
-                 osp.basename(period_file))
+    logger.debug("Motion corrected with calculated tilt angles")
     UVW_ship_tilt = UVW_tilt[0]
     UVW_earth_tilt = UVW_tilt[11]
     # Append corrected wind vectors to DataFrame
@@ -369,9 +379,9 @@ def flux_period(period_file, config):
                                           index=wind.index)
 
     # Append results
-    ec_wind_corr = pd.concat((ec, wind.loc[:, wind_corr_names[0]:]),
-                             axis=1)
-    return ec_wind_corr, period_flags
+    ec_wind_corr = pd.concat((ec_prep,
+                              wind.loc[:, wind_corr_names[0]:]), axis=1)
+    return ec_wind_corr
 
 
 def main(config_file):
@@ -416,16 +426,19 @@ def main(config_file):
         iname_prefix = osp.splitext(iname)[0]
 
         try:
-            ec_wind_corr, ec_flags = flux_period(ec_file, config)
+            ec_prep, prep_flags = prepare_period(ec_file, config)
         except (NavigationError, SonicError) as err:
             for k, v in err.flags.items():
                 osummary.loc[iname, k] = v
         else:
+            ec_wind_corr = wind_correct_period(ec_prep, config)
             # Save to file with suffix "_mc.csv"
             ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + "_mc.csv"),
                                 index_label=colnames[1])
-            for k, v in ec_flags.iteritems():
+            for k, v in prep_flags.iteritems():
                 osummary.loc[iname, k] = v
+
+        # TODO: Further flux processing
 
         logger.info("%s: End processing", osp.basename(ec_file))
 
