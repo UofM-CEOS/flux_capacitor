@@ -12,51 +12,39 @@ import os.path as osp
 import logging
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from scipy.stats import circmean
+from fluxer.eddycov import (FLUX_FLAGS, FluxError, SonicError,
+                            NavigationError, MeteorologyError)
 from fluxer.flux_config import parse_config
 from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
                                  despike_VickersMahrt, planarfit_coef,
                                  rotate_vectors)
+from fluxer.eddycov.tilt_windows import TiltWindows
 
-__all__ = ["main", "prepare_period", "wind_correct_period"]
+__all__ = ["main", "prepare_period", "wind3D_correct_period"]
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-_FLUX_FLAGS = ["open_flag", "closed_flag", "sonic_flag",
-               "motion_flag", "bad_navigation_flag",
-               "bad_meteorology_flag"]
-plt.style.use("ggplot")
-
-
-# Exception classes for catching our conditions
-class FluxError(Exception):
-    """Base class for Exceptions in this module"""
-    pass
-
-
-class SonicError(FluxError):
-    """Critical sonic anemometer Exception"""
-    def __init__(self, message, flags):
-        self.message = message
-        self.flags = flags
-
-
-class NavigationError(FluxError):
-    """Critical navigation Exception"""
-    def __init__(self, message, flags):
-        self.message = message
-        self.flags = flags
-
-
-class MeteorologyError(FluxError):
-    """Critical meteorology Exception"""
-    def __init__(self, message, flags):
-        self.message = message
-        self.flags = flags
 
 
 def prepare_period(period_file, config):
-    """Parse input period file and set up data for flux analyses"""
+    """Parse input period file and set up data for flux analyses
+
+    Parameters
+    ----------
+    period_file : str
+        Path to file with pre-filtered, candidate, flux data.
+    config : OrderedDict
+        Dictionary with parsed configuration file.
+
+    Returns
+    -------
+
+    Tuple of two pandas.DataFrame objects; first represents prepared flux
+    data, and the second the flags encountered during tests.  The latter is
+    also passed along with exception, if raised.
+
+    """
     # Extract all the config pieces
     colnames = config["EC Inputs"]["colnames"]
     imu_xyz_idx = np.array(config["EC Motion Correction"]["imu_xyz_idx"],
@@ -72,7 +60,7 @@ def prepare_period(period_file, config):
                      false_values=["f"])
     ec_nrows = len(ec.index)
     # Initial values for flags
-    period_flags = dict.fromkeys(_FLUX_FLAGS, False)
+    period_flags = dict.fromkeys(FLUX_FLAGS, False)
     # Put acceleration components in 3-column array.  Original comment:
     # read in angular rates in RH coordinate system, convert to rad/s.
     imu_linaccel_names = ["acceleration_x", "acceleration_y",
@@ -284,15 +272,22 @@ def prepare_period(period_file, config):
     return ec, period_flags
 
 
-def wind_correct_period(ec_prep, config):
-    """Perform wind motion correction on period dataframe.
+def wind3D_correct_period(ec_prep, config, **kwargs):
+    """Perform wind motion correction on period dataframe
 
     Parameters
     ----------
-    ec_prep: pandas.DataFrame
+    ec_prep : pandas.DataFrame
         Pandas DataFrame with prepared flux data.
     config : OrderedDict
         Dictionary with parsed configuration file.
+
+    Keyword Parameters
+    ------------------
+    tilt_motion : numpy.array
+        Passed to wind3D_correct.
+    tilt_anemometer : numpy.array
+        Passed to wind3D_correct.
 
     Returns
     -------
@@ -313,6 +308,11 @@ def wind_correct_period(ec_prep, config):
     motion3d = ec_prep[motion3d_names]
     heading = ec_prep["heading"]
     sog = ec_prep["speed_over_ground"]
+    # Pop keyword arguments, and default to the same defaults as
+    # wind3D_correct.
+    mot3d_phitheta = kwargs.pop("tilt_motion", np.array([0, 0]))
+    wnd3d_phitheta = kwargs.pop("tilt_anemometer", np.array([0, 0]))
+
     # Save full tuple output and select later. Note that we the use the
     # interpolated, smoothed heading and speed over ground.
     UVW = wind3D_correct(wind.values,
@@ -326,23 +326,17 @@ def wind_correct_period(ec_prep, config):
     # Earth-referenced speeds
     UVW_earth = UVW[11]
 
-    # Repeat applying instrument tilt angle correction, assuming both sonic
-    # and IMU have the same angles
-    mot3d_k, mot3d_kcoefs = planarfit_coef(motion3d.values)
-    logger.debug("Tilt K=%s  K_coefs=%s", mot3d_k, mot3d_kcoefs)
-    mot3d_dummy, mot3d_phitheta = rotate_vectors(motion3d.values[:, 0:3],
-                                                 k_vector=mot3d_k)
-    logger.debug("Tilt phi=%s  theta=%s", mot3d_phitheta[0],
-                 mot3d_phitheta[1])
-
     UVW_tilt = wind3D_correct(wind.values,
                               motion3d.loc[:, :"acceleration_z"].values,
                               motion3d.loc[:, "rate_x":].values,
                               heading.values, sog.values, imu2anem_pos,
-                              sample_freq_hz, Tcf, Ta, mot3d_phitheta)
+                              sample_freq_hz, Tcf, Ta,
+                              tilt_motion=mot3d_phitheta,
+                              tilt_anemometer=wnd3d_phitheta)
     logger.debug("Motion corrected with calculated tilt angles")
     UVW_ship_tilt = UVW_tilt[0]
     UVW_earth_tilt = UVW_tilt[11]
+
     # Append corrected wind vectors to DataFrame
     wind_corr_names = ["wind_speed_u_ship_notilt",
                        "wind_speed_v_ship_notilt",
@@ -404,43 +398,105 @@ def main(config_file):
     ec_idir = config["EC Inputs"]["input_directory"]
     ec_files = config["EC Inputs"]["input_files"]
     colnames = config["EC Inputs"]["colnames"]
+    ec_tilt_window_width = int(config["EC Motion Correction"]
+                               ["tilt_window_width"])
     summary_file = config["EC Outputs"]["summary_file"]
     # Stop if we don't have any files
     if len(ec_files) < 1:
         raise FluxError("There are no input files")
 
+    # Initialize tilt windows to work on
+    ec_windows = TiltWindows(ec_files, ec_tilt_window_width)
     # [Original comment: create flags for the 6 possible sources of "bad"
     # data, flag=0 means data good]
-    flags = dict.fromkeys(_FLUX_FLAGS, False)
+    flags = dict.fromkeys(FLUX_FLAGS, False)
     # We set up a dataframe with all files to process as index, and all the
     # flags as columns.  This is the basis for our summary output file;
     # other columns (such as flux summary calculations for the period)
     # will be appended as we loop.
     osummary = pd.DataFrame(flags,
                             index=[osp.basename(x) for x in ec_files])
-    for ec_file in ec_files:
-        logger.info("%s: Begin processing", osp.basename(ec_file))
-        # Get a file name prefix to be shared by the output files from this
-        # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
-        iname = osp.basename(ec_file)
-        iname_prefix = osp.splitext(iname)[0]
 
-        try:
-            ec_prep, prep_flags = prepare_period(ec_file, config)
-        except (NavigationError, SonicError) as err:
-            for k, v in err.flags.items():
-                osummary.loc[iname, k] = v
-        else:
-            ec_wind_corr = wind_correct_period(ec_prep, config)
-            # Save to file with suffix "_mc.csv"
-            ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix + "_mc.csv"),
-                                index_label=colnames[1])
-            for k, v in prep_flags.iteritems():
-                osummary.loc[iname, k] = v
+    # Iterate over the list of tuples (key=window time stamp, file-list)
+    for (k, l) in ec_windows.win_files:
+        logger.info("Begin window %s", k)
+        ec_list = []
+        ec_list_keys = []
+        # Iterate over the file-list
+        for ec_file in l:
+            logger.info("Begin preparing %s", osp.basename(ec_file))
+            # Get a file name prefix to be shared by the output files from this
+            # period.  Note iname is THE SAME AS THE INDEX IN OSUMMARY
+            iname = osp.basename(ec_file)
+            iname_prefix = osp.splitext(iname)[0]
+            # Try to prepare file; set flags, and populate the list of OK
+            # files and summaries. Continue if preparation fails.
+            try:
+                ec_prep, prep_flags = prepare_period(ec_file, config)
+            except (NavigationError, SonicError) as err:
+                for flagname, flag in err.flags.items():
+                    osummary.loc[iname, flagname] = flag
+                    ec_windows.tilts.loc[k, "n" + flagname] += np.int(flag)
+                logger.info("Skip %s", ec_file)
+                continue
+            else:
+                for flagname, flag in prep_flags.iteritems():
+                    osummary.loc[iname, flagname] = flag
+                    ec_windows.tilts.loc[k, "n" + flagname] += np.int(flag)
+                ec_list.append(ec_prep)
+                ec_list_keys.append(ec_file)
+            logger.info("End preparing %s", osp.basename(ec_file))
 
-        # TODO: Further flux processing
+        n_ok = len(ec_list)
+        ec_windows.tilts.loc[k, "nfiles_ok"] = n_ok
+        if n_ok > 0:
+            ec_win = pd.concat(ec_list, keys=ec_list_keys)
+            logger.info("Combining %s periods in window %s", n_ok, k)
+            wind_names = ["wind_speed_u", "wind_speed_v", "wind_speed_w"]
+            wnd = ec_win.loc[:, wind_names]
+            mot3d_names = ["acceleration_x", "acceleration_y",
+                           "acceleration_z", "rate_x", "rate_y", "rate_z"]
+            mot3d = ec_win[mot3d_names]
+            # Calculate tilt angles for motion sensor
+            mot3d_k, __ = planarfit_coef(mot3d.values[:, 0:3])
+            __, mot3d_tilt = rotate_vectors(mot3d.values[:, 0:3],
+                                            k_vector=mot3d_k)
+            ec_windows.tilts.loc[k, "phi_motion"] = mot3d_tilt[0]
+            ec_windows.tilts.loc[k, "theta_motion"] = mot3d_tilt[1]
+            # Calculate tilt angles for sonic anemometer
+            wnd3d_k, __ = planarfit_coef(wnd.values[:, 0:3])
+            __, wnd3d_tilt = rotate_vectors(wnd.values[:, 0:3],
+                                            k_vector=wnd3d_k)
+            ec_windows.tilts.loc[k, "phi_sonic"] = wnd3d_tilt[0]
+            ec_windows.tilts.loc[k, "theta_sonic"] = wnd3d_tilt[1]
+            wind_direction_mean = circmean(ec_win["wind_direction"].values,
+                                           high=np.degrees(2 * np.pi))
+            ec_windows.tilts.loc[k, "wind_direction"] = wind_direction_mean
 
-        logger.info("%s: End processing", osp.basename(ec_file))
+            for ec_file in ec_list_keys:
+                logger.info("Begin processing %s", iname)
+                ec_prep = ec_win.ix[ec_file]
+                iname = osp.basename(ec_file)
+                iname_prefix = osp.splitext(iname)[0]
+                ec_wind_corr = wind3D_correct_period(ec_prep, config,
+                                                     tilt_motion=mot3d_tilt,
+                                                     tilt_anemometer=mot3d_tilt)  # noqa: E501
+                # Save to file with suffix "_mc.csv"
+                ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix +
+                                             "_mc.csv"),
+                                    index_label=colnames[1])
+
+                # TODO: Further flux processing
+
+                logger.info("End processing %s", iname)
+
+        logger.info("End window %s", k)
+
+    # Perhaps plot the tilt window data?
+    ec_windows.plot("ec_{0}min.png".format(ec_tilt_window_width))
+    # Write tilt window calculations
+    ec_windows.tilts.to_csv("tilts_{0}.csv".format(ec_tilt_window_width),
+                            index_label="timestamp")
 
     # Now we have the summary DataFrame filled up and can work with it.
     osummary.to_csv(summary_file, index_label="input_file")

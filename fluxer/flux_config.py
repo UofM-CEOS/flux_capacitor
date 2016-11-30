@@ -102,6 +102,7 @@ _DFLTS = {
                     "cp_CO2_signal_strength,cp_H2O_signal_strength"),
     'ec_sample_frequency': "10.0",
     'ec_summary_file': "fluxes.csv",
+    'ec_tilt_window_width': "120",
     'ec_despike_win_width': "3000",
     'ec_despike_step': "1500",
     'ec_despike_nreps': "20",
@@ -148,7 +149,8 @@ _SCALAR_OPTS = {
     'EC Inputs': ["sample_frequency"],
     'EC Despiking': ["despike_win_width",
                      "despike_step", "despike_nreps"],
-    'EC Motion Correction': ["complementary_filter_period",
+    'EC Motion Correction': ["tilt_window_width",
+                             "complementary_filter_period",
                              "accel_highpass_cutoff"],
     'UW Inputs': ["anemometer2d_height", "uw_intake_depth"]}
 _VECTOR_OPTS = {
@@ -196,6 +198,8 @@ def parse_config(cfg_file):
         ),
         ("EC Motion Correction",
          OrderedDict((
+             ("tilt_window_width",
+              _DFLTS["ec_tilt_window_width"]),
              ("imu2anemometer_pos",
               _DFLTS["imu2anemometer_pos"]),
              ("imu_xyz_idx",
@@ -232,8 +236,8 @@ def parse_config(cfg_file):
     # Set up the parser to interpolate across sections
     config = cfg.ConfigParser(interpolation=cfg.ExtendedInterpolation())
     config.read_dict(dflt_dict)     # set up our specific defaults
-    config.read_file(open(cfg_file)) # replace defaults with what
-                                     # we're given
+    # Replace defaults with what we're given
+    config.read_file(open(cfg_file))
     # Copy where we'll replace strings with other types
     py_dict = dflt_dict.copy()
     # Loop through all items and clean them up to generate our variables as
@@ -271,7 +275,11 @@ def parse_config(cfg_file):
     if py_dict["EC Inputs"]["sample_frequency"] <= 0:
         raise Exception("Sampling frequency must be greater than zero")
 
-    # Check if we have a valid despiking parameters
+    # Check if we have a valid tilt window width
+    if py_dict["EC Motion Correction"]["tilt_window_width"] <= 0:
+        raise Exception("Tilt window width must be greater than zero")
+
+    # Check if we have valid despiking parameters
     if py_dict["EC Despiking"]["despike_win_width"] <= 0:
         raise Exception("Despiking window width must be greater than zero")
     if py_dict["EC Despiking"]["despike_step"] <= 0:
