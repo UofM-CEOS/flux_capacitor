@@ -91,8 +91,9 @@ if __name__ == "__main__":
     # in the most natural way, and avoid hard-coding any location
     _SCRIPTS_DIR = osp.dirname(osp.realpath(__file__))
     _MATCH_PROG = osp.join(_SCRIPTS_DIR, "match_replace_cols.awk")
+    _FORMATERCLASS = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(description=_DESCRIPTION,
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                     formatter_class=_FORMATERCLASS)
     group = parser.add_argument_group("required arguments")
     # We have to specify every argument to the underlying program
     parser.add_argument("base",
