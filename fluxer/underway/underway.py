@@ -32,8 +32,6 @@ import argparse
 import os.path as osp
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-plt.style.use("ggplot")
 
 __all__ = ["main", "underway_pCO2"]
 
@@ -148,7 +146,7 @@ def underway_pCO2(period_file, config):
     Pw = (np.exp(24.4543 - 67.4509 * (100.0 / T_eq) - 4.8489 *
                  np.log(T_eq / 100.0) - 0.000544 * sal))
     # Calculate pCO2 in the equilibrator
-    pCO2_eq = xCO2 * (1 - Pw) # units: uatm, here 1 -> 1 atm
+    pCO2_eq = xCO2 * (1 - Pw)   # units: uatm, here 1 -> 1 atm
 
     # Calculate pCO2_sw (apply temperature corrections)
 
