@@ -28,7 +28,3 @@ class MeteorologyError(FluxError):
     def __init__(self, message, flags):
         self.message = message
         self.flags = flags
-
-# from db_flux import *
-
-# __all__ = db_flux.__all__

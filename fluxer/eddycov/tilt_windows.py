@@ -48,6 +48,16 @@ def _make_windows(ec_files, win_minutes):
 class TiltWindows:
     """Well-defined pandas DataFrame"""
     def __init__(self, ec_files=[], win_minutes=0):
+        """Set up attributes for handling tilt window data
+
+        Parameters
+        ----------
+        ec_files : list
+            List of file names.
+        win_minutes : int
+            Number of minutes to build windows, based on file names.
+
+        """
         win_files = _make_windows(ec_files, win_minutes)
         # Set up dataframe to place tilt angles and other details
         cols = (["nfiles", "nfiles_ok"] +
@@ -74,6 +84,7 @@ class TiltWindows:
             Path to file to write plot to
         title : str
             Title for plot
+
         """
         plt.style.use('ggplot')
         # Workaround for stupid problem in Debian now:

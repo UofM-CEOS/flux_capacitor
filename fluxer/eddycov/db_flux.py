@@ -3,9 +3,10 @@
 """Steps towards CO2 flux analyses, using data files output from PostgreSQL
 database.
 
-It takes a single argument, which should be the path to a configuration
-file containing necessary set up information such as location of input
-files and variables.
+Main function takes a single argument, which should be the path to a
+configuration file containing necessary set up information such as location
+of input files and variables.
+
 """
 
 import os.path as osp

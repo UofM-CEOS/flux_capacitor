@@ -1,6 +1,10 @@
 # pylint: disable=too-many-locals,invalid-name,no-member
 
-"""Core functionality for the package."""
+"""Core functionality for the package
+
+Library of main functions required for flux calculations.
+
+"""
 
 from itertools import groupby
 import numpy as np
