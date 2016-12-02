@@ -23,8 +23,10 @@ from fluxer.eddycov.tilt_windows import TiltWindows
 
 __all__ = ["main", "prepare_period", "wind3D_correct_period"]
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+# Add the null handler if importing as library; whatever using this library
+# should set up logging.basicConfig() as needed
+logger.addHandler(logging.NullHandler())
 
 
 def prepare_period(period_file, config):
@@ -493,10 +495,13 @@ def main(config_file):
         logger.info("End window %s", k)
 
     # Perhaps plot the tilt window data?
-    ec_windows.plot("ec_{0}min.png".format(ec_tilt_window_width))
+    tilt_figf = "ec_{0}min.png".format(ec_tilt_window_width)
+    ec_windows.plot(tilt_figf)
+    logger.info("Plot of tilt window calculations written to %s", tilt_figf)
     # Write tilt window calculations
-    ec_windows.tilts.to_csv("tilts_{0}.csv".format(ec_tilt_window_width),
-                            index_label="timestamp")
+    tilt_ofile = "tilts_{0}.csv".format(ec_tilt_window_width)
+    ec_windows.tilts.to_csv(tilt_ofile, index_label="timestamp")
+    logger.info("Tilt window calculations written to %s", tilt_ofile)
 
     # Now we have the summary DataFrame filled up and can work with it.
     osummary.to_csv(summary_file, index_label="input_file")

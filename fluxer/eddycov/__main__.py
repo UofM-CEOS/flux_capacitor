@@ -14,11 +14,15 @@ def main():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("config_file", type=str,
                         help="Path to configuration file")
-    parser.add_argument("--log-file", type=str, default="eddycov.log",
+    parser.add_argument("log_file", nargs="?", type=str,
+                        default="eddycov.log",
                         help="Path to log file")
     args = parser.parse_args()
     logging.basicConfig(filename=args.log_file, level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    logger.info("Begin %s", args.config_file)
     db_flux.main(args.config_file)
+    logger.info("End %s", args.config_file)
 
 
 if __name__ == "__main__":
