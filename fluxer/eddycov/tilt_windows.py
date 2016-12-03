@@ -73,6 +73,13 @@ class TiltWindows:
         self.tilts = tilts
         self.win_files = win_files
 
+    def __str__(self):
+        # Show tilts attribute first, followed by the number of windows
+        # found, followed by the width (window width) attribute
+        msg = ("TiltWindows({0.tilts}, nwindows={1}, "
+               "width={0.width!r})")
+        return msg.format(self, len(self.win_files))
+
     def plot(self, fig_file, title=None):
         """Generate a plot of tilt angles and diagnostics
 
@@ -203,5 +210,11 @@ class TiltWindows:
 
 
 if __name__ == "__main__":
-    win_files = _make_windows([], 0)
+    # Test defaults
     tlt = TiltWindows()
+    # Generate 6 hours (20 min x 30) of time stamps for filenames
+    tstamps = pd.date_range("2016-01-01 00:30:00", periods=30,
+                            freq="20min")
+    files = tstamps.strftime("EC_%Y%m%d%H%M%S.csv")
+    tlt = TiltWindows(files, 120)
+    print tlt
