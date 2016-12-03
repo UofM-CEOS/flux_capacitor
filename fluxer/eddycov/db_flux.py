@@ -14,7 +14,7 @@ import logging
 import numpy as np
 import pandas as pd
 from scipy.stats import circmean
-from fluxer.eddycov import (FLUX_FLAGS, FluxError, SonicError,
+from fluxer.eddycov import (_FLUX_FLAGS, FluxError, SonicError,
                             NavigationError, MeteorologyError)
 from fluxer.flux_config import parse_config
 from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
@@ -63,7 +63,7 @@ def prepare_period(period_file, config):
                      false_values=["f"])
     ec_nrows = len(ec.index)
     # Initial values for flags
-    period_flags = dict.fromkeys(FLUX_FLAGS, False)
+    period_flags = dict.fromkeys(_FLUX_FLAGS, False)
     # Put acceleration components in 3-column array.  Original comment:
     # read in angular rates in RH coordinate system, convert to rad/s.
     imu_linaccel_names = ["acceleration_x", "acceleration_y",
@@ -412,7 +412,7 @@ def main(config_file):
     ec_windows = TiltWindows(ec_files, ec_tilt_window_width)
     # [Original comment: create flags for the 6 possible sources of "bad"
     # data, flag=0 means data good]
-    flags = dict.fromkeys(FLUX_FLAGS, False)
+    flags = dict.fromkeys(_FLUX_FLAGS, False)
     # We set up a dataframe with all files to process as index, and all the
     # flags as columns.  This is the basis for our summary output file;
     # other columns (such as flux summary calculations for the period)

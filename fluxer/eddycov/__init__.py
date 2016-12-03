@@ -1,6 +1,6 @@
-FLUX_FLAGS = ["open_flag", "closed_flag", "sonic_flag",
-              "motion_flag", "bad_navigation_flag",
-              "bad_meteorology_flag"]
+_FLUX_FLAGS = ["open_flag", "closed_flag", "sonic_flag",
+               "motion_flag", "bad_navigation_flag",
+               "bad_meteorology_flag"]
 
 
 # Exception classes for catching our conditions
