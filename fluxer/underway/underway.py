@@ -115,19 +115,19 @@ def underway_pCO2(period_file, config):
     rt = (c0 + (c1 * uw.ctd_temperature) +
           (c2 * uw.ctd_temperature ** 2.0) +
           (c3 * uw.ctd_temperature ** 3.0) +
-          (c4 * uw.ctd_temperature ** 4.0)) # [eqn 3]
+          (c4 * uw.ctd_temperature ** 4.0))  # [eqn 3]
     Rp = 1.0 + ((pressure_sw *
                  (e1 + e2 * pressure_sw +
                   e3 * pressure_sw ** 2.0)) /
                 (1.0 + d1 * uw.ctd_temperature +
                  d2 * uw.ctd_temperature ** 2.0 +
-                 (d3 + d4 * uw.ctd_temperature) * bigR)) #  [eqn 4]
-    bigRt = bigR / (Rp * rt) # eqn after eq'n 4
+                 (d3 + d4 * uw.ctd_temperature) * bigR))  # [eqn 4]
+    bigRt = bigR / (Rp * rt)    # eqn after eq'n 4
     delS = (((uw.ctd_temperature - 15.0) /
              (1.0 + K * (uw.ctd_temperature - 15.0))) *
             (b0 + b1 * bigR ** (1 / 2.0) + b2 * bigR + b3 *
              bigR ** (3 / 2.0) + b4 * bigR ** 2.0 + b5 *
-             bigR ** (5 / 2.0))) # [eqn 2]
+             bigR ** (5 / 2.0)))  # [eqn 2]
     sal = (a0 + a1 * bigRt ** (1 / 2.0) + a2 * bigRt + a3 *
            bigRt ** (3 / 2.0) + a4 * bigRt ** 2.0 + a5 *
            bigRt ** (5 / 2.0) + delS)
@@ -212,7 +212,7 @@ def underway_pCO2(period_file, config):
 
 def main(config_file):
     config = parse_config(config_file)
-    uw_idir = config["UW Inputs"]["input_directory"]
+    # uw_idir = config["UW Inputs"]["input_directory"]
     uw_files = config["UW Inputs"]["input_files"]
     colnames = config["UW Inputs"]["colnames"]
     pCO2_dir = config["UW Outputs"]["pco2_directory"]

@@ -5,6 +5,7 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
+
 # FLUXER_CONFIGS = ["fluxer/config/flux_default.cfg",
 #                   "fluxer/config/underway_default.cfg"]
 setup(name="fluxer",
