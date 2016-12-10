@@ -16,11 +16,10 @@ import pandas as pd
 from scipy.stats import circmean
 from fluxer.eddycov import (_FLUX_FLAGS, FluxError, SonicError,
                             NavigationError, MeteorologyError)
-from fluxer.flux_config import parse_config
-from fluxer.eddycov.flux import (smooth_angle, wind3D_correct,
-                                 despike_VickersMahrt, planarfit_coef,
-                                 rotate_vectors)
-from fluxer.eddycov.tilt_windows import TiltWindows
+from fluxer import parse_config
+from .flux import (smooth_angle, wind3D_correct, despike_VickersMahrt,
+                   planarfit_coef, rotate_vectors)
+from .tilt_windows import TiltWindows
 
 __all__ = ["main", "prepare_period", "wind3D_correct_period"]
 
@@ -218,10 +217,10 @@ def prepare_period(period_file, config):
     # bias.  Perhaps it doesn't matter.  Why aren't latitude and longitude
     # similarly interpolated?]
     cog, sog = smooth_angle(ec["course_over_ground"].values,
-                            ec["speed_over_ground"].values, 21)
+                            ec["speed_over_ground"].values, 50)
     ec["course_over_ground"] = cog
     ec["speed_over_ground"] = sog
-    heading, _ = smooth_angle(ec["heading"].values, 1, 21)
+    heading, _ = smooth_angle(ec["heading"].values, 1, 50)
     ec["heading"] = heading
     if ((ec["course_over_ground"].count() < len(cog)) or
         (ec["speed_over_ground"].count() < len(sog)) or

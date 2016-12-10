@@ -5,7 +5,7 @@ This function is run via an executable script via setuptools.
 """
 import logging
 import argparse
-import fluxer.eddycov.db_flux as db_flux
+from .db_flux import main as dbf_main
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
     logging.basicConfig(filename=args.log_file, level=logging.DEBUG)
     logger = logging.getLogger(__name__)
     logger.info("Begin %s", args.config_file)
-    db_flux.main(args.config_file)
+    dbf_main(args.config_file)
     logger.info("End %s", args.config_file)
 
 
