@@ -1,1 +1,1 @@
-from fluxer.flux_config import parse_config
+from .flux_config import parse_config

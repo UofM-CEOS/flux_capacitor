@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from fluxer.eddycov import _FLUX_FLAGS
+from .settings import FLUX_FLAGS
 
 __all__ = ["TiltWindows"]
 
@@ -61,7 +61,7 @@ class TiltWindows:
         win_files = _make_windows(ec_files, win_minutes)
         # Set up dataframe to place tilt angles and other details
         cols = (["nfiles", "nfiles_ok"] +
-                ["n{0}".format(i) for i in _FLUX_FLAGS] +
+                ["n{0}".format(i) for i in FLUX_FLAGS] +
                 ["phi_motion", "theta_motion", "phi_sonic", "theta_sonic"] +
                 ["wind_direction"])
         tilts = pd.DataFrame(index=[x[0] for x in win_files], columns=cols)

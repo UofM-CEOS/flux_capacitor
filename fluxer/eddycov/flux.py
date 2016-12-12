@@ -472,7 +472,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # Using coordinate rotations
     Ur = euler_rotate(np.dot(M_ma, wind_speed.T).T, EA)
 
-    ## PLATFORM ANGULAR VELOCITY
+    # PLATFORM ANGULAR VELOCITY
     uam = np.column_stack((anemometer_pos[2] * ry -
                            anemometer_pos[1] * rz,
                            anemometer_pos[0] * rz -
@@ -481,7 +481,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                            anemometer_pos[0] * ry))
     Ua = euler_rotate(uam, EA)  # rotate to earth frame
 
-    ## PLATFORM LINEAR VELOCITY
+    # PLATFORM LINEAR VELOCITY
     # High-pass filters for accelerometers
     wp = 1.0 / (2.0 * Ta[0]) / (sample_freq / 2.0)
     ws = 1.0 / Ta[0] / (sample_freq / 2.0)   # stop, passband cutoffs
@@ -608,7 +608,8 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
     n_outs = sum(isout_hi) + sum(isout_lo)
     # Set categorical x: 0 (ok), 1 (upper outlier), -1 (lower outlier)
     xcat = np.zeros(x.shape, dtype=np.int)
-    xcat[isout_hi] = 1; xcat[isout_lo] = -1
+    xcat[isout_hi] = 1
+    xcat[isout_lo] = -1
     if n_outs > 0:
         # Create tuples for each sequence indicating whether it's outliers
         # and its length.
@@ -708,7 +709,8 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
             xwin = x_nonan[winidx]   # values for the current window
             xnew, nsp, ntr, xmask = get_VickersMahrt(xwin, zscore_thr,
                                                      nrep_thr)
-            nspikes_loop += nsp; ntrends += ntr
+            nspikes_loop += nsp
+            ntrends += ntr
             x_nonan[winidx] = xnew
         nloops += 1
         # Increase zscore_thr by 0.3, instead of 0.1 as in V&M (1997),
