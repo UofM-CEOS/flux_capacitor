@@ -50,25 +50,15 @@ given in the default files).
 
 * =eddycov= package
 
-The main interface for this package is the two functions: =main= and
-=flux_period=:
+The main interface for this package is the function =main=:
 
 #+BEGIN_SRC python :results silent :exports code
   # The main() function takes a configuration file and runs the analyses
-  from fluxer import eddycov
-  eddycov.main("ec_config.cfg")
+  import fluxer.eddycov as ec
+  ec.main("ec_config.cfg")
 #+END_SRC
 
-#+BEGIN_SRC python :results silent :exports code
-  # The flux_period() function takes an input data file and a *parsed*
-  # configuration file and runs the analysis for it
-  from fluxer import eddycov
-  from fluxer.flux_config import parse_config
-  config = parse_config("ec_config.cfg")
-  eddycov.flux_period("YYYYMMDD_100000_10hz.csv", config)
-#+END_SRC
-
-A third alternative is offered to allow execution from a command line:
+which can also be executed from a command line:
 
 #+BEGIN_SRC shell :results silent :exports code
   get_fluxes ec_config.cfg
@@ -76,8 +66,7 @@ A third alternative is offered to allow execution from a command line:
 
 * =underway= package
 
-Consistent with =eddycov=, this package offers two functions: =main= and
-=underway_pCO2=.
+This package offers two functions: =main= and =underway_pCO2=.
 
 #+BEGIN_SRC python :results silent :exports code
   # The main() function takes a configuration file and runs the analyses

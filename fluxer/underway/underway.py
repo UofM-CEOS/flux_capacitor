@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # pylint: disable=too-many-locals,invalid-name,no-member
 
 """Processing of underway pCO2 system data.
@@ -28,7 +27,6 @@ bad_equ_temperature_flag (boolean)
 """
 
 from fluxer import parse_config
-import argparse
 import os.path as osp
 import numpy as np
 import pandas as pd
@@ -37,7 +35,22 @@ __all__ = ["main", "underway_pCO2"]
 
 
 def underway_pCO2(period_file, config):
-    """Perform pCO2 computations on period."""
+    """Perform underway pCO2 computations on period file
+
+    Parameters
+    ----------
+    period_file : str
+        Path to file with pre-filtered, candidate, flux data.
+    config : OrderedDict
+        Dictionary with parsed configuration file.
+
+    Returns
+    -------
+
+    A pandas.DataFrame object with additional columns as results of
+    computations.
+
+    """
     R_u = 8.31451              # j/mol/k universal gas constant
     # Extract all the config pieces
     colnames = config["UW Inputs"]["colnames"]
@@ -211,6 +224,20 @@ def underway_pCO2(period_file, config):
 
 
 def main(config_file):
+    """Perform underway pCO2 analyses, given a configuration file
+
+    Parameters
+    ----------
+    config_file : str
+        Path to configuration file.
+
+    Returns
+    -------
+    None
+
+    Writes summary file and prints messages from process.
+
+    """
     config = parse_config(config_file)
     # uw_idir = config["UW Inputs"]["input_directory"]
     uw_files = config["UW Inputs"]["input_files"]
@@ -231,13 +258,3 @@ def main(config_file):
         ofile = osp.join(pCO2_dir, iname_prefix + '_pCO2.csv')
         uw_pCO2.to_csv(ofile, index_label=colnames[1])
         print("pCO2 file written to " + ofile)
-
-
-if __name__ == "__main__":
-    description = ("Perform underway pCO2 calculations, " +
-                   "given a configuration file.")
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("config_file", type=str,
-                        help="Path to configuration file")
-    args = parser.parse_args()
-    main(args.config_file)
