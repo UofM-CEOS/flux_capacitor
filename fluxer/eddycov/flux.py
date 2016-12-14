@@ -6,6 +6,7 @@ Library of main functions required for flux calculations.
 
 """
 
+from collections import namedtuple
 from itertools import groupby
 import numpy as np
 from scipy import interpolate as itpl
@@ -14,15 +15,37 @@ from scipy.stats import zscore
 from astropy.convolution import convolve, Box1DKernel
 
 
-__all__ = ["smooth_angle", "planarfit_coef", "rotate_vectors",
+__all__ = ["smooth_angle", "planarfit", "rotate_vectors",
            "wind3D_correct", "despike_VickersMahrt"]
 
 # Valid 3-D wind rotation methods
 _VECTOR_ROTATION_METHODS = {"DR", "TR", "PF"}
 
 
+AngleCoordinates = namedtuple("AngleCoordinates", ["x", "y"])
+Vector = namedtuple("Vector", ["angle", "magnitude"])
+PlanarFitCoefs = namedtuple("PlanarFitCoefs", ["k_vct", "tilt_coefs"])
+RotatedVectors = namedtuple("RotatedVectors", ["rotated", "phi_roll"])
+CorrectedWind3D = namedtuple("CorrectedWind3D",
+                             ["uvw_ship",
+                              "euler_angles",
+                              "euler_angles_angular_rates",
+                              "euler_angles_accelerations",
+                              "euler_angles_slow",
+                              "euler_angles_fast",
+                              "mount_offset_rotations",
+                              "uvw_earth",
+                              "uvw_angular",
+                              "uvw_linear",
+                              "ship_enu",
+                              "uvw_enu",
+                              "imu_enu"])
+VickersMahrt = namedtuple("VickersMahrt",
+                          ["x", "nspikes", "ntrends", "kclass"])
+
+
 def decompose(angle, vmagnitude):
-    """Decompose angle and magnitude into `x` and `y` vector(s)
+    """Decompose angle and magnitude into `x` and `y` coordinates
 
     Parameters
     ----------
@@ -34,7 +57,7 @@ def decompose(angle, vmagnitude):
 
     Returns
     -------
-    Tuple with ndarrays `x` and `y`, in that order.
+    namedtuple with ndarrays `x` and `y`, in that order.
 
     Examples
     --------
@@ -51,7 +74,7 @@ def decompose(angle, vmagnitude):
     """
     x = vmagnitude * np.cos(np.radians(angle))
     y = vmagnitude * np.sin(np.radians(angle))
-    return x, y
+    return AngleCoordinates(x, y)
 
 
 def recompose(x, y):
@@ -66,7 +89,7 @@ def recompose(x, y):
 
     Returns
     -------
-    Tuple with ndarrays `angle` and `vmagnitude`, in that order
+    namedtuple with ndarrays `angle` and `magnitude`, in that order.
 
     """
     vmag = np.sqrt((x ** 2) + (y ** 2))
@@ -83,7 +106,7 @@ def recompose(x, y):
         if np.isscalar(ang) and ang == 0:
             ang = 2 * np.pi
 
-    return np.degrees(ang), vmag
+    return Vector(np.degrees(ang), vmag)
 
 
 def smooth_angle(angle, vmagnitude=1, kernel_width=21):
@@ -104,7 +127,7 @@ def smooth_angle(angle, vmagnitude=1, kernel_width=21):
 
     Returns
     -------
-    Tuple with ndarrays `angle` and `vmagnitude`, in that order.
+    namedtuple with ndarrays `angle` and `magnitude`, in that order.
     """
     x, y = decompose(angle, vmagnitude)
     x_smooth = convolve(x, Box1DKernel(kernel_width), boundary="extend")
@@ -122,7 +145,7 @@ def level3D_anemometer(wind_speed, roll, pitch):
     pass                        # IMPLEMENT THIS?
 
 
-def planarfit_coef(vectors):
+def planarfit(vectors):
     """Calculate planar fit coefficients for coordinate rotation
 
     See Handbook of Micrometeorology (Lee et al. 2004).  Ported from
@@ -137,10 +160,10 @@ def planarfit_coef(vectors):
 
     Returns
     -------
-    Tuple with (index in brackets):
-    numpy.ndarray [0]
+    namedtuple with (index and name in brackets):
+    numpy.ndarray [0, 'k_vct']
         1-D array (1x3) unit vector parallel to the new z-axis.
-    numpy.ndarray [1]
+    numpy.ndarray [1, 'tilt_coefs']
         1-D array (1x3) Tilt coefficients.
 
     """
@@ -166,7 +189,7 @@ def planarfit_coef(vectors):
     k_0 = -tilt_coef[1] * k_2
     k_1 = -tilt_coef[2] * k_2
     k_vct = np.array([k_0, k_1, k_2])
-    return (k_vct, tilt_coef)
+    return PlanarFitCoefs(k_vct, tilt_coef)
 
 
 def rotate_vectors(vectors, method="PF", **kwargs):
@@ -194,10 +217,10 @@ def rotate_vectors(vectors, method="PF", **kwargs):
 
     Returns
     -------
-    Tuple with (index in brackets):
-    numpy.ndarray [0]
+    namedtuple with (index, name in brackets):
+    numpy.ndarray [0, 'rotated']
         2-D array (Nx3) Array with rotated vectors
-    numpy.ndarray [1]
+    numpy.ndarray [1, 'phi_theta']
         1-D array (1x2) Phi (roll) and Theta (pitch) rotation angles
 
     """
@@ -210,7 +233,7 @@ def rotate_vectors(vectors, method="PF", **kwargs):
         if "k_vector" in kwargs:
             k_vct = kwargs.get("k_vector")
         else:
-            k_vct, tilt_coef = planarfit_coef(vectors)
+            k_vct, tilt_coef = planarfit(vectors)
         j_vct = np.cross(k_vct, np.mean(vectors, 0))
         j_vct = j_vct / np.sqrt(np.sum(j_vct ** 2))
         i_vct = np.cross(j_vct, k_vct)
@@ -245,7 +268,7 @@ def rotate_vectors(vectors, method="PF", **kwargs):
                              [0, np.sin(psi), np.cos(psi)]])
             vcts_new = np.dot(vcts_new, rot3)
 
-    return(vcts_new, np.array([phi, theta]))
+    return RotatedVectors(vcts_new, np.array([phi, theta]))
 
 
 def euler_rotate(X, euler):
@@ -319,35 +342,35 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
     Returns
     -------
-    Tuple with (index in brackets):
-    numpy.ndarray [0]
+    namedtuple with (index, name in brackets):
+    numpy.ndarray [0, 'uvw_ship']
         2-D array (Nx3) with corrected wind vectors in ship-referenced
         frame with z-axis parallel to gravity.
-    numpy.ndarray [1]
+    numpy.ndarray [1, 'euler_angles']
         2-D array (Nx3) with Euler angles.
-    numpy.ndarray [2]
+    numpy.ndarray [2, 'euler_angles_angular_rates']
         2-D array (NX3) with Euler angles from rate sensors (unfiltered).
-    numpy.ndarray [3]
+    numpy.ndarray [3, 'euler_angles_accelerations']
         2-D array (NX3) with Euler angles from accelerometers (unfiltered).
-    numpy.ndarray [4]
+    numpy.ndarray [4, 'euler_angles_slow']
         2-D array (NX3) with slow Euler angles (low pass filtered).
-    numpy.ndarray [5]
+    numpy.ndarray [5, 'euler_angles_fast']
         2-D array (NX3) with fast Euler angles (high pass filtered).
-    numpy.ndarray [6]
+    numpy.ndarray [6, 'mount_offset_rotations']
         2-D array (3X3) with mounting offset rotation matrix (see Miller 2008).
-    numpy.ndarray [7]
+    numpy.ndarray [7, 'uvw_earth']
         2-D array (NX3) with measured velocity, rotated to the earth frame.
-    numpy.ndarray [8]
+    numpy.ndarray [8, 'uvw_angular']
         2-D array (NX3) with velocity induced by angular motion.
-    numpy.ndarray [9]
+    numpy.ndarray [9, 'uvw_linear]
         2-D array (NX3) with velocity induced by platform linear motion.
-    numpy.ndarray [10]
+    numpy.ndarray [10, 'ship_enu']
         2-D array (NX3) with ship velocity in eastward, northward, up
         frame.  (low pass filtered).
-    numpy.ndarray [11]
+    numpy.ndarray [11, 'uvw_enu']
         2-D array (NX3) with corrected wind in eastward, northward, up
         frame.
-    numpy.ndarray [12]
+    numpy.ndarray [12, 'imu_enu']
         2-D (NX3) array with displacement of the motion sensor.
 
     Reference
@@ -548,8 +571,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                           signal.filtfilt(bay, aay, xp[:, 1], padlen=pdly),
                           signal.filtfilt(baz, aaz, xp[:, 2], padlen=pdlz)))
 
-    return (UVW, EA, EA_rate, EA_acc, EA_slow, EA_fast, M_ma, Ur, Ua, Up,
-            U_ship, U_earth, Xp)
+    return CorrectedWind3D(UVW, EA, EA_rate, EA_acc, EA_slow, EA_fast,
+                           M_ma, Ur, Ua, Up, U_ship, U_earth, Xp)
 
 
 def window_indices(idxs, width, step=None):
@@ -588,14 +611,14 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
 
     Returns
     -------
-    Tuple with (index in brackets):
-    numpy.ndarray [0]
+    Tuple with (index, name in brackets):
+    numpy.ndarray [0, 'x']
         1-D array with interpolated input.
-    numpy.int [1]
+    numpy.int [1, 'nspikes']
         Number of spikes detected.
-    numpy.int [2]
+    numpy.int [2, 'ntrends']
         Number of outlier trends detected.
-    numpy.ndarray [3]
+    numpy.ndarray [3, 'kclass']
         1-D array of the same size as input, indicating the classification
         `k` for each measurement. k=0: measurement within plausibility
         range, k=[-1 or 1]: measurement outside plausibility range, abs(k)
@@ -638,9 +661,9 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
                                               x[isok], k=1)
         x_itpl = s(xidx[~ isok])
         x_new[~ isok] = x_itpl
-        return x_new, nspikes, ntrends, xcat
+        return VickersMahrt(x_new, nspikes, ntrends, xcat)
     else:
-        return x, 0, 0, xcat
+        return VickersMahrt(x, 0, 0, xcat)
 
 
 def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
@@ -674,14 +697,14 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
 
     Returns
     -------
-    Tuple with (index in brackets):
-    numpy.ndarray [0]
+    Tuple with (index, name in brackets):
+    numpy.ndarray [0, 'x']
         1-D array with despiked input.
-    numpy.int [1]
+    numpy.int [1, 'nspikes']
         Number of spikes detected.
-    numpy.int [2]
+    numpy.int [2, 'ntrends']
         Number of outlier trends detected.
-    numpy.int [3]
+    numpy.int [3, 'kclass']
         Number of iterations performed.
 
     """
@@ -728,4 +751,4 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         x_itpl = s(xidx[is_missing])
         xout[is_missing] = x_itpl
 
-    return xout, nspikes, ntrends, nloops
+    return VickersMahrt(xout, nspikes, ntrends, nloops)

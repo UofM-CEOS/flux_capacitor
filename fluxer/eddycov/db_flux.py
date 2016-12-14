@@ -17,7 +17,7 @@ from scipy.stats import circmean
 from .settings import (FLUX_FLAGS)
 from ..flux_config import parse_config
 from .flux import (smooth_angle, wind3D_correct, despike_VickersMahrt,
-                   planarfit_coef, rotate_vectors)
+                   planarfit, rotate_vectors)
 from .tilt_windows import TiltWindows
 
 __all__ = ["main", "prepare_period", "wind3D_correct_period"]
@@ -486,13 +486,13 @@ def main(config_file):
                            "acceleration_z", "rate_x", "rate_y", "rate_z"]
             mot3d = ec_win[mot3d_names]
             # Calculate tilt angles for motion sensor
-            mot3d_k, __ = planarfit_coef(mot3d.values[:, 0:3])
+            mot3d_k, __ = planarfit(mot3d.values[:, 0:3])
             __, mot3d_tilt = rotate_vectors(mot3d.values[:, 0:3],
                                             k_vector=mot3d_k)
             ec_windows.tilts.loc[k, "phi_motion"] = mot3d_tilt[0]
             ec_windows.tilts.loc[k, "theta_motion"] = mot3d_tilt[1]
             # Calculate tilt angles for sonic anemometer
-            wnd3d_k, __ = planarfit_coef(wnd.values[:, 0:3])
+            wnd3d_k, __ = planarfit(wnd.values[:, 0:3])
             __, wnd3d_tilt = rotate_vectors(wnd.values[:, 0:3],
                                             k_vector=wnd3d_k)
             ec_windows.tilts.loc[k, "phi_sonic"] = wnd3d_tilt[0]
