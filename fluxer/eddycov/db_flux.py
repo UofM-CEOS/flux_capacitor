@@ -14,8 +14,7 @@ import logging
 import numpy as np
 import pandas as pd
 from scipy.stats import circmean
-from .settings import (FLUX_FLAGS, FluxError, SonicError,
-                       NavigationError, MeteorologyError)
+from .settings import (FLUX_FLAGS)
 from ..flux_config import parse_config
 from .flux import (smooth_angle, wind3D_correct, despike_VickersMahrt,
                    planarfit_coef, rotate_vectors)
@@ -27,6 +26,33 @@ logger = logging.getLogger(__name__)
 # Add the null handler if importing as library; whatever using this library
 # should set up logging.basicConfig() as needed
 logger.addHandler(logging.NullHandler())
+
+
+# Exception classes for catching our conditions
+class FluxError(Exception):
+    """Base class for Exceptions in this module"""
+    pass
+
+
+class SonicError(FluxError):
+    """Critical sonic anemometer Exception"""
+    def __init__(self, message, flags):
+        self.message = message
+        self.flags = flags
+
+
+class NavigationError(FluxError):
+    """Critical navigation Exception"""
+    def __init__(self, message, flags):
+        self.message = message
+        self.flags = flags
+
+
+class MeteorologyError(FluxError):
+    """Critical meteorology Exception"""
+    def __init__(self, message, flags):
+        self.message = message
+        self.flags = flags
 
 
 def prepare_period(period_file, config):
