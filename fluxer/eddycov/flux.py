@@ -192,6 +192,63 @@ def planarfit(vectors):
     return PlanarFitCoefs(k_vct, tilt_coef)
 
 
+def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
+    """Rotate vector coordinate system or vectors themselves around an axis
+
+    A right-handed coordinate system is assumed, where positive rotations
+    are clockwise when looking along the rotation axis from the origin
+    towards the positive direction.
+
+    Parameters
+    ----------
+    vectors: array_like
+        An nx3 array of vectors with their x, y, z components
+    theta: numeric, optional
+        The angle (degrees) by which to perform the rotation.  Default is
+        0, which means return the coordinates of the vector in the rotated
+        coordinate system, when rotate_vectors=False.
+    axis: int, optional
+        Axis around which to perform the rotation (x=0; y=1; z=2)
+    rotate_vectors: bool, optional
+        Whether to return the coordinates of each vector in the rotated
+        coordinate system or to rotate the vectors themselves onto the same
+        coordinate system.  Default is to perform a passive transformation,
+        i.e. rotation of the coordinate system.
+
+    Returns
+    -------
+    array_like
+    The vector array with the same shape as input with rotated components.
+
+    """
+    theta = np.radians(theta)
+    if axis == 0:
+        R_theta = np.array([[1, 0, 0],
+                            [0, np.cos(theta), -np.sin(theta)],
+                            [0, np.sin(theta), np.cos(theta)]])
+    elif axis == 1:
+        R_theta = np.array([[np.cos(theta), 0, np.sin(theta)],
+                            [0, 1, 0],
+                            [-np.sin(theta), 0, np.cos(theta)]])
+    else:
+        R_theta = np.array([[np.cos(theta), -np.sin(theta), 0],
+                            [np.sin(theta), np.cos(theta), 0],
+                            [0, 0, 1]])
+
+    # Multiplying a vector by R_theta, as defined above, transforms the
+    # vector coordinates from the original coordinate system to the new,
+    # rotated coordinate frame.  Note that the rotation matrix
+    # post-multiplies the vector matrix.  If rotating the vectors
+    # themselves, then the *transposed* rotation matrix post-multiplies the
+    # matrix of vectors.
+    if not rotate_vectors:
+        vectors_theta = np.dot(vectors, R_theta)
+    else:
+        vectors_theta = np.dot(vectors, np.transpose(R_theta))
+
+    return vectors_theta
+
+
 def rotate_vectors(vectors, method="PF", **kwargs):
     """Transform vectors to reference mean streamline coordinate system
 
@@ -427,7 +484,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
     # NONLINEAR ROTATION OF ANGULAR RATES FROM MOTION SENSOR-FRAME TO
     # EARTH-FRAME This next step puts the measured angular rates into the
-    # earth reference frame.  Motion sensor frame-based anglular rates are
+    # earth reference frame.  Motion sensor frame-based angular rates are
     # first rolled based on the roll angle (phim) estimated above; they are
     # then pitched *in a rolled frame* based upon the pitch angle (thetam)
     # estimated above; finally, they are yawed *in a rolled and pitched
