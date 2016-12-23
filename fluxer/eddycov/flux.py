@@ -15,8 +15,8 @@ from scipy.stats import zscore
 from astropy.convolution import convolve, Box1DKernel
 
 
-__all__ = ["smooth_angle", "planarfit", "rotate_vectors",
-           "wind3D_correct", "despike_VickersMahrt"]
+__all__ = ["smooth_angle", "planarfit", "rotate_coordinates",
+           "rotate_vectors", "wind3D_correct", "despike_VickersMahrt"]
 
 # Valid 3-D wind rotation methods
 _VECTOR_ROTATION_METHODS = {"DR", "TR", "PF"}

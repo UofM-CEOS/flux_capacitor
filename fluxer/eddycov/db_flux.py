@@ -17,7 +17,7 @@ from scipy.stats import circmean
 from .settings import (FLUX_FLAGS)
 from ..flux_config import parse_config
 from .flux import (smooth_angle, wind3D_correct, despike_VickersMahrt,
-                   planarfit, rotate_vectors)
+                   planarfit, rotate_coordinates, rotate_vectors)
 from .tilt_windows import TiltWindows
 
 __all__ = ["main", "prepare_period", "wind3D_correct_period"]
@@ -79,6 +79,7 @@ def prepare_period(period_file, config):
                            dtype=int)
     imu2rhs_linmult = config["EC Motion Correction"]["imu2rhs_linaccel_mult"]
     imu2rhs_angmult = config["EC Motion Correction"]["imu2rhs_angaccel_mult"]
+    sonic_xoffset = config["EC Motion Correction"]["sonic_xoffset"]
     dtypes = config["EC Inputs"]["dtypes"]
     # Read, specifying the options matching what we get in our database
     # output files
@@ -114,6 +115,10 @@ def prepare_period(period_file, config):
                              'rate_shi': (imu2rhs_angmult[2] *
                                           np.radians(ec[imu_ang_zname]))})
     wind = ec.loc[:, ["wind_speed_u", "wind_speed_v", "wind_speed_w"]]
+    # Rotate the sonic vectors to align the instrument's coordinate frame
+    # with the ship's
+    wind.loc[:] = rotate_coordinates(wind.values, theta=sonic_xoffset,
+                                     axis=2, rotate_vectors=False)
 
     # [Original comment: check for any significant number of 'NAN's (not
     # worried about the odd one scattered here and there)].  [Original
