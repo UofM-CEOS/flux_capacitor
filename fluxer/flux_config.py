@@ -102,6 +102,7 @@ _DFLTS = {
                     "cp_CO2_signal_strength,cp_H2O_signal_strength"),
     'ec_sample_frequency': "10.0",
     'ec_summary_file': "fluxes.csv",
+    'ec_sonic_xoffset': "0.0",
     'ec_tilt_window_width': "120",
     'ec_despike_win_width': "3000",
     'ec_despike_step': "1500",
@@ -149,7 +150,7 @@ _SCALAR_OPTS = {
     'EC Inputs': ["sample_frequency"],
     'EC Despiking': ["despike_win_width",
                      "despike_step", "despike_nreps"],
-    'EC Motion Correction': ["tilt_window_width",
+    'EC Motion Correction': ["sonic_xoffset", "tilt_window_width",
                              "complementary_filter_period",
                              "accel_highpass_cutoff"],
     'UW Inputs': ["anemometer2d_height", "uw_intake_depth"]}
@@ -198,6 +199,8 @@ def parse_config(cfg_file):
         ),
         ("EC Motion Correction",
          OrderedDict((
+             ("sonic_xoffset",
+              _DFLTS["ec_sonic_xoffset"]),
              ("tilt_window_width",
               _DFLTS["ec_tilt_window_width"]),
              ("imu2anemometer_pos",
