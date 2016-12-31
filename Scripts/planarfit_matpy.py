@@ -5,7 +5,7 @@ from fluxer.eddycov.flux import (planarfit, rotate_vectors)
 octave.addpath("~/Scripts/Projects/CEOS/Flux_Capacitor/Scripts/EddyCalc")
 
 np.random.seed(123)
-uvw = np.random.rand(10, 3)
+uvw = np.random.randn(10, 3)
 
 # Compare with EddyCalc implementation
 k, b = octave.getPlanarFitCoeffs(uvw[:, np.newaxis, 0],
