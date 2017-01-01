@@ -25,7 +25,7 @@ _VECTOR_ROTATION_METHODS = {"DR", "TR", "PF"}
 AngleCoordinates = namedtuple("AngleCoordinates", ["x", "y"])
 Vector = namedtuple("Vector", ["angle", "magnitude"])
 PlanarFitCoefs = namedtuple("PlanarFitCoefs", ["k_vct", "tilt_coefs"])
-RotatedVectors = namedtuple("RotatedVectors", ["rotated", "phi_roll"])
+RotatedVectors = namedtuple("RotatedVectors", ["rotated", "phi_theta"])
 CorrectedWind3D = namedtuple("CorrectedWind3D",
                              ["uvw_ship",
                               "euler_angles",
