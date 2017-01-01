@@ -297,7 +297,7 @@ def rotate_vectors(vectors, method="PF", **kwargs):
         vcts_mat = np.column_stack((i_vct, j_vct, k_vct))
         vcts_new = np.dot(vectors, vcts_mat)
         phi = np.arccos(np.dot(k_vct, np.array([0, 0, 1])))
-        theta = np.arctan2(np.mean(-vectors[:, 1], 0),
+        theta = np.arctan2(np.mean(vectors[:, 1], 0),
                            np.mean(vectors[:, 0], 0))
     else:
         # First rotation to set mean v to 0
