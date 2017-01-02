@@ -449,6 +449,9 @@ def main(config_file):
     # will be appended as we loop.
     osummary = pd.DataFrame(flags,
                             index=[osp.basename(x) for x in ec_files])
+    wind_names = ["wind_speed_u", "wind_speed_v", "wind_speed_w"]
+    mot3d_names = ["acceleration_x", "acceleration_y",
+                   "acceleration_z", "rate_x", "rate_y", "rate_z"]
 
     # Iterate over the list of tuples (key=window time stamp, file-list)
     for (k, l) in ec_windows.win_files:
@@ -476,32 +479,35 @@ def main(config_file):
                 for flagname, flag in prep_flags.iteritems():
                     osummary.loc[iname, flagname] = flag
                     ec_windows.tilts.loc[k, "n" + flagname] += np.int(flag)
-                ec_list.append(ec_prep)
-                ec_list_keys.append(ec_file)
+            ec_list.append(ec_prep)
+            ec_list_keys.append(ec_file)
             logger.info("End preparing %s", osp.basename(ec_file))
 
         n_ok = len(ec_list)
         ec_windows.tilts.loc[k, "nfiles_ok"] = n_ok
-        if n_ok > 0:
+        if n_ok < 1:
+            logger.info("Aborting window with zero adequate files %s", k)
+            continue
+        elif n_ok == 1:
+            logger.info("Aborting window with only one adequate file %s",
+                        k)
+            continue
+        else:
             ec_win = pd.concat(ec_list, keys=ec_list_keys)
             logger.info("Combining %s periods in window %s", n_ok, k)
-            wind_names = ["wind_speed_u", "wind_speed_v", "wind_speed_w"]
-            wnd = ec_win.loc[:, wind_names]
-            mot3d_names = ["acceleration_x", "acceleration_y",
-                           "acceleration_z", "rate_x", "rate_y", "rate_z"]
-            mot3d = ec_win[mot3d_names]
+            # Extract means from each period file for planar fitting
+            wnd = ec_win.loc[:, wind_names].groupby(level=0).mean()
+            mot3d = ec_win.loc[:, mot3d_names[0:3]].groupby(level=0).mean()
             # Calculate tilt angles for motion sensor
-            mot3d_k, __ = planarfit(mot3d.values[:, 0:3])
-            __, mot3d_tilt = rotate_vectors(mot3d.values[:, 0:3],
-                                            k_vector=mot3d_k)
-            ec_windows.tilts.loc[k, "phi_motion"] = mot3d_tilt[0]
-            ec_windows.tilts.loc[k, "theta_motion"] = mot3d_tilt[1]
+            mot3d_pfit = planarfit(mot3d.values)
+            ec_windows.tilts.loc[k, "phi_motion"] = mot3d_pfit.phi
+            ec_windows.tilts.loc[k, "theta_motion"] = mot3d_pfit.theta
+            mot3d_tilt = [mot3d_pfit.phi, mot3d_pfit.theta]
             # Calculate tilt angles for sonic anemometer
-            wnd3d_k, __ = planarfit(wnd.values[:, 0:3])
-            __, wnd3d_tilt = rotate_vectors(wnd.values[:, 0:3],
-                                            k_vector=wnd3d_k)
-            ec_windows.tilts.loc[k, "phi_sonic"] = wnd3d_tilt[0]
-            ec_windows.tilts.loc[k, "theta_sonic"] = wnd3d_tilt[1]
+            sonic_pfit = planarfit(wnd.values)
+            ec_windows.tilts.loc[k, "phi_sonic"] = sonic_pfit.phi
+            ec_windows.tilts.loc[k, "theta_sonic"] = sonic_pfit.theta
+            sonic_tilt = [sonic_pfit.phi, sonic_pfit.theta]
             wind_direction_mean = circmean(ec_win["wind_direction"].values,
                                            high=np.degrees(2 * np.pi))
             ec_windows.tilts.loc[k, "wind_direction"] = wind_direction_mean
@@ -513,7 +519,7 @@ def main(config_file):
                 iname_prefix = osp.splitext(iname)[0]
                 ec_wind_corr = wind3D_correct_period(ec_prep, config,
                                                      tilt_motion=mot3d_tilt,
-                                                     tilt_anemometer=mot3d_tilt)  # noqa: E501
+                                                     tilt_anemometer=sonic_tilt)  # noqa: E501
                 # Save to file with suffix "_mc.csv"
                 ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix +
                                              "_mc.csv"),

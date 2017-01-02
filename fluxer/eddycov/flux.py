@@ -24,7 +24,8 @@ _VECTOR_ROTATION_METHODS = {"DR", "TR", "PF"}
 
 AngleCoordinates = namedtuple("AngleCoordinates", ["x", "y"])
 Vector = namedtuple("Vector", ["angle", "magnitude"])
-PlanarFitCoefs = namedtuple("PlanarFitCoefs", ["k_vct", "tilt_coefs"])
+PlanarFitCoefs = namedtuple("PlanarFitCoefs",
+                            ["k_vct", "tilt_coefs", "phi", "theta"])
 RotatedVectors = namedtuple("RotatedVectors", ["rotated", "phi_theta"])
 CorrectedWind3D = namedtuple("CorrectedWind3D",
                              ["uvw_ship",
@@ -184,12 +185,20 @@ def planarfit(vectors):
                       [sum_v, sum_uv, sum_v2]])
     g_arr = np.array([sum_w, sum_uw, sum_vw])
     tilt_coef = np.linalg.solve(H_arr, g_arr)
-    # Determine unit vector parellel to new z-axis
+    # Estimated \phi (roll) and \theta (pitch) tilt angles
+    phi_sin = (tilt_coef[2] /
+               np.sqrt((tilt_coef[2] ** 2) + 1))
+    phi = np.arcsin(phi_sin)
+    theta_sin = (-tilt_coef[1] /
+                 np.sqrt((tilt_coef[1] ** 2) +
+                         (tilt_coef[2] ** 2) + 1))
+    theta = np.arcsin(theta_sin)
+    # Determine unit vector parallel to new z-axis
     k_2 = 1 / np.sqrt(1 + tilt_coef[1] ** 2 + tilt_coef[2] ** 2)
     k_0 = -tilt_coef[1] * k_2
     k_1 = -tilt_coef[2] * k_2
     k_vct = np.array([k_0, k_1, k_2])
-    return PlanarFitCoefs(k_vct, tilt_coef)
+    return PlanarFitCoefs(k_vct, tilt_coef, phi, theta)
 
 
 def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
@@ -278,7 +287,12 @@ def rotate_vectors(vectors, method="PF", **kwargs):
     numpy.ndarray [0, 'rotated']
         2-D array (Nx3) Array with rotated vectors
     numpy.ndarray [1, 'phi_theta']
-        1-D array (1x2) Phi (roll) and Theta (pitch) rotation angles
+        1-D array (1x2) Phi and Theta rotation angles.  The former is the
+        estimated angle between the vertical unit coordinate vector in the
+        rotated frame and the vertical unit vector in the measured uv
+        plane, while the latter is wind direction in the measured uv plane.
+        Note these are *not* roll and pitch angles of the measurement
+        coordinate frame relative to the reference frame.
 
     """
     if method not in _VECTOR_ROTATION_METHODS:
@@ -290,7 +304,8 @@ def rotate_vectors(vectors, method="PF", **kwargs):
         if "k_vector" in kwargs:
             k_vct = kwargs.get("k_vector")
         else:
-            k_vct, tilt_coef = planarfit(vectors)
+            pfit = planarfit(vectors)
+            k_vct = pfit.k_vct
         j_vct = np.cross(k_vct, np.mean(vectors, 0))
         j_vct = j_vct / np.sqrt(np.sum(j_vct ** 2))
         i_vct = np.cross(j_vct, k_vct)
