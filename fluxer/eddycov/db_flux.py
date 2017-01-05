@@ -484,11 +484,8 @@ def main(config_file):
 
         n_ok = len(ec_list)
         ec_windows.tilts.loc[k, "nfiles_ok"] = n_ok
-        if n_ok < 1:
-            logger.info("Aborting window with zero adequate files %s", k)
-            continue
-        elif n_ok == 1:
-            logger.info("Aborting window with only one adequate file %s",
+        if n_ok < 3:
+            logger.info("Aborting window without enough adequate files %s",
                         k)
             continue
         else:
