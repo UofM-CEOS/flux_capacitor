@@ -165,7 +165,11 @@ def planarfit(vectors):
     numpy.ndarray [0, 'k_vct']
         1-D array (1x3) unit vector parallel to the new z-axis.
     numpy.ndarray [1, 'tilt_coefs']
-        1-D array (1x3) Tilt coefficients.
+        1-D array (1x3) Tilt coefficients b0, b1, b2.
+    numpy.float ['phi']
+        Scalar representing roll angle Phi.
+    numpy.float ['theta']
+        Scalar representing pitch angle Theta.
 
     """
     vct_u = vectors[:, 0]
@@ -186,13 +190,14 @@ def planarfit(vectors):
     g_arr = np.array([sum_w, sum_uw, sum_vw])
     tilt_coef = np.linalg.solve(H_arr, g_arr)
     # Estimated \phi (roll) and \theta (pitch) tilt angles
-    phi_sin = (tilt_coef[2] /
-               np.sqrt((tilt_coef[2] ** 2) + 1))
-    phi = np.arcsin(phi_sin)
-    theta_sin = (-tilt_coef[1] /
-                 np.sqrt((tilt_coef[1] ** 2) +
-                         (tilt_coef[2] ** 2) + 1))
-    theta = np.arcsin(theta_sin)
+    phi_denom = np.sqrt(1 + (tilt_coef[2] ** 2))
+    phi_sin = tilt_coef[2] / phi_denom
+    phi_cos = 1 / phi_denom
+    phi = np.arctan2(phi_sin, phi_cos)
+    theta_denom = np.sqrt(1 + (tilt_coef[1] ** 2) + (tilt_coef[2] ** 2))
+    theta_sin = -tilt_coef[1] / theta_denom
+    theta_cos = np.sqrt((tilt_coef[2] ** 2) + 1) / theta_denom
+    theta = np.arctan2(theta_sin, theta_cos)
     # Determine unit vector parallel to new z-axis
     k_2 = 1 / np.sqrt(1 + tilt_coef[1] ** 2 + tilt_coef[2] ** 2)
     k_0 = -tilt_coef[1] * k_2
