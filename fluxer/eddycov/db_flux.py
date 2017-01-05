@@ -275,22 +275,21 @@ def prepare_period(period_file, config):
         logger.debug(("Setting bad_meteorology_flag -> missing mean "
                       "air temperature or relative_humidity"))
 
-    # Now raise Exceptions to signal rest of analyses cannot continue.
-    # Return flags so they can be caught and used later.
-
-    # Set wind flag high if gt 0.5% of records are frost contaminated
+    # Set wind flag high if gt 0.5% of records are froth contaminated
     # [Original comment: check critical low frequency variables]
     if ((nbad_vertical_wind / float(ec_nrows)) > 0.05 or
         (nbad_air_temp_sonic / float(ec_nrows)) > 0.05):
         period_flags["sonic_flag"] = True
-        logger.error(("Setting sonic_flag -> Too many "
+        logger.debug(("Setting sonic_flag -> Too many "
                       "records where vertical wind was too high or "
                       "where sonic air temperature was aberrant "))
-        raise SonicError("Bad sonic anemometer data", period_flags)
     # # Below will be needed at some point
     # sw_avg = ec.K_down[0]
     # lw_avg = ec.LW_down[0]
     # sog_avg = ec["speed_over_ground"].mean()
+
+    # Now raise Exceptions to signal rest of analyses cannot continue.
+    # Return flags so they can be caught and used later.
 
     # If we have no good COG, SOG, or heading, then we cannot continue.
     if (ec["course_over_ground"].count() < 1 or
