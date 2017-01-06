@@ -179,15 +179,15 @@ def planarfit(vectors):
     sum_u = sum(vct_u)
     sum_v = sum(vct_v)
     sum_w = sum(vct_w)
-    sum_uv = np.dot(vct_u, vct_v)
-    sum_uw = np.dot(vct_u, vct_w)
-    sum_vw = np.dot(vct_v, vct_w)
-    sum_u2 = np.dot(vct_u, vct_u)
-    sum_v2 = np.dot(vct_v, vct_v)
+    dot_uv = np.dot(vct_u, vct_v)
+    dot_uw = np.dot(vct_u, vct_w)
+    dot_vw = np.dot(vct_v, vct_w)
+    dot_u2 = np.dot(vct_u, vct_u)
+    dot_v2 = np.dot(vct_v, vct_v)
     H_arr = np.array([[vct_nrows, sum_u, sum_v],
-                      [sum_u, sum_u2, sum_uv],
-                      [sum_v, sum_uv, sum_v2]])
-    g_arr = np.array([sum_w, sum_uw, sum_vw])
+                      [sum_u, dot_u2, dot_uv],
+                      [sum_v, dot_uv, dot_v2]])
+    g_arr = np.array([sum_w, dot_uw, dot_vw])
     tilt_coef = np.linalg.solve(H_arr, g_arr)
     # Estimated \phi (roll) and \theta (pitch) tilt angles
     phi_denom = np.sqrt(1 + (tilt_coef[2] ** 2))
