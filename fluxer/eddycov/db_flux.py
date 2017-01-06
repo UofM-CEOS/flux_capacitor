@@ -83,7 +83,7 @@ def prepare_period(period_file, config):
     dtypes = config["EC Inputs"]["dtypes"]
     # Read, specifying the options matching what we get in our database
     # output files
-    ec = pd.read_csv(period_file, dtype=dtypes, header=1,
+    ec = pd.read_csv(period_file, dtype=dtypes, header=None,
                      parse_dates=[0, 1], index_col=1, names=colnames,
                      na_values=["NAN"], true_values=["t"],
                      false_values=["f"], low_memory=False)
