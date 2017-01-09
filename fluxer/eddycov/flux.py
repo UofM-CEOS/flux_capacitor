@@ -206,6 +206,34 @@ def planarfit(vectors):
     return PlanarFitCoefs(k_vct, tilt_coef, phi, theta)
 
 
+def rotation_matrix(theta, axis):
+    """Generate rotation matrix for a given axis
+
+    Parameters
+    ----------
+    See rotate_coordinates.
+
+    Returns
+    -------
+    numpy.ndarray
+    3x3 rotation matrix
+    """
+    theta = np.radians(theta)
+    if axis == 0:
+        R_theta = np.array([[1, 0, 0],
+                            [0, np.cos(theta), -np.sin(theta)],
+                            [0, np.sin(theta), np.cos(theta)]])
+    elif axis == 1:
+        R_theta = np.array([[np.cos(theta), 0, np.sin(theta)],
+                            [0, 1, 0],
+                            [-np.sin(theta), 0, np.cos(theta)]])
+    else:
+        R_theta = np.array([[np.cos(theta), -np.sin(theta), 0],
+                            [np.sin(theta), np.cos(theta), 0],
+                            [0, 0, 1]])
+    return R_theta
+
+
 def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
     """Rotate vector coordinate system or vectors themselves around an axis
 
@@ -235,19 +263,7 @@ def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
     The vector array with the same shape as input with rotated components.
 
     """
-    theta = np.radians(theta)
-    if axis == 0:
-        R_theta = np.array([[1, 0, 0],
-                            [0, np.cos(theta), -np.sin(theta)],
-                            [0, np.sin(theta), np.cos(theta)]])
-    elif axis == 1:
-        R_theta = np.array([[np.cos(theta), 0, np.sin(theta)],
-                            [0, 1, 0],
-                            [-np.sin(theta), 0, np.cos(theta)]])
-    else:
-        R_theta = np.array([[np.cos(theta), -np.sin(theta), 0],
-                            [np.sin(theta), np.cos(theta), 0],
-                            [0, 0, 1]])
+    R_theta = rotation_matrix(theta, axis)
 
     # Multiplying a vector by R_theta, as defined above, transforms the
     # vector coordinates from the original coordinate system to the new,
@@ -549,19 +565,12 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # SHIP AND ANEMOMETER OFFSET ANGLES
     # Pitch and roll tilt of platform w.r.t. earth (see Wilczak et al. 2000)
     phi_em, theta_em = tilt_motion[0], tilt_motion[1]
-    PHI_em = np.array([[1, 0, 0], [0, np.cos(phi_em), -np.sin(phi_em)],
-                       [0, np.sin(phi_em), np.cos(phi_em)]]).T
-    THETA_em = np.array([[np.cos(theta_em), 0, np.sin(theta_em)],
-                         [0, 1, 0],
-                         [-np.sin(theta_em), 0, np.cos(theta_em)]]).T
-
+    PHI_em = np.transpose(rotation_matrix(phi_em, axis=0))
+    THETA_em = np.transpose(rotation_matrix(theta_em, axis=1))
     # Pitch and roll tilt of anemometer w.r.t. earth
     phi_ea, theta_ea = tilt_anemometer[0], tilt_anemometer[1]
-    PHI_ea = np.array([[1, 0, 0], [0, np.cos(phi_ea), -np.sin(phi_ea)],
-                       [0, np.sin(phi_ea), np.cos(phi_ea)]]).T
-    THETA_ea = np.array([[np.cos(theta_ea), 0, np.sin(theta_ea)],
-                         [0, 1, 0],
-                         [-np.sin(theta_ea), 0, np.cos(theta_ea)]]).T
+    PHI_ea = np.transpose(rotation_matrix(phi_ea, axis=0))
+    THETA_ea = np.transpose(rotation_matrix(theta_ea, axis=1))
 
     # Anemometer WRT motion sensor
     M_em = np.dot(THETA_em, PHI_em)
