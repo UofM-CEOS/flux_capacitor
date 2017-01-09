@@ -383,6 +383,19 @@ def euler_rotate(X, euler):
     return np.column_stack((x_new, y_new, z_new))
 
 
+def _integrate_rate(rate, sample_freq):
+    """Integrate angular rate signal given sampling frequency
+
+    Parameters
+    ----------
+    rate : array_like
+        A 1- or 2-D array with angular rate (deg/s) measurements.
+    sample_freq : int, float
+        The sampling frequency in units required for integration.
+    """
+    return (np.cumsum(rate) - 0.5 * rate - 0.5 * rate[0]) / sample_freq
+
+
 def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                    anemometer_pos, sample_freq, Tcf, Ta,
                    tilt_motion=np.array([0.0, 0.0]),
@@ -492,32 +505,26 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     ax, ay = acceleration[:, 0], acceleration[:, 1]
     phi_lf = (np.arctan2(ay, g) -
               signal.filtfilt(bc, ac, np.arctan2(ay, g), padlen=pdl))
-    # High frequency angles using angle rates
+    # High frequency angles using angular rates
     rm = signal.detrend(angle_rate, 0)
-    rx, ry, rz = rm[:, 0], rm[:, 1], rm[:, 2]  # don't do this in ipdb!
-    phi_hf = signal.filtfilt(bc, ac,
-                             ((np.cumsum(rx) - 0.5 * rx - 0.5 * rx[0]) /
-                              sample_freq), padlen=pdl)
+    EA_rate = _integrate_rate(rm, sample_freq)
+    phi_hf = signal.filtfilt(bc, ac, EA_rate[:, 0], padlen=pdl)
     phi = phi_lf + phi_hf
     theta_lf = (np.arctan2(-ax * np.cos(phi), g) -
                 signal.filtfilt(bc, ac, np.arctan2(-ax * np.cos(phi), g),
                                 padlen=pdl))
+    theta_hf = signal.filtfilt(bc, ac, EA_rate[:, 1], padlen=pdl)
+    theta = theta_lf + theta_hf
 
     gyro = np.unwrap(np.radians(heading))  # Put heading in radians
     gyro0 = gyro[0]               # Initial heading
     gyro = gyro - gyro0           # Remove initial heading
     # Low-pass filter to retain low-frequency content, but not the offset
     psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
-
-    theta_hf = signal.filtfilt(bc, ac,
-                               ((np.cumsum(ry) - 0.5 * ry - 0.5 * ry[0]) /
-                                sample_freq), padlen=pdl)
-    psi_hf = signal.filtfilt(bc, ac,
-                             ((np.cumsum(rz) - 0.5 * rz - 0.5 * rz[0]) /
-                              sample_freq), padlen=pdl)
-    theta = theta_lf + theta_hf
+    psi_hf = signal.filtfilt(bc, ac, EA_rate[:, 2], padlen=pdl)
     # s = psi_lf + psi_hf             # SPL: not used...
 
+    rx, ry, rz = rm[:, 0], rm[:, 1], rm[:, 2]  # don't do this in ipdb!
     # NONLINEAR ROTATION OF ANGULAR RATES FROM MOTION SENSOR-FRAME TO
     # EARTH-FRAME This next step puts the measured angular rates into the
     # earth reference frame.  Motion sensor frame-based angular rates are
@@ -534,7 +541,6 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     F23 = -np.sin(phi)
     F32 = np.sin(phi) / np.cos(theta)
     F33 = np.cos(phi) / np.cos(theta)
-
     phi_dot = rx + ry * F12 + rz * F13
     theta_dot = ry * F22 - rz * F23
     psi_dot = ry * F32 + rz * F33
@@ -544,20 +550,16 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # rotation-transformation matrix. Re-integrate and high pass filter
     # these angular rates to get the fast angles.
     phi_hf = signal.filtfilt(bc, ac,
-                             (np.cumsum(phi_dot) -
-                              0.5 * phi_dot -
-                              0.5 * phi_dot[0]) / sample_freq, padlen=pdl)
+                             _integrate_rate(phi_dot, sample_freq),
+                             padlen=pdl)
     theta_hf = signal.filtfilt(bc, ac,
-                               (np.cumsum(theta_dot) -
-                                0.5 * theta_dot -
-                                0.5 * theta_dot[0]) / sample_freq,
+                               _integrate_rate(theta_dot, sample_freq),
                                padlen=pdl)
     psi_hf = signal.filtfilt(bc, ac,
-                             (np.cumsum(psi_dot) -
-                              0.5 * psi_dot -
-                              0.5 * psi_dot[0]) / sample_freq, padlen=pdl)
+                             _integrate_rate(psi_dot, sample_freq),
+                             padlen=pdl)
 
-    # combine high- and low-frequency angles; make 2D matrix
+    # combine high- and low-frequency angles; make 2D transformation matrix
     EA = np.column_stack((phi_lf + phi_hf,
                           theta_lf + theta_hf,
                           psi_lf + psi_hf))
@@ -634,12 +636,6 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     UVW = Ur + Ua + Up + Us     # corrected wind vector
 
     # Organize outputs
-    EA_rate = np.column_stack(((np.cumsum(rx) - 0.5 * rx - 0.5 * rx[0]) /
-                               sample_freq,
-                               (np.cumsum(ry) - 0.5 * ry - 0.5 * ry[0]) /
-                               sample_freq,
-                               (np.cumsum(rz) - 0.5 * rz - 0.5 * rz[0]) /
-                               sample_freq))
     EA_acc = np.column_stack((np.arctan2(ay, g),
                               np.arctan2(-ax, g),
                               gyro))
