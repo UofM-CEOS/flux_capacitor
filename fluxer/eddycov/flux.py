@@ -10,7 +10,7 @@ from collections import namedtuple
 from itertools import groupby
 import numpy as np
 from scipy import interpolate as itpl
-from scipy import signal
+from scipy import signal, integrate
 from scipy.stats import zscore
 from astropy.convolution import convolve, Box1DKernel
 
@@ -393,7 +393,9 @@ def _integrate_rate(rate, sample_freq):
     sample_freq : int, float
         The sampling frequency in units required for integration.
     """
-    return (np.cumsum(rate) - 0.5 * rate - 0.5 * rate[0]) / sample_freq
+    angle = integrate.cumtrapz(rate, dx=(1.0 / sample_freq),
+                               axis=0, initial=0)
+    return angle
 
 
 def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,

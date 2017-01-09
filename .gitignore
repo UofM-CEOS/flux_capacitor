@@ -20,3 +20,4 @@ motion.m
 /dist
 MANIFEST
 venv/
+/Scripts/octave-workspace
