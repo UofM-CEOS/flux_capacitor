@@ -502,31 +502,30 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     pdl = 3 * (max(len(ac), len(bc)) - 1)
 
     # EULER ANGLES: (see Edson et al., 1998)
-    # Low frequency tilt using accelerometers
+    # Low frequency tilt using accelerometers and gyro
     g = np.sqrt(np.sum(np.mean(acceleration, 0) ** 2))
-    ax, ay = acceleration[:, 0], acceleration[:, 1]
-    phi_lf = (np.arctan2(ay, g) -
-              signal.filtfilt(bc, ac, np.arctan2(ay, g), padlen=pdl))
+    gyro = np.unwrap(-np.radians(heading))  # Put heading in radians
+    gyro0 = gyro[0]               # Initial heading
+    gyro = gyro - gyro0           # Remove initial heading
+    EA_acc = np.column_stack((np.arctan2(acceleration[:, 1], g),
+                              np.arctan2(-acceleration[:, 0], g),
+                              gyro))
+    phi_lf = (EA_acc[:, 0] -
+              signal.filtfilt(bc, ac, EA_acc[:, 0], padlen=pdl))
     # High frequency angles using angular rates
     rm = signal.detrend(angle_rate, 0)
     EA_rate = _integrate_rate(rm, sample_freq)
     phi_hf = signal.filtfilt(bc, ac, EA_rate[:, 0], padlen=pdl)
     phi = phi_lf + phi_hf
-    theta_lf = (np.arctan2(-ax * np.cos(phi), g) -
-                signal.filtfilt(bc, ac, np.arctan2(-ax * np.cos(phi), g),
-                                padlen=pdl))
+    axg = np.arctan2(-acceleration[:, 0] * np.cos(phi), g)
+    theta_lf = axg - signal.filtfilt(bc, ac, axg, padlen=pdl)
     theta_hf = signal.filtfilt(bc, ac, EA_rate[:, 1], padlen=pdl)
     theta = theta_lf + theta_hf
 
-    gyro = np.unwrap(np.radians(heading))  # Put heading in radians
-    gyro0 = gyro[0]               # Initial heading
-    gyro = gyro - gyro0           # Remove initial heading
     # Low-pass filter to retain low-frequency content, but not the offset
     psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
     psi_hf = signal.filtfilt(bc, ac, EA_rate[:, 2], padlen=pdl)
-    # s = psi_lf + psi_hf             # SPL: not used...
 
-    rx, ry, rz = rm[:, 0], rm[:, 1], rm[:, 2]  # don't do this in ipdb!
     # NONLINEAR ROTATION OF ANGULAR RATES FROM MOTION SENSOR-FRAME TO
     # EARTH-FRAME This next step puts the measured angular rates into the
     # earth reference frame.  Motion sensor frame-based angular rates are
@@ -543,9 +542,9 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     F23 = -np.sin(phi)
     F32 = np.sin(phi) / np.cos(theta)
     F33 = np.cos(phi) / np.cos(theta)
-    phi_dot = rx + ry * F12 + rz * F13
-    theta_dot = ry * F22 - rz * F23
-    psi_dot = ry * F32 + rz * F33
+    phi_dot = rm[:, 0] + rm[:, 1] * F12 + rm[:, 2] * F13
+    theta_dot = rm[:, 1] * F22 - rm[:, 2] * F23
+    psi_dot = rm[:, 1] * F32 + rm[:, 2] * F33
 
     # The angular rates phi_dot, theta_dot, and psi_dot are now in the
     # earth based frame, which is what we want for creating the
@@ -586,12 +585,12 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     Ur = euler_rotate(np.dot(M_ma, wind_speed.T).T, EA)
 
     # PLATFORM ANGULAR VELOCITY
-    uam = np.column_stack((anemometer_pos[2] * ry -
-                           anemometer_pos[1] * rz,
-                           anemometer_pos[0] * rz -
-                           anemometer_pos[2] * rx,
-                           anemometer_pos[1] * rx -
-                           anemometer_pos[0] * ry))
+    uam = np.column_stack((anemometer_pos[2] * rm[:, 1] -
+                           anemometer_pos[1] * rm[:, 2],
+                           anemometer_pos[0] * rm[:, 2] -
+                           anemometer_pos[2] * rm[:, 0],
+                           anemometer_pos[1] * rm[:, 0] -
+                           anemometer_pos[0] * rm[:, 1]))
     Ua = euler_rotate(uam, EA)  # rotate to earth frame
 
     # PLATFORM LINEAR VELOCITY
@@ -638,10 +637,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     UVW = Ur + Ua + Up + Us     # corrected wind vector
 
     # Organize outputs
-    EA_acc = np.column_stack((np.arctan2(ay, g),
-                              np.arctan2(-ax, g),
-                              gyro))
-    EA_slow = np.column_stack((phi_lf, theta_hf, psi_hf))
+    EA_slow = np.column_stack((phi_lf, theta_lf, psi_lf))
     EA_fast = np.column_stack((phi_hf, theta_hf, psi_hf))
     u_ea = np.column_stack((np.zeros((n, 1)),
                             np.zeros((n, 1)),
