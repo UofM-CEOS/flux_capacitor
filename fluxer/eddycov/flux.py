@@ -547,19 +547,16 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                               gyro))
     phi_lf = (EA_acc[:, 0] -
               signal.filtfilt(bc, ac, EA_acc[:, 0], padlen=pdl))
+    # Low-pass filter to retain low-frequency content, but not the offset
+    psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
     # High frequency angles using angular rates
     rm = signal.detrend(angle_rate, 0)
     EA_rate = _integrate_rate(rm, sample_freq)
-    phi_hf = signal.filtfilt(bc, ac, EA_rate[:, 0], padlen=pdl)
-    phi = phi_lf + phi_hf
+    EA_rate_hf = signal.filtfilt(bc, ac, EA_rate, padlen=pdl, axis=0)
+    phi = phi_lf + EA_rate_hf[:, 0]
     axg = np.arctan2(-acceleration[:, 0] * np.cos(phi), g)
     theta_lf = axg - signal.filtfilt(bc, ac, axg, padlen=pdl)
-    theta_hf = signal.filtfilt(bc, ac, EA_rate[:, 1], padlen=pdl)
-    theta = theta_lf + theta_hf
-
-    # Low-pass filter to retain low-frequency content, but not the offset
-    psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
-    psi_hf = signal.filtfilt(bc, ac, EA_rate[:, 2], padlen=pdl)
+    theta = theta_lf + EA_rate_hf[:, 1]
 
     # NONLINEAR ROTATION OF ANGULAR RATES FROM MOTION SENSOR-FRAME TO
     # EARTH-FRAME This next step puts the measured angular rates into the
