@@ -384,18 +384,57 @@ def euler_rotate(X, euler):
 
 
 def _integrate_rate(rate, sample_freq):
-    """Integrate angular rate signal given sampling frequency
+    """Integrate angular or linear rate signal given sampling frequency
 
     Parameters
     ----------
     rate : array_like
-        A 1- or 2-D array with angular rate (deg/s) measurements.
+        A 1- or 2-D array with angular rate (deg/s) or linear rate
+        measurements.
     sample_freq : int, float
         The sampling frequency in units required for integration.
+
+    Returns
+    -------
+    array_like
+        Array with same shape as `rate'
     """
-    angle = integrate.cumtrapz(rate, dx=(1.0 / sample_freq),
-                               axis=0, initial=0)
-    return angle
+    x = integrate.cumtrapz(rate, dx=(1.0 / sample_freq), axis=0, initial=0)
+    return x
+
+
+def _butterworth_coefs(cutoff_factor, sample_freq, Astop=10.0, Apass=0.5):
+    """Compute Butterworth filter coefficients
+
+    Parameters
+    ----------
+    cutoff_factor : float
+        Cutoff value to use for designing the filter
+    sample_freq : int, float
+        The sampling frequency in units required for integration.
+    Apass : float
+        Stopband attenuation
+    Astop : float
+        Passband ripple (dB)
+
+    Returns
+    -------
+    Tuple with (index, name in brackets):
+    numpy.ndarray [0]
+        Numerator (b) polynomial of the filter.
+    numpy.ndarray [1]
+        Denominator (a) polynomial of the filter.
+    float [2]
+        Padding length for the filter.
+    """
+    # Stop, passband cutoffs
+    wp = 1.0 / (2.0 * cutoff_factor) / (sample_freq / 2.0)
+    ws = 1.0 / cutoff_factor / (sample_freq / 2.0)
+    N, Wn = signal.buttord(wp, ws, Apass, Astop)
+    bc, ac = signal.butter(N, Wn, "high")
+    # WATCH THIS: we need to make padlen the same as in Matlab
+    pdl = 3 * (max(len(ac), len(bc)) - 1)
+    return bc, ac, pdl
 
 
 def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
@@ -494,12 +533,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
     Astop, Apass = 10.0, 0.5     # stopband attenuation; passband Ripple (dB)
     # Stop, passband cutoffs
-    wp = 1.0 / (2.0 * Tcf) / (sample_freq / 2.0)
-    ws = 1.0 / Tcf / (sample_freq / 2.0)
-    N, Wn = signal.buttord(wp, ws, Apass, Astop)
-    bc, ac = signal.butter(N, Wn, "high")
-    # WATCH THIS: we need to make padlen the same as in Matlab
-    pdl = 3 * (max(len(ac), len(bc)) - 1)
+    bc, ac, pdl = _butterworth_coefs(Tcf, sample_freq,
+                                     Astop=Astop, Apass=Apass)
 
     # EULER ANGLES: (see Edson et al., 1998)
     # Low frequency tilt using accelerometers and gyro
@@ -595,31 +630,17 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
     # PLATFORM LINEAR VELOCITY
     # High-pass filters for accelerometers
-    wp = 1.0 / (2.0 * Ta[0]) / (sample_freq / 2.0)
-    ws = 1.0 / Ta[0] / (sample_freq / 2.0)   # stop, passband cutoffs
-    N, Wn = signal.buttord(wp, ws, Apass, Astop)
-    bax, aax = signal.butter(N, Wn, "high")
-    # Again, watch padlen
-    pdlx = 3 * (max(len(aax), len(bax)) - 1)
-
-    wp = 1.0 / (2.0 * Ta[1]) / (sample_freq / 2.0)
-    ws = 1.0 / Ta[1] / (sample_freq / 2.0)   # stop, passband cutoffs
-    N, Wn = signal.buttord(wp, ws, Apass, Astop)
-    bay, aay = signal.butter(N, Wn, "high")
-    pdly = 3 * (max(len(aay), len(bay)) - 1)
-
-    wp = 1.0 / (2.0 * Ta[2]) / (sample_freq / 2.0)
-    ws = 1.0 / Ta[2] / (sample_freq / 2.0)   # stop, passband cutoffs
-    N, Wn = signal.buttord(wp, ws, Apass, Astop)
-    baz, aaz = signal.butter(N, Wn, "high")
-    pdlz = 3 * (max(len(aaz), len(baz)) - 1)
+    bax, aax, pdlx = _butterworth_coefs(Ta[0], sample_freq,
+                                        Astop=Astop, Apass=Apass)
+    bay, aay, pdly = _butterworth_coefs(Ta[1], sample_freq,
+                                        Astop=Astop, Apass=Apass)
+    baz, aaz, pdlz = _butterworth_coefs(Ta[2], sample_freq,
+                                        Astop=Astop, Apass=Apass)
 
     # Rotate accelerations
     ae = euler_rotate(acceleration, EA)
     ae[:, 2] = ae[:, 2] - g     # subtract gravity
-    n = np.size(ae, 0)
-    up = (np.cumsum(ae, 0) -
-          0.5 * ae - 0.5 * (np.ones((n, 1)) * ae[0, :])) / sample_freq
+    up = _integrate_rate(ae, sample_freq)
     Up = np.column_stack((signal.filtfilt(bax, aax, up[:, 0], padlen=pdlx),
                           signal.filtfilt(bay, aay, up[:, 1], padlen=pdly),
                           signal.filtfilt(baz, aaz, up[:, 2], padlen=pdlz)))
@@ -645,8 +666,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     U_ship = euler_rotate(Us, u_ea)
     U_earth = euler_rotate(UVW, u_ea)
     # Platform displacement
-    xp = (np.cumsum(Up, 0) - 0.5 * Up -
-          0.5 * (np.ones((n, 1)) * Up[0, :])) / sample_freq
+    xp = _integrate_rate(Up, sample_freq)
     Xp = np.column_stack((signal.filtfilt(bax, aax, xp[:, 0], padlen=pdlx),
                           signal.filtfilt(bay, aay, xp[:, 1], padlen=pdly),
                           signal.filtfilt(baz, aaz, xp[:, 2], padlen=pdlz)))
