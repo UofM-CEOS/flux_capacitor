@@ -77,8 +77,7 @@ def prepare_period(period_file, config):
     # output files
     ec = pd.read_csv(period_file, dtype=dtypes, header=None,
                      parse_dates=[0, 1], index_col=1, names=colnames,
-                     na_values=["NAN"], true_values=["t"],
-                     false_values=["f"], low_memory=False)
+                     na_values=["NAN"], true_values=["t"], false_values=["f"])
     ec_nrows = len(ec.index)
     # Initial values for flags
     period_flags = dict.fromkeys(FLUX_FLAGS, False)
