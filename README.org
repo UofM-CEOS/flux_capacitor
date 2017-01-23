@@ -148,7 +148,6 @@ The first step is to correct data for ship motion effects:
   > 0.5% sonic temperature records > 7 deg
   difference from mean MET temperature?) then (yes)
     #GoldenRod:sonic_flag=True>
-    stop
   endif
   if (All COG, SOG, or heading missing?) then (yes)
     #GoldenRod:bad_navigation_flag=True>
@@ -158,5 +157,8 @@ The first step is to correct data for ship motion effects:
   :Correct sonic wind speed for ship motion, with and without IMU tilt angles;
   end
 #+END_SRC
+
+#+RESULTS:
+[[file:motion_correction_flowchart.png]]
 
 [[file:motion_correction_flowchart.png]]
