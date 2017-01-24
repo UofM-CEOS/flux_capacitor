@@ -102,6 +102,8 @@ class TiltWindows:
                "width={0.width!r})")
         return msg.format(self, len(self.win_files))
 
+    __repr__ = __str__
+
     def get_tilts_planarfit(self, config):
         """Compute tilt angles in all windows using planar fit method
 
@@ -305,4 +307,4 @@ if __name__ == "__main__":
                             freq="20min")
     files = tstamps.strftime("EC_%Y%m%d%H%M%S.csv")
     tlt = TiltWindows(files, 120)
-    print tlt
+    tlt
