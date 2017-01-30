@@ -206,12 +206,16 @@ def planarfit(vectors):
     return PlanarFitCoefs(k_vct, tilt_coef, phi, theta)
 
 
-def rotation_matrix(theta, axis):
+def rotation_matrix(theta, axis, active=False):
     """Generate rotation matrix for a given axis
 
     Parameters
     ----------
-    See rotate_coordinates.
+
+    active: bool, optional
+        Whether to return active transformation matrix.
+
+    See rotate_coordinates for rest of parameters.
 
     Returns
     -------
@@ -231,6 +235,8 @@ def rotation_matrix(theta, axis):
         R_theta = np.array([[np.cos(theta), -np.sin(theta), 0],
                             [np.sin(theta), np.cos(theta), 0],
                             [0, 0, 1]])
+    if active:
+        R_theta = np.transpose(R_theta)
     return R_theta
 
 
@@ -263,20 +269,14 @@ def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
     The vector array with the same shape as input with rotated components.
 
     """
-    R_theta = rotation_matrix(theta, axis)
-
+    R_theta = rotation_matrix(theta, axis, active=rotate_vectors)
     # Multiplying a vector by R_theta, as defined above, transforms the
     # vector coordinates from the original coordinate system to the new,
     # rotated coordinate frame.  Note that the rotation matrix
     # post-multiplies the vector matrix.  If rotating the vectors
     # themselves, then the *transposed* rotation matrix post-multiplies the
     # matrix of vectors.
-    if not rotate_vectors:
-        vectors_theta = np.dot(vectors, R_theta)
-    else:
-        vectors_theta = np.dot(vectors, np.transpose(R_theta))
-
-    return vectors_theta
+    return np.dot(vectors, R_theta)
 
 
 def rotate_vectors(vectors, method="PF", **kwargs):
@@ -600,12 +600,12 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # SHIP AND ANEMOMETER OFFSET ANGLES
     # Pitch and roll tilt of platform w.r.t. earth (see Wilczak et al. 2000)
     phi_em, theta_em = tilt_motion[0], tilt_motion[1]
-    PHI_em = np.transpose(rotation_matrix(phi_em, axis=0))
-    THETA_em = np.transpose(rotation_matrix(theta_em, axis=1))
+    PHI_em = rotation_matrix(phi_em, axis=0, active=True)
+    THETA_em = rotation_matrix(theta_em, axis=1, active=True)
     # Pitch and roll tilt of anemometer w.r.t. earth
     phi_ea, theta_ea = tilt_anemometer[0], tilt_anemometer[1]
-    PHI_ea = np.transpose(rotation_matrix(phi_ea, axis=0))
-    THETA_ea = np.transpose(rotation_matrix(theta_ea, axis=1))
+    PHI_ea = rotation_matrix(phi_ea, axis=0, active=True)
+    THETA_ea = rotation_matrix(theta_ea, axis=1, active=True)
 
     # Anemometer WRT motion sensor
     M_em = np.dot(THETA_em, PHI_em)
