@@ -365,7 +365,7 @@ def rotate_vectors(vectors, method="PF", **kwargs):
 
 
 def euler_rotate(X, euler):
-    """Rotate vector matrix given Euler transformation matrix"""
+    """Rotate vector matrix given Euler angles"""
     x, y, z = X[:, 0], X[:, 1], X[:, 2]
     phi, theta, psi = euler[:, 0], euler[:, 1], euler[:, 2]
     x_new = (x * np.cos(theta) * np.cos(psi) +
