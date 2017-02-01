@@ -600,12 +600,12 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # SHIP AND ANEMOMETER OFFSET ANGLES
     # Pitch and roll tilt of platform w.r.t. earth (see Wilczak et al. 2000)
     phi_em, theta_em = tilt_motion[0], tilt_motion[1]
-    PHI_em = rotation_matrix(phi_em, axis=0, active=True)
-    THETA_em = rotation_matrix(theta_em, axis=1, active=True)
+    PHI_em = rotation_matrix(np.degrees(phi_em), axis=0, active=True)
+    THETA_em = rotation_matrix(np.degrees(theta_em), axis=1, active=True)
     # Pitch and roll tilt of anemometer w.r.t. earth
     phi_ea, theta_ea = tilt_anemometer[0], tilt_anemometer[1]
-    PHI_ea = rotation_matrix(phi_ea, axis=0, active=True)
-    THETA_ea = rotation_matrix(theta_ea, axis=1, active=True)
+    PHI_ea = rotation_matrix(np.degrees(phi_ea), axis=0, active=True)
+    THETA_ea = rotation_matrix(np.degrees(theta_ea), axis=1, active=True)
 
     # Anemometer WRT motion sensor
     M_em = np.dot(THETA_em, PHI_em)
