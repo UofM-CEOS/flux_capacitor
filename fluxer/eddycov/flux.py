@@ -364,23 +364,60 @@ def rotate_vectors(vectors, method="PF", **kwargs):
     return RotatedVectors(vcts_new, np.array([phi, theta]))
 
 
-def euler_rotate(X, euler):
-    """Rotate vector matrix given Euler angles"""
-    x, y, z = X[:, 0], X[:, 1], X[:, 2]
-    phi, theta, psi = euler[:, 0], euler[:, 1], euler[:, 2]
-    x_new = (x * np.cos(theta) * np.cos(psi) +
-             y * (np.sin(phi) * np.sin(theta) * np.cos(psi) -
-                  np.cos(phi) * np.sin(psi)) +
-             z * (np.cos(phi) * np.sin(theta) * np.cos(psi) +
-                  np.sin(phi) * np.sin(psi)))
-    y_new = (x * np.cos(theta) * np.sin(psi) +
-             y * (np.sin(phi) * np.sin(theta) * np.sin(psi) +
-                  np.cos(phi) * np.cos(psi)) +
-             z * (np.cos(phi) * np.sin(theta) * np.sin(psi) -
-                  np.sin(phi) * np.cos(psi)))
-    z_new = (x * (-np.sin(theta)) + y * (np.cos(theta) * np.sin(phi)) +
-             z * (np.cos(theta) * np.cos(phi)))
-    return np.column_stack((x_new, y_new, z_new))
+def _rot_xyz(phi, theta, psi):
+    """Compute passive rotation matrix from 3 angles in 1-D array x
+
+    The matrix is meant to post-multiply row vectors.
+
+    Parameters
+    ----------
+    phi : float
+        Angle (degrees) for the rotation around the x-axis.
+    theta: float
+        Angle (degrees) for the rotation around the y-axis.
+    psi: float
+        Angle (degrees) for the rotation around the z-axis.
+
+    Returns
+    -------
+    numpy.ndarray
+        2-D array (3x3) with rotation matrix corresponding to the rotation
+        sequence \phi, \theta, \psi.
+
+    """
+    rotx = rotation_matrix(phi, 0)
+    roty = rotation_matrix(theta, 1)
+    rotz = rotation_matrix(psi, 2)
+    return np.transpose(np.dot(rotz, np.dot(roty, rotx)))
+
+
+def euler_rotate(xyz, xyz_angles):
+    """Rotate vectors using Euler angles
+
+    Parameters
+    ----------
+    xyz : array_like
+        2-D array (Nx3) with row vectors to be rotated.
+    xyz_angles: array_like
+        2-D array (Nx3) with row vectors of angles (degrees) to be used for
+        rotation of `xyz', where the first column specifies the angle for
+        the first rotation around the x-axis, the second column the angle
+        for the second rotation around the y-axis, and the third column the
+        angle for the last rotation around the z-axis.
+
+    Returns
+    -------
+    numpy.ndarray
+        Array of the same shape as `xyz' with rotated vectors.
+
+    """
+    xyz_rots = np.empty_like(xyz)
+    for i, v in enumerate(xyz_angles):
+        phi, theta, psi = v
+        euler_mati = _rot_xyz(phi, theta, psi)
+        xyz_roti = np.dot(xyz[i], euler_mati)
+        xyz_rots[i] = xyz_roti
+    return xyz_rots
 
 
 def _integrate_rate(rate, sample_freq):
@@ -614,7 +651,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
     # WIND VECTOR ROTATION
     # Using coordinate rotations
-    Ur = euler_rotate(np.dot(M_ma, wind_speed.T).T, EA)
+    EA_degs = np.degrees(EA)
+    Ur = euler_rotate(np.dot(M_ma, wind_speed.T).T, EA_degs)
 
     # PLATFORM ANGULAR VELOCITY
     uam = np.column_stack((anemometer_pos[2] * rm[:, 1] -
@@ -623,7 +661,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                            anemometer_pos[2] * rm[:, 0],
                            anemometer_pos[1] * rm[:, 0] -
                            anemometer_pos[0] * rm[:, 1]))
-    Ua = euler_rotate(uam, EA)  # rotate to earth frame
+    Ua = euler_rotate(uam, EA_degs)  # rotate to earth frame
 
     # PLATFORM LINEAR VELOCITY
     # High-pass filters for accelerometers
@@ -635,7 +673,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                                         Astop=Astop, Apass=Apass)
 
     # Rotate accelerations
-    ae = euler_rotate(acceleration, EA)
+    ae = euler_rotate(acceleration, EA_degs)
     ae[:, 2] = ae[:, 2] - g     # subtract gravity
     up = _integrate_rate(ae, sample_freq)
     Up = np.column_stack((signal.filtfilt(bax, aax, up[:, 0], padlen=pdlx),
@@ -660,8 +698,9 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     u_ea = np.column_stack((np.zeros((n, 1)),
                             np.zeros((n, 1)),
                             (gyro0 + np.pi / 2) * np.ones((n, 1))))
-    U_ship = euler_rotate(Us, u_ea)
-    U_earth = euler_rotate(UVW, u_ea)
+    u_ea_degs = np.degrees(u_ea)
+    U_ship = euler_rotate(Us, u_ea_degs)
+    U_earth = euler_rotate(UVW, u_ea_degs)
     # Platform displacement
     xp = _integrate_rate(Up, sample_freq)
     Xp = np.column_stack((signal.filtfilt(bax, aax, xp[:, 0], padlen=pdlx),
