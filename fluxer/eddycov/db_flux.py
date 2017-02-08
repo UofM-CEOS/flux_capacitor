@@ -201,6 +201,6 @@ def main(config_file):
                 # Save to file with suffix "_mc.csv"
                 ec_wind_corr.to_csv(osp.join(ec_idir, iname_prefix +
                                              "_mc.csv"),
-                                    index_label=colnames[1])
+                                    index_label=colnames[1], na_rep="NaN")
             logger.info("End motion correction %s", iname)
             # TODO: Further flux processing
