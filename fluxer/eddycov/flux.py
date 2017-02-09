@@ -420,6 +420,41 @@ def euler_rotate(xyz, xyz_angles):
     return xyz_rots
 
 
+def euler_rate_rotate(euler_angles, omega):
+    """Rotate angular rates, given Euler angles
+
+    Parameters
+    ----------
+    euler_angles : array_like
+        2-D array (Nx2) with Euler \phi (roll) and \theta (pitch) angles
+        (radians) around the x- and y-axes in columns 1 and 2,
+        respectively, representing the orientation of the sensor
+        orientation relative to the output frame.
+    omega: float 2-D array
+        (Nx3) with angular rates \dot \phi, \dot \theta, and \dot \psi
+        around the x-, y-, and z-axes in columns 1, 2, and 3, respectively.
+
+    Returns
+    -------
+    array_like
+        Array with same shape as `omega' with rotated angular rates.
+
+    """
+    def rot_mat(phi, theta):
+        """Transformation matrix pre-multiplying column vectors"""
+        return np.array([[1, np.sin(phi) * np.tan(theta),
+                          np.cos(phi) * np.tan(theta)],
+                         [0, np.cos(phi), -np.sin(phi)],
+                         [0, np.sin(phi) / np.cos(theta),
+                          np.cos(phi) / np.cos(theta)]])
+    omega_rots = np.empty_like(omega)
+    for i, v in enumerate(euler_angles):
+        phi, theta = v
+        # Multiply and transpose to original shape as row vectors
+        omega_rots[i] = np.dot(rot_mat(phi, theta), omega[i].T).T
+    return omega_rots
+
+
 def _integrate_rate(rate, sample_freq):
     """Integrate angular or linear rate signal given sampling frequency
 
@@ -594,6 +629,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     axg = np.arctan2(-acceleration[:, 0] * np.cos(phi), g)
     theta_lf = axg - signal.filtfilt(bc, ac, axg, padlen=pdl)
     theta = theta_lf + EA_rate_hf[:, 1]
+    EA_slow = np.column_stack((phi_lf, theta_lf, psi_lf))
 
     # NONLINEAR ROTATION OF ANGULAR RATES FROM MOTION SENSOR-FRAME TO
     # EARTH-FRAME This next step puts the measured angular rates into the
@@ -605,34 +641,18 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # estimates. These sequential rotations are exact for small angle RATES
     # (see Goldstein) - I've found this step doesn't have much effect on
     # the corrected winds.
-    F12 = np.tan(theta) * np.sin(phi)
-    F13 = np.tan(theta) * np.cos(phi)
-    F22 = np.cos(phi)
-    F23 = -np.sin(phi)
-    F32 = np.sin(phi) / np.cos(theta)
-    F33 = np.cos(phi) / np.cos(theta)
-    phi_dot = rm[:, 0] + rm[:, 1] * F12 + rm[:, 2] * F13
-    theta_dot = rm[:, 1] * F22 - rm[:, 2] * F23
-    psi_dot = rm[:, 1] * F32 + rm[:, 2] * F33
+    omega = euler_rate_rotate(np.column_stack((phi, theta)), rm)
 
-    # The angular rates phi_dot, theta_dot, and psi_dot are now in the
-    # earth based frame, which is what we want for creating the
-    # rotation-transformation matrix. Re-integrate and high pass filter
-    # these angular rates to get the fast angles.
-    phi_hf = signal.filtfilt(bc, ac,
-                             _integrate_rate(phi_dot, sample_freq),
-                             padlen=pdl)
-    theta_hf = signal.filtfilt(bc, ac,
-                               _integrate_rate(theta_dot, sample_freq),
-                               padlen=pdl)
-    psi_hf = signal.filtfilt(bc, ac,
-                             _integrate_rate(psi_dot, sample_freq),
-                             padlen=pdl)
+    # The angular rates omega are now in the earth based frame, which is
+    # what we want for creating the rotation-transformation
+    # matrix. Re-integrate and high pass filter these angular rates to get
+    # the fast angles.
+    EA_fast = signal.filtfilt(bc, ac,
+                              _integrate_rate(omega, sample_freq),
+                              padlen=pdl, axis=0)
 
     # combine high- and low-frequency angles; make 2D transformation matrix
-    EA = np.column_stack((phi_lf + phi_hf,
-                          theta_lf + theta_hf,
-                          psi_lf + psi_hf))
+    EA = EA_slow + EA_fast
 
     # SHIP AND ANEMOMETER OFFSET ANGLES
     # Pitch and roll tilt of platform w.r.t. earth (see Wilczak et al. 2000)
@@ -693,8 +713,6 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     UVW = Ur + Ua + Up + Us     # corrected wind vector
 
     # Organize outputs
-    EA_slow = np.column_stack((phi_lf, theta_lf, psi_lf))
-    EA_fast = np.column_stack((phi_hf, theta_hf, psi_hf))
     u_ea = np.column_stack((np.zeros((n, 1)),
                             np.zeros((n, 1)),
                             (gyro0 + np.pi / 2) * np.ones((n, 1))))
