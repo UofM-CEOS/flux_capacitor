@@ -36,12 +36,9 @@ def wind3D_correct_period(ec_prep, config, **kwargs):
         Pandas DataFrame with prepared flux data.
     config : OrderedDict
         Dictionary with parsed configuration file.
-
-    Keyword Parameters
-    ------------------
-    tilt_motion : numpy.array
+    tilt_motion : numpy.array, optional keyword
         Passed to wind3D_correct.
-    tilt_anemometer : numpy.array
+    tilt_anemometer : numpy.array, optional keyword
         Passed to wind3D_correct.
 
     Returns

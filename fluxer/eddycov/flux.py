@@ -46,7 +46,7 @@ VickersMahrt = namedtuple("VickersMahrt",
 
 
 def decompose(angle, vmagnitude):
-    """Decompose angle and magnitude into `x` and `y` coordinates
+    """Decompose angle and magnitude into ``x`` and ``y`` coordinates
 
     Parameters
     ----------
@@ -54,11 +54,11 @@ def decompose(angle, vmagnitude):
         The angle(s) in degree units.
     vmagnitude : array_like
         The magnitude array associated with each angle.  It can be a scalar
-        that is common to all `angle` elements.
+        that is common to all ``angle`` elements.
 
     Returns
     -------
-    namedtuple with ndarrays `x` and `y`, in that order.
+    namedtuple with ndarrays ``x`` and ``y``, in that order.
 
     Examples
     --------
@@ -79,18 +79,18 @@ def decompose(angle, vmagnitude):
 
 
 def recompose(x, y):
-    """Recompose angles and associated magnitudes from `x` and `y` vectors
+    """Recompose angles and associated magnitudes from ``x`` and ``y`` vectors
 
     Parameters
     ----------
     x : array_like or scalar
-        `x`-coordinates
+        ``x``-coordinates
     y : array_like or scalar
-        `y`-coordinates
+        ``y``-coordinates
 
     Returns
     -------
-    namedtuple with ndarrays `angle` and `magnitude`, in that order.
+    namedtuple with ndarrays ``angle`` and ``magnitude``, in that order.
 
     """
     vmag = np.sqrt((x ** 2) + (y ** 2))
@@ -122,13 +122,13 @@ def smooth_angle(angle, vmagnitude=1, kernel_width=21):
         The angle(s) in degree units.
     vmagnitude : numpy.ndarray, optional
         The magnitude array associated with each angle.  It can be a scalar
-        that is common to all `angle` elements.
-    kernel_width : int
+        that is common to all ``angle`` elements.
+    kernel_width : int, optional
         The width of the filter kernel.
 
     Returns
     -------
-    namedtuple with ndarrays `angle` and `magnitude`, in that order.
+    namedtuple with ndarrays ``angle`` and ``magnitude``, in that order.
     """
     x, y = decompose(angle, vmagnitude)
     x_smooth = convolve(x, Box1DKernel(kernel_width), boundary="extend")
@@ -249,15 +249,15 @@ def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
 
     Parameters
     ----------
-    vectors: array_like
+    vectors : array_like
         An nx3 array of vectors with their x, y, z components
-    theta: numeric, optional
+    theta : numeric, optional
         The angle (degrees) by which to perform the rotation.  Default is
         0, which means return the coordinates of the vector in the rotated
         coordinate system, when rotate_vectors=False.
-    axis: int, optional
+    axis : int, optional
         Axis around which to perform the rotation (x=0; y=1; z=2)
-    rotate_vectors: bool, optional
+    rotate_vectors : bool, optional
         Whether to return the coordinates of each vector in the rotated
         coordinate system or to rotate the vectors themselves onto the same
         coordinate system.  Default is to perform a passive transformation,
@@ -294,10 +294,10 @@ def rotate_vectors(vectors, method="PF", **kwargs):
         A 2-D (Nx3) array with x, y, and z vector components, expressed in
         a right-handed coordinate system.  These may represent u, v, and w
         wind speed vectors, or inertial acceleration.
-    method : str
+    method : str, optional
         One of: "DR", "TR", "PF" for double rotation, triple rotation, or
         planar fit.
-    k_vector : numpy.ndarray (optional)
+    k_vector : numpy.ndarray, optional
         1-D array (1x3) unit vector parallel to the new z-axis, when
         "method" is "PF" (planar fit).  If not supplied, then it is
         calculated.
@@ -373,9 +373,9 @@ def _rot_xyz(phi, theta, psi):
     ----------
     phi : float
         Angle (degrees) for the rotation around the x-axis.
-    theta: float
+    theta : float
         Angle (degrees) for the rotation around the y-axis.
-    psi: float
+    psi : float
         Angle (degrees) for the rotation around the z-axis.
 
     Returns
@@ -398,9 +398,9 @@ def euler_rotate(xyz, xyz_angles):
     ----------
     xyz : array_like
         2-D array (Nx3) with row vectors to be rotated.
-    xyz_angles: array_like
+    xyz_angles : array_like
         2-D array (Nx3) with row vectors of angles (degrees) to be used for
-        rotation of `xyz', where the first column specifies the angle for
+        rotation of ``xyz``, where the first column specifies the angle for
         the first rotation around the x-axis, the second column the angle
         for the second rotation around the y-axis, and the third column the
         angle for the last rotation around the z-axis.
@@ -408,7 +408,7 @@ def euler_rotate(xyz, xyz_angles):
     Returns
     -------
     numpy.ndarray
-        Array of the same shape as `xyz' with rotated vectors.
+        Array of the same shape as ``xyz`` with rotated vectors.
 
     """
     xyz_rots = np.empty_like(xyz)
@@ -430,14 +430,14 @@ def euler_rate_rotate(euler_angles, omega):
         (radians) around the x- and y-axes in columns 1 and 2,
         respectively, representing the orientation of the sensor
         orientation relative to the output frame.
-    omega: float 2-D array
+    omega : float 2-D array
         (Nx3) with angular rates \dot \phi, \dot \theta, and \dot \psi
         around the x-, y-, and z-axes in columns 1, 2, and 3, respectively.
 
     Returns
     -------
     array_like
-        Array with same shape as `omega' with rotated angular rates.
+        Array with same shape as ``omega`` with rotated angular rates.
 
     """
     def rot_mat(phi, theta):
@@ -469,7 +469,7 @@ def _integrate_rate(rate, sample_freq):
     Returns
     -------
     array_like
-        Array with same shape as `rate'
+        Array with same shape as ``rate``
     """
     x = integrate.cumtrapz(rate, dx=(1.0 / sample_freq), axis=0, initial=0)
     return x
@@ -484,9 +484,9 @@ def _butterworth_coefs(cutoff_factor, sample_freq, Astop=10.0, Apass=0.5):
         Cutoff value to use for designing the filter
     sample_freq : int, float
         The sampling frequency in units required for integration.
-    Apass : float
+    Apass : float, optional
         Stopband attenuation
-    Astop : float
+    Astop : float, optional
         Passband ripple (dB)
 
     Returns
@@ -515,7 +515,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                    tilt_anemometer=np.array([0.0, 0.0])):
     """Correct wind vector measurements from a moving platform
 
-    This is a port of Scott Miller's `motion` Matlab function, which
+    This is a port of Scott Miller's ``motion`` Matlab function, which
     implements Miller et al. (2008) approach.  Coordinate frame is assumed
     to be right-handed:
 
@@ -546,17 +546,17 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     Ta : float
         High-pass filter cutoff for accelerations (s).  This can be a
         scalar if the same cutoff is used for the three components, or a 3
-        element vector to indicate cutoff period for the `x`, `y`, `z`
+        element vector to indicate cutoff period for the ``x``, ``y``, ``z``
         components.
-    tilt_motion : array_like
+    tilt_motion : array_like, optional
         [roll, pitch] vector with mean tilt (radians) relative to a
-        horizontal plane.  `Roll` angle offset is positive is port side up,
-        and `pitch` is positive for bow down (see Miller 2008 for info, set
+        horizontal plane.  Roll angle offset is positive is port side up,
+        and pitch is positive for bow down (see Miller 2008 for info, set
         to [0 0] if unknown).
-    tilt_anemometer : array_like
+    tilt_anemometer : array_like, optional
         [roll, pitch] vector with mean tilt (radians) relative to a
-        horizontal plane.  `Roll` angle offset is positive is port side up,
-        and `pitch` is positive for bow down (see Miller 2008 for info, set
+        horizontal plane.  Roll angle offset is positive is port side up,
+        and pitch is positive for bow down (see Miller 2008 for info, set
         to [0 0] if unknown).
 
     Returns
@@ -642,7 +642,6 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # (see Goldstein) - I've found this step doesn't have much effect on
     # the corrected winds.
     omega = euler_rate_rotate(np.column_stack((phi, theta)), rm)
-
     # The angular rates omega are now in the earth based frame, which is
     # what we want for creating the rotation-transformation
     # matrix. Re-integrate and high pass filter these angular rates to get
@@ -738,7 +737,7 @@ def window_indices(idxs, width, step=None):
         A 1-D index vector.
     width : int
         Window width.
-    step : int
+    step : int, optional
         Step size for sliding windows.
 
     Returns
@@ -774,7 +773,7 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
         Number of outlier trends detected.
     numpy.ndarray [3, 'kclass']
         1-D array of the same size as input, indicating the classification
-        `k` for each measurement. k=0: measurement within plausibility
+        ``k`` for each measurement. k=0: measurement within plausibility
         range, k=[-1 or 1]: measurement outside plausibility range, abs(k)
         > 1: measurement is part of an outlier trend.
 
@@ -835,19 +834,19 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
         A 1-D signal vectors to be despiked.
     width : int
         Window width.
-    step : int
+    step : int, optional
         Step size for sliding windows.  Default is one-half window width.
     zscore_thr : float
         The zscore beyond which an observation is considered to be an
-        outlier.
-    nrep_thr : int
+        outlier.  Default is zero.
+    nrep_thr : int, optional
         The maximum number of consecutive outliers that should occur for a
         spike to be detected.  Default: 3.
-    nreps: int
-        How many times to run the procedure.
-    interp.nan : bool
+    nreps: int, optional
+        How many times to run the procedure.  Default is zero.
+    interp.nan : bool, optional
         Whether missing values should be interpolated.  Interpolated values
-        are computed after despiking.
+        are computed after despiking.  Default is True.
 
     Returns
     -------

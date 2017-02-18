@@ -63,10 +63,11 @@ class TiltWindows:
 
         Parameters
         ----------
-        ec_files : list
-            List of file names.
-        win_minutes : int
+        ec_files : list, optional
+            List of file names.  Default is empty list.
+        win_minutes : int, optional
             Number of minutes to build windows, based on file names.
+            Default is zero.
 
         """
         win_files = _make_windows(ec_files, win_minutes)
@@ -189,10 +190,10 @@ class TiltWindows:
         ----------
         fig_file : str
             Path to file to write plot to
-        step : int
-            Step (stride) to subsample the time series by.
+        step : int, optional
+            Step (stride) to subsample the time series by.  Default is 1.
         title : str
-            Title for plot
+            Title for plot.  Default is None.
 
         """
         # Workaround for stupid problem in Debian now:
