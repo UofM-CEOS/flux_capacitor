@@ -115,7 +115,6 @@ class TiltWindows:
 
         Returns
         -------
-
         pandas.DataFrame with tilt angles for each window.
 
         """

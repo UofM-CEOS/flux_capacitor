@@ -1,23 +1,29 @@
+# Extensions that should be ignored
 *.pyc
 *.[Rr][Dd]ata
 *.[Rr]history
 *.pro
 *.png
-!/motion_correction_flowchart.png
+# Do not ignore doc built images
+!/docs/**/motion_correction_flowchart.png
 *.html
 *.pdf
 *.csv
 *.xls*
 *.sav
+
+# Folders we don't care about
 *.egg-info/
-README.rst
+/build/
+/dist/
 auto/
+# Sphinx build directories
+docs/build/html
+docs/build/doctrees
 EddyCovariance/
+
+# Specific files
+MANIFEST
 Scripts/*.m
 flux_[0-9]*.cfg
-motion.m
-/build
-/dist
-MANIFEST
-venv/
 /Scripts/octave-workspace

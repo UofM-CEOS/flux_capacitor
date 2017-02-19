@@ -155,9 +155,10 @@ def planarfit(vectors):
     Parameters
     ----------
     vectors : numpy.ndarray
-        A 2-D (Nx3) array with x, y, and z vectors, expressed in a
-        right-handed coordinate system.  These vectors may correspond to u,
-        v, and w wind speed vectors, or inertial acceleration components.
+        A 2-D (Nx3) array with ``x``, ``y``, and ``z`` vectors, expressed
+        in a right-handed coordinate system.  These vectors may correspond
+        to ``u``, ``v``, and ``w`` wind speed vectors, or inertial
+        acceleration components.
 
     Returns
     -------
@@ -165,11 +166,11 @@ def planarfit(vectors):
     numpy.ndarray [0, 'k_vct']
         1-D array (1x3) unit vector parallel to the new z-axis.
     numpy.ndarray [1, 'tilt_coefs']
-        1-D array (1x3) Tilt coefficients b0, b1, b2.
+        1-D array (1x3) Tilt coefficients ``b0``, ``b1``, ``b2``.
     numpy.float ['phi']
-        Scalar representing roll angle Phi.
+        Scalar representing roll angle :math:`\\phi`.
     numpy.float ['theta']
-        Scalar representing pitch angle Theta.
+        Scalar representing pitch angle :math:`\\theta`.
 
     """
     vct_u = vectors[:, 0]
@@ -211,10 +212,11 @@ def rotation_matrix(theta, axis, active=False):
 
     Parameters
     ----------
-
     active: bool, optional
         Whether to return active transformation matrix.
 
+    Note
+    ----
     See rotate_coordinates for rest of parameters.
 
     Returns
@@ -250,13 +252,14 @@ def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
     Parameters
     ----------
     vectors : array_like
-        An nx3 array of vectors with their x, y, z components
+        An nx3 array of vectors with their ``x``, ``y``, ``z`` components
     theta : numeric, optional
         The angle (degrees) by which to perform the rotation.  Default is
         0, which means return the coordinates of the vector in the rotated
         coordinate system, when rotate_vectors=False.
     axis : int, optional
-        Axis around which to perform the rotation (x=0; y=1; z=2)
+        Axis around which to perform the rotation (``x`` = 0; ``y`` = 1;
+        ``z`` = 2)
     rotate_vectors : bool, optional
         Whether to return the coordinates of each vector in the rotated
         coordinate system or to rotate the vectors themselves onto the same
@@ -291,9 +294,10 @@ def rotate_vectors(vectors, method="PF", **kwargs):
     Parameters
     ----------
     vectors : numpy.ndarray
-        A 2-D (Nx3) array with x, y, and z vector components, expressed in
-        a right-handed coordinate system.  These may represent u, v, and w
-        wind speed vectors, or inertial acceleration.
+        A 2-D (Nx3) array with ``x``, ``y``, and ``z`` vector components,
+        expressed in a right-handed coordinate system.  These may represent
+        ``u``, ``v``, and ``w`` wind speed vectors, or inertial
+        acceleration.
     method : str, optional
         One of: "DR", "TR", "PF" for double rotation, triple rotation, or
         planar fit.
@@ -308,12 +312,12 @@ def rotate_vectors(vectors, method="PF", **kwargs):
     numpy.ndarray [0, 'rotated']
         2-D array (Nx3) Array with rotated vectors
     numpy.ndarray [1, 'phi_theta']
-        1-D array (1x2) Phi and Theta rotation angles.  The former is the
-        estimated angle between the vertical unit coordinate vector in the
-        rotated frame and the vertical unit vector in the measured uv
-        plane, while the latter is wind direction in the measured uv plane.
-        Note these are *not* roll and pitch angles of the measurement
-        coordinate frame relative to the reference frame.
+        1-D array (1x2) :math:`\\phi` and :math:`\\theta` rotation angles.
+        The former is the estimated angle between the vertical unit
+        coordinate vector in the rotated frame and the vertical unit vector
+        in the measured uv plane, while the latter is wind direction in the
+        measured uv plane.  Note these are *not* roll and pitch angles of
+        the measurement coordinate frame relative to the reference frame.
 
     """
     if method not in _VECTOR_ROTATION_METHODS:
@@ -382,7 +386,7 @@ def _rot_xyz(phi, theta, psi):
     -------
     numpy.ndarray
         2-D array (3x3) with rotation matrix corresponding to the rotation
-        sequence \phi, \theta, \psi.
+        sequence :math:`\\phi`, :math:`\\theta`, :math:`\\psi`.
 
     """
     rotx = rotation_matrix(phi, 0)
@@ -401,9 +405,9 @@ def euler_rotate(xyz, xyz_angles):
     xyz_angles : array_like
         2-D array (Nx3) with row vectors of angles (degrees) to be used for
         rotation of ``xyz``, where the first column specifies the angle for
-        the first rotation around the x-axis, the second column the angle
-        for the second rotation around the y-axis, and the third column the
-        angle for the last rotation around the z-axis.
+        the first rotation around the ``x``-axis, the second column the
+        angle for the second rotation around the ``y``-axis, and the third
+        column the angle for the last rotation around the ``z``-axis.
 
     Returns
     -------
@@ -426,13 +430,14 @@ def euler_rate_rotate(euler_angles, omega):
     Parameters
     ----------
     euler_angles : array_like
-        2-D array (Nx2) with Euler \phi (roll) and \theta (pitch) angles
-        (radians) around the x- and y-axes in columns 1 and 2,
-        respectively, representing the orientation of the sensor
-        orientation relative to the output frame.
+        2-D array (Nx2) with Euler :math:`\\phi` (roll) and :math:`\\theta`
+        (pitch) angles (radians) around the ``x``- and ``y``-axes in
+        columns 1 and 2, respectively, representing the orientation of the
+        sensor orientation relative to the output frame.
     omega : float 2-D array
-        (Nx3) with angular rates \dot \phi, \dot \theta, and \dot \psi
-        around the x-, y-, and z-axes in columns 1, 2, and 3, respectively.
+        (Nx3) with angular rates :math:`\\dot \\phi`, :math:`\\dot \\theta`,
+        and :math:`\\dot \\psi` around the ``x``-, ``y``-, and ``z``-axes in
+        columns 1, 2, and 3, respectively.
 
     Returns
     -------
@@ -515,20 +520,22 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                    tilt_anemometer=np.array([0.0, 0.0])):
     """Correct wind vector measurements from a moving platform
 
-    This is a port of Scott Miller's ``motion`` Matlab function, which
+    This is a port of S. Miller's ``motion`` Matlab function, which
     implements Miller et al. (2008) approach.  Coordinate frame is assumed
     to be right-handed:
 
-    x - positive towards the bow.
-    y - positive towards port side.
-    z - positive upwards.
+    * ``x`` - positive towards the bow.
+    * ``y`` - positive towards port side.
+    * ``z`` - positive upwards.
 
     Parameters
     ----------
     wind_speed : numpy.ndarray
-        A 2-D (Nx3) array with u, v, and w wind speed (m/s) vectors.
+        A 2-D (Nx3) array with ``u``, ``v``, and ``w`` wind speed (m/s)
+        vectors.
     acceleration : numpy.ndarray
-        A 2-D (Nx3) array with x, y, and z acceleration (m/s/s) vectors.
+        A 2-D (Nx3) array with ``x``, ``y``, and ``z`` acceleration (m/s/s)
+        vectors.
     angle_rate : numpy.ndarray
         A 2-D (Nx3) array with angular rates (radians/s) vectors.
     heading : array_like
@@ -537,8 +544,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     speed : array_like
         A vector with ship speed (m/s).
     anemometer_pos : array_like
-        [x, y, z] position vector of anemometer, relative to motion sensor
-        (m).
+        [``x``, ``y``, ``z``] position vector of anemometer, relative to
+        motion sensor (m).
     sample_freq : float
         Sampling frequency (Hz).
     Tcf : float
@@ -592,8 +599,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     numpy.ndarray [12, 'imu_enu']
         2-D (NX3) array with displacement of the motion sensor.
 
-    Reference
-    ---------
+    References
+    ----------
     Miller,S.D., Hristov,T.S., Edson,J.B., and C.A. Friehe, 2008:
         Platform Motion Effects on Measurements of Turbulence and Air-Sea
         Exchange Over the Open Ocean, J. Atmo. Ocean. Tech. 25(9),
