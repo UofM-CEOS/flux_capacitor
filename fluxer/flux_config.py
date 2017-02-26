@@ -166,7 +166,7 @@ def parse_config(cfg_file):
 
     Parameters
     ----------
-    cfg_file : string
+    cfg_file : str
         Path to configuration file.
 
     Returns

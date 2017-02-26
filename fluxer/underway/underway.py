@@ -24,6 +24,7 @@ bad_temperature_external (boolean)
 bad_temperature_analyzer (boolean)
 bad_pressure_analyzer_flag (boolean)
 bad_equ_temperature_flag (boolean)
+
 """
 
 from fluxer import parse_config

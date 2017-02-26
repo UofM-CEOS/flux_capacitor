@@ -46,7 +46,7 @@ VickersMahrt = namedtuple("VickersMahrt",
 
 
 def decompose(angle, vmagnitude):
-    """Decompose angle and magnitude into ``x`` and ``y`` coordinates
+    """Decompose angle and magnitude into `x` and `y` coordinates
 
     Parameters
     ----------
@@ -58,7 +58,7 @@ def decompose(angle, vmagnitude):
 
     Returns
     -------
-    namedtuple with ndarrays ``x`` and ``y``, in that order.
+    namedtuple with ndarrays `x` and `y`, in that order.
 
     Examples
     --------
@@ -90,7 +90,7 @@ def recompose(x, y):
 
     Returns
     -------
-    namedtuple with ndarrays ``angle`` and ``magnitude``, in that order.
+    namedtuple with ndarrays `angle` and `magnitude`, in that order.
 
     """
     vmag = np.sqrt((x ** 2) + (y ** 2))
@@ -155,21 +155,21 @@ def planarfit(vectors):
     Parameters
     ----------
     vectors : numpy.ndarray
-        A 2-D (Nx3) array with ``x``, ``y``, and ``z`` vectors, expressed
-        in a right-handed coordinate system.  These vectors may correspond
-        to ``u``, ``v``, and ``w`` wind speed vectors, or inertial
-        acceleration components.
+        A 2-D (Nx3) array with `x`, `y`, and `z` vectors, expressed in a
+        right-handed coordinate system.  These vectors may correspond to
+        `u`, `v`, and `w` wind speed vectors, or inertial acceleration
+        components.
 
     Returns
     -------
     namedtuple with (index and name in brackets):
-    numpy.ndarray [0, 'k_vct']
+    numpy.ndarray [0, `k_vct`]
         1-D array (1x3) unit vector parallel to the new z-axis.
-    numpy.ndarray [1, 'tilt_coefs']
-        1-D array (1x3) Tilt coefficients ``b0``, ``b1``, ``b2``.
-    numpy.float ['phi']
+    numpy.ndarray [1, `tilt_coefs`]
+        1-D array (1x3) Tilt coefficients `b0`, `b1`, `b2`.
+    numpy.float [`phi`]
         Scalar representing roll angle :math:`\\phi`.
-    numpy.float ['theta']
+    numpy.float [`theta`]
         Scalar representing pitch angle :math:`\\theta`.
 
     """
@@ -217,7 +217,7 @@ def rotation_matrix(theta, axis, active=False):
 
     Note
     ----
-    See rotate_coordinates for rest of parameters.
+    See ``rotate_coordinates`` for rest of parameters.
 
     Returns
     -------
@@ -252,14 +252,14 @@ def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
     Parameters
     ----------
     vectors : array_like
-        An nx3 array of vectors with their ``x``, ``y``, ``z`` components
+        An nx3 array of vectors with their `x`, `y`, `z` components
     theta : numeric, optional
         The angle (degrees) by which to perform the rotation.  Default is
         0, which means return the coordinates of the vector in the rotated
         coordinate system, when rotate_vectors=False.
     axis : int, optional
-        Axis around which to perform the rotation (``x`` = 0; ``y`` = 1;
-        ``z`` = 2)
+        Axis around which to perform the rotation (`x` = 0; `y` = 1; `z` =
+        2)
     rotate_vectors : bool, optional
         Whether to return the coordinates of each vector in the rotated
         coordinate system or to rotate the vectors themselves onto the same
@@ -294,10 +294,9 @@ def rotate_vectors(vectors, method="PF", **kwargs):
     Parameters
     ----------
     vectors : numpy.ndarray
-        A 2-D (Nx3) array with ``x``, ``y``, and ``z`` vector components,
+        A 2-D (Nx3) array with `x`, `y`, and `z` vector components,
         expressed in a right-handed coordinate system.  These may represent
-        ``u``, ``v``, and ``w`` wind speed vectors, or inertial
-        acceleration.
+        `u`, `v`, and `w` wind speed vectors, or inertial acceleration.
     method : str, optional
         One of: "DR", "TR", "PF" for double rotation, triple rotation, or
         planar fit.
@@ -309,9 +308,9 @@ def rotate_vectors(vectors, method="PF", **kwargs):
     Returns
     -------
     namedtuple with (index, name in brackets):
-    numpy.ndarray [0, 'rotated']
+    numpy.ndarray [0, `rotated`]
         2-D array (Nx3) Array with rotated vectors
-    numpy.ndarray [1, 'phi_theta']
+    numpy.ndarray [1, `phi_theta`]
         1-D array (1x2) :math:`\\phi` and :math:`\\theta` rotation angles.
         The former is the estimated angle between the vertical unit
         coordinate vector in the rotated frame and the vertical unit vector
@@ -376,11 +375,11 @@ def _rot_xyz(phi, theta, psi):
     Parameters
     ----------
     phi : float
-        Angle (degrees) for the rotation around the x-axis.
+        Angle (degrees) for the rotation around the `x`-axis.
     theta : float
-        Angle (degrees) for the rotation around the y-axis.
+        Angle (degrees) for the rotation around the `y`-axis.
     psi : float
-        Angle (degrees) for the rotation around the z-axis.
+        Angle (degrees) for the rotation around the `z`-axis.
 
     Returns
     -------
@@ -405,9 +404,9 @@ def euler_rotate(xyz, xyz_angles):
     xyz_angles : array_like
         2-D array (Nx3) with row vectors of angles (degrees) to be used for
         rotation of ``xyz``, where the first column specifies the angle for
-        the first rotation around the ``x``-axis, the second column the
-        angle for the second rotation around the ``y``-axis, and the third
-        column the angle for the last rotation around the ``z``-axis.
+        the first rotation around the `x`-axis, the second column the angle
+        for the second rotation around the `y`-axis, and the third column
+        the angle for the last rotation around the `z`-axis.
 
     Returns
     -------
@@ -431,18 +430,18 @@ def euler_rate_rotate(euler_angles, omega):
     ----------
     euler_angles : array_like
         2-D array (Nx2) with Euler :math:`\\phi` (roll) and :math:`\\theta`
-        (pitch) angles (radians) around the ``x``- and ``y``-axes in
-        columns 1 and 2, respectively, representing the orientation of the
-        sensor orientation relative to the output frame.
+        (pitch) angles (radians) around the `x`- and `y`-axes in columns 1
+        and 2, respectively, representing the orientation of the sensor
+        orientation relative to the output frame.
     omega : float 2-D array
-        (Nx3) with angular rates :math:`\\dot \\phi`, :math:`\\dot \\theta`,
-        and :math:`\\dot \\psi` around the ``x``-, ``y``-, and ``z``-axes in
-        columns 1, 2, and 3, respectively.
+        (Nx3) with angular rates :math:`\\dot \\phi`, :math:`\\dot
+        \\theta`, and :math:`\\dot \\psi` around the `x`-, `y`-, and
+        `z`-axes in columns 1, 2, and 3, respectively.
 
     Returns
     -------
     array_like
-        Array with same shape as ``omega`` with rotated angular rates.
+        Array with same shape as `omega` with rotated angular rates.
 
     """
     def rot_mat(phi, theta):
@@ -475,6 +474,7 @@ def _integrate_rate(rate, sample_freq):
     -------
     array_like
         Array with same shape as ``rate``
+
     """
     x = integrate.cumtrapz(rate, dx=(1.0 / sample_freq), axis=0, initial=0)
     return x
@@ -524,17 +524,16 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     implements Miller et al. (2008) approach.  Coordinate frame is assumed
     to be right-handed:
 
-    * ``x`` - positive towards the bow.
-    * ``y`` - positive towards port side.
-    * ``z`` - positive upwards.
+    * `x` - positive towards the bow.
+    * `y` - positive towards port side.
+    * `z` - positive upwards.
 
     Parameters
     ----------
     wind_speed : numpy.ndarray
-        A 2-D (Nx3) array with ``u``, ``v``, and ``w`` wind speed (m/s)
-        vectors.
+        A 2-D (Nx3) array with `u`, `v`, and `w` wind speed (m/s) vectors.
     acceleration : numpy.ndarray
-        A 2-D (Nx3) array with ``x``, ``y``, and ``z`` acceleration (m/s/s)
+        A 2-D (Nx3) array with `x`, `y`, and `z` acceleration (m/s/s)
         vectors.
     angle_rate : numpy.ndarray
         A 2-D (Nx3) array with angular rates (radians/s) vectors.
@@ -544,8 +543,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     speed : array_like
         A vector with ship speed (m/s).
     anemometer_pos : array_like
-        [``x``, ``y``, ``z``] position vector of anemometer, relative to
-        motion sensor (m).
+        [`x`, `y`, `z`] position vector of anemometer, relative to motion
+        sensor (m).
     sample_freq : float
         Sampling frequency (Hz).
     Tcf : float
@@ -553,7 +552,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     Ta : float
         High-pass filter cutoff for accelerations (s).  This can be a
         scalar if the same cutoff is used for the three components, or a 3
-        element vector to indicate cutoff period for the ``x``, ``y``, ``z``
+        element vector to indicate cutoff period for the `x`, `y`, `z`
         components.
     tilt_motion : array_like, optional
         [roll, pitch] vector with mean tilt (radians) relative to a
@@ -569,34 +568,34 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     Returns
     -------
     namedtuple with (index, name in brackets):
-    numpy.ndarray [0, 'uvw_ship']
+    numpy.ndarray [0, `uvw_ship`]
         2-D array (Nx3) with corrected wind vectors in ship-referenced
         frame with z-axis parallel to gravity.
-    numpy.ndarray [1, 'euler_angles']
+    numpy.ndarray [1, `euler_angles`]
         2-D array (Nx3) with Euler angles.
-    numpy.ndarray [2, 'euler_angles_angular_rates']
+    numpy.ndarray [2, `euler_angles_angular_rates`]
         2-D array (NX3) with Euler angles from rate sensors (unfiltered).
-    numpy.ndarray [3, 'euler_angles_accelerations']
+    numpy.ndarray [3, `euler_angles_accelerations`]
         2-D array (NX3) with Euler angles from accelerometers (unfiltered).
-    numpy.ndarray [4, 'euler_angles_slow']
+    numpy.ndarray [4, `euler_angles_slow`]
         2-D array (NX3) with slow Euler angles (low pass filtered).
-    numpy.ndarray [5, 'euler_angles_fast']
+    numpy.ndarray [5, `euler_angles_fast`]
         2-D array (NX3) with fast Euler angles (high pass filtered).
-    numpy.ndarray [6, 'mount_offset_rotations']
+    numpy.ndarray [6, `mount_offset_rotations`]
         2-D array (3X3) with mounting offset rotation matrix (see Miller 2008).
-    numpy.ndarray [7, 'uvw_earth']
+    numpy.ndarray [7, `uvw_earth`]
         2-D array (NX3) with measured velocity, rotated to the earth frame.
-    numpy.ndarray [8, 'uvw_angular']
+    numpy.ndarray [8, `uvw_angular`]
         2-D array (NX3) with velocity induced by angular motion.
-    numpy.ndarray [9, 'uvw_linear]
+    numpy.ndarray [9, `uvw_linear`]
         2-D array (NX3) with velocity induced by platform linear motion.
-    numpy.ndarray [10, 'ship_enu']
+    numpy.ndarray [10, `ship_enu`]
         2-D array (NX3) with ship velocity in eastward, northward, up
         frame.  (low pass filtered).
-    numpy.ndarray [11, 'uvw_enu']
+    numpy.ndarray [11, `uvw_enu`]
         2-D array (NX3) with corrected wind in eastward, northward, up
         frame.
-    numpy.ndarray [12, 'imu_enu']
+    numpy.ndarray [12, `imu_enu`]
         2-D (NX3) array with displacement of the motion sensor.
 
     References
@@ -772,15 +771,15 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
     Returns
     -------
     Tuple with (index, name in brackets):
-    numpy.ndarray [0, 'x']
+    numpy.ndarray [0, `x`]
         1-D array with interpolated input.
-    numpy.int [1, 'nspikes']
+    numpy.int [1, `nspikes`]
         Number of spikes detected.
-    numpy.int [2, 'ntrends']
+    numpy.int [2, `ntrends`]
         Number of outlier trends detected.
-    numpy.ndarray [3, 'kclass']
+    numpy.ndarray [3, `kclass`]
         1-D array of the same size as input, indicating the classification
-        ``k`` for each measurement. k=0: measurement within plausibility
+        `k` for each measurement. k=0: measurement within plausibility
         range, k=[-1 or 1]: measurement outside plausibility range, abs(k)
         > 1: measurement is part of an outlier trend.
 
@@ -858,13 +857,13 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
     Returns
     -------
     Tuple with (index, name in brackets):
-    numpy.ndarray [0, 'x']
+    numpy.ndarray [0, `x`]
         1-D array with despiked input.
-    numpy.int [1, 'nspikes']
+    numpy.int [1, `nspikes`]
         Number of spikes detected.
-    numpy.int [2, 'ntrends']
+    numpy.int [2, `ntrends`]
         Number of outlier trends detected.
-    numpy.int [3, 'kclass']
+    numpy.int [3, `kclass`]
         Number of iterations performed.
 
     """

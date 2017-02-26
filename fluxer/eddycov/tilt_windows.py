@@ -192,7 +192,7 @@ class TiltWindows:
         step : int, optional
             Step (stride) to subsample the time series by.  Default is 1.
         title : str
-            Title for plot.  Default is None.
+            Title for plot.  Default is ``None``.
 
         """
         # Workaround for stupid problem in Debian now:
@@ -216,7 +216,7 @@ class TiltWindows:
             yoffset : int
                 Location for quiver in the y-coordinate.
             **kwargs : optional keyword arguments
-                Arguments passed to pyplot.quiver.
+            Arguments passed to ``pyplot.quiver``.
 
             Returns
             -------
