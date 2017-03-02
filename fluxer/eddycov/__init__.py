@@ -8,7 +8,7 @@ Tools for eddy covariance analysis requiring motion correction
    smooth_angle
    planarfit
    rotate_coordinates
-   rotate_vectors
+   rotate_wind3d
    wind3D_correct
    despike_VickersMahrt
    wind3D_correct_period

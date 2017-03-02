@@ -16,7 +16,7 @@ from astropy.convolution import convolve, Box1DKernel
 
 
 __all__ = ["smooth_angle", "planarfit", "rotate_coordinates",
-           "rotate_vectors", "wind3D_correct", "despike_VickersMahrt"]
+           "rotate_wind3d", "wind3D_correct", "despike_VickersMahrt"]
 
 # Valid 3-D wind rotation methods
 _VECTOR_ROTATION_METHODS = {"DR", "TR", "PF"}
@@ -282,8 +282,8 @@ def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
     return np.dot(vectors, R_theta)
 
 
-def rotate_vectors(vectors, method="PF", **kwargs):
-    """Transform vectors to reference mean streamline coordinate system
+def rotate_wind3d(wind3D, method="PF", **kwargs):
+    """Transform 3D wind vectors to reference mean streamline coordinate system
 
     Use double rotation, triple rotation, or planar fit methods (Wilczak et
     al. 2001; Handbook of Micrometeorology).
@@ -293,7 +293,7 @@ def rotate_vectors(vectors, method="PF", **kwargs):
 
     Parameters
     ----------
-    vectors : numpy.ndarray
+    wind3D : numpy.ndarray
         A 2-D (Nx3) array with `x`, `y`, and `z` vector components,
         expressed in a right-handed coordinate system.  These may represent
         `u`, `v`, and `w` wind speed vectors, or inertial acceleration.
@@ -328,24 +328,24 @@ def rotate_vectors(vectors, method="PF", **kwargs):
         if "k_vector" in kwargs:
             k_vct = kwargs.get("k_vector")
         else:
-            pfit = planarfit(vectors)
+            pfit = planarfit(wind3D)
             k_vct = pfit.k_vct
-        j_vct = np.cross(k_vct, np.mean(vectors, 0))
+        j_vct = np.cross(k_vct, np.mean(wind3D, 0))
         j_vct = j_vct / np.sqrt(np.sum(j_vct ** 2))
         i_vct = np.cross(j_vct, k_vct)
         vcts_mat = np.column_stack((i_vct, j_vct, k_vct))
-        vcts_new = np.dot(vectors, vcts_mat)
+        vcts_new = np.dot(wind3D, vcts_mat)
         phi = np.arccos(np.dot(k_vct, np.array([0, 0, 1])))
-        theta = np.arctan2(np.mean(vectors[:, 1], 0),
-                           np.mean(vectors[:, 0], 0))
+        theta = np.arctan2(np.mean(wind3D[:, 1], 0),
+                           np.mean(wind3D[:, 0], 0))
     else:
         # First rotation to set mean v to 0
-        theta = np.arctan2(np.mean(vectors[:, 1]),
-                           np.mean(vectors[:, 0]))
+        theta = np.arctan2(np.mean(wind3D[:, 1]),
+                           np.mean(wind3D[:, 0]))
         rot1 = np.array([[np.cos(theta), -np.sin(theta), 0],
                          [np.sin(theta), np.cos(theta), 0],
                          [0, 0, 1]])
-        vcts1 = np.dot(vectors, rot1)
+        vcts1 = np.dot(wind3D, rot1)
         # Second rotation to set mean w to 0
         phi = np.arctan2(np.mean(vcts1[:, 2]),
                          np.mean(vcts1[:, 0]))
