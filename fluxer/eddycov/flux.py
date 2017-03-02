@@ -210,6 +210,9 @@ def planarfit(vectors):
 def rotation_matrix(theta, axis, active=False):
     """Generate rotation matrix for a given axis
 
+    The default (``active=False``) output matrix corresponds to passive
+    ("alias") rotations, if used to post-multiply row vectors.
+
     Parameters
     ----------
     active: bool, optional
@@ -223,6 +226,7 @@ def rotation_matrix(theta, axis, active=False):
     -------
     numpy.ndarray
     3x3 rotation matrix
+
     """
     theta = np.radians(theta)
     if axis == 0:
@@ -247,7 +251,19 @@ def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
 
     A right-handed coordinate system is assumed, where positive rotations
     are clockwise when looking along the rotation axis from the origin
-    towards the positive direction.
+    towards the positive direction.  With the default
+    ``rotate_vectors=False``, each vector :math:`i` in input coordinate
+    system :math:`0` is rotated around the given axis by angle
+    :math:`\\theta`, so that it can be expressed in coordinate system
+    :math:`1` as follows:
+
+    .. math:: \\vec{v}_{i,1} = \\vec{v}_{i,0} R_{\\theta}
+
+    where the input and output coordinate systems are different.  If the
+    input and output coordinate systems are the same,
+    i.e. ``rotate_vectors=True``, the vectors are transformed according to:
+
+    .. math:: \\vec{v}_{i,1} = \\vec{v}_{i,0} R_{\\theta}^\\intercal
 
     Parameters
     ----------
@@ -426,6 +442,20 @@ def euler_rotate(xyz, xyz_angles):
 def euler_rate_rotate(euler_angles, omega):
     """Rotate angular rates, given Euler angles
 
+    The Euler angular rate column vector :math:`\\Omega` consists of the
+    angular rates :math:`\\dot \\phi`, :math:`\\dot \\theta`, and
+    :math:`\\dot \\psi` around the axes in the inertial frame.  It is
+    related to the angular rate column vector :math:`\\omega`, consisting
+    of the angular rates :math:`\\omega_x`, :math:`\\omega_y`, and
+    :math:`\\omega_z` in the body frame via a non-orthogonal transformation
+    matrix :math:`R`:
+
+    .. math:: \\Omega = R \\omega
+
+    This function performs this operation by using the transpose of the
+    input body-frame angular rate row vectors, and transposing the result
+    to return row vectors also.
+
     Parameters
     ----------
     euler_angles : array_like
@@ -434,9 +464,9 @@ def euler_rate_rotate(euler_angles, omega):
         and 2, respectively, representing the orientation of the sensor
         orientation relative to the output frame.
     omega : float 2-D array
-        (Nx3) with angular rates :math:`\\dot \\phi`, :math:`\\dot
-        \\theta`, and :math:`\\dot \\psi` around the `x`-, `y`-, and
-        `z`-axes in columns 1, 2, and 3, respectively.
+        (Nx3) with angular rates :math:`\\omega_x`, :math:`\\omega_y`, and
+        :math:`\\omega_z` around the body-frame `x`-, `y`-, and `z`-axes in
+        columns 1, 2, and 3, respectively.
 
     Returns
     -------

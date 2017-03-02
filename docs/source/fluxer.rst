@@ -1,10 +1,6 @@
 fluxer API
 ==========
 
-
-Module contents
----------------
-
 .. automodule:: fluxer
     :members:
     :undoc-members:

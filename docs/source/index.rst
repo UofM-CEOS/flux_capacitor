@@ -2,9 +2,8 @@
  fluxer package
 ################
 
-
-Routines and tools to process flux (eddy covariance) data as collected by
-our group.
+Routines and tools to process flux (eddy covariance) data, as collected by
+CEOS.
 
 
 Basic usage
@@ -98,7 +97,6 @@ It is also possible to perform the analysis from the shell command line:
 ####################
  Indices and tables
 ####################
-
 
 * :ref:`genindex`
 * :ref:`modindex`
