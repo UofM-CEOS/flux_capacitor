@@ -72,6 +72,7 @@ def prepare_period(period_file, config):
     imu2rhs_linmult = config["EC Motion Correction"]["imu2rhs_linaccel_mult"]
     imu2rhs_angmult = config["EC Motion Correction"]["imu2rhs_angaccel_mult"]
     sonic_xoffset = config["EC Motion Correction"]["sonic_xoffset"]
+    imu_xoffset = config["EC Motion Correction"]["imu_xoffset"]
     dtypes = config["EC Inputs"]["dtypes"]
     # Read, specifying the options matching what we get in our database
     # output files
@@ -110,6 +111,16 @@ def prepare_period(period_file, config):
     # with the ship's
     wind.loc[:] = rotate_coordinates(wind.values, theta=sonic_xoffset,
                                      axis=2, rotate_vectors=False)
+    # Rotate the motion sensor vectors to align the instrument's coordinate
+    # frame with the ship's - Note we modify motiond3d by reference
+    accel3d = rotate_coordinates(motion3d.iloc[:, 0:3].values,
+                                 theta=imu_xoffset, axis=2,
+                                 rotate_vectors=False)
+    rate3d = rotate_coordinates(motion3d.iloc[:, 3:].values,
+                                theta=imu_xoffset, axis=2,
+                                rotate_vectors=False)
+    motion3d.loc[:, "acceleration_x":"acceleration_z"] = accel3d
+    motion3d.loc[:, "rate_phi":] = rate3d
 
     # [Original comment: check for any significant number of 'NAN's (not
     # worried about the odd one scattered here and there)].  [Original
