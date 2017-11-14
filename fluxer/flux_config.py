@@ -2,12 +2,19 @@
 
 from collections import OrderedDict
 from os import getcwd
+import logging
 import os.path as osp
 import glob
 import re
 import configparser as cfg
 
 __all__ = ["parse_config"]
+
+logger = logging.getLogger(__name__)
+# Add the null handler if importing as library; whatever using this library
+# should set up logging.basicConfig() as needed
+logger.addHandler(logging.NullHandler())
+logger.setLevel(logging.INFO)
 
 # We need to control names.  We leave the date time columns (always the
 # first two in input) up to pandas to determine, as they're always safe.
@@ -310,15 +317,23 @@ def parse_config(cfg_file):
     illegal_names = ((set(py_dict["EC Inputs"]["colnames"][2:]) |
                       set(py_dict["UW Inputs"]["colnames"][2:])) -
                      set(_INCOLS_ALL.keys()))
+    legal_names = set(_INCOLS_ALL.keys()) - set(illegal_names)
     if len(illegal_names) > 0:
-        raise Exception("There are illegal column names in config file:")
-        print illegal_names
+        logger.info("There are unknown column names in config file: %s",
+                    list(illegal_names))
+
+    ec_legal_names = set(py_dict["EC Inputs"]["colnames"][2:]) & legal_names
+    if len(ec_legal_names) < 1:
+        logger.error("There are no legal EC column names in config file")
     else:
-        ec_dtypes = {key: _INCOLS_ALL[key] for key in
-                     py_dict["EC Inputs"]["colnames"][2:]}
+        ec_dtypes = {key: _INCOLS_ALL[key] for key in ec_legal_names}
         py_dict["EC Inputs"]["dtypes"] = ec_dtypes
-        uw_dtypes = {key: _INCOLS_ALL[key] for key in
-                     py_dict["UW Inputs"]["colnames"][2:]}
+
+    uw_legal_names = set(py_dict["UW Inputs"]["colnames"][2:]) & legal_names
+    if len(uw_legal_names) < 1:
+        logger.error("There are no legal UW column names in config file")
+    else:
+        uw_dtypes = {key: _INCOLS_ALL[key] for key in uw_legal_names}
         py_dict["UW Inputs"]["dtypes"] = uw_dtypes
 
     return py_dict
