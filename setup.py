@@ -6,8 +6,6 @@ def readme():
         return f.read()
 
 
-# FLUXER_CONFIGS = ["fluxer/config/flux_default.cfg",
-#                   "fluxer/config/underway_default.cfg"]
 setup(name="fluxer",
       version="0.1.0",
       description=("Tools to process flux (eddy covariance) data"
@@ -21,9 +19,7 @@ setup(name="fluxer",
                "pCO2/pCO2_bottle_match.awk"],
       test_suite="fluxer.tests",
       entry_points={
-          "console_scripts": ["get_fluxes = fluxer.eddycov.__main__:main"]
+          "console_scripts": ["get_fluxes = fluxer.eddycov.__main__:main",
+                              "get_pCO2 = fluxer.underway.__main__:main"]
       }
-      # package_data={'fluxer': FLUXER_CONFIGS},
-      # data_files=[('config', ['config/flux_default.cfg',
-      #                         'config/underway_default.cfg'])],
       )

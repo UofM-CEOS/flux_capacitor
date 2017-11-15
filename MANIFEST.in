@@ -1,2 +1,4 @@
 include README.rst
 recursive-include fluxer/config *.cfg
+recursive-include docs/build/html *
+recursive-include docs/build/latex *.pdf

@@ -81,7 +81,7 @@ It is also possible to perform the analysis from the shell command line:
 
 .. code:: shell
 
-    underway.py ec_config.cfg
+    get_pCO2 ec_config.cfg
 
 
 ###################
