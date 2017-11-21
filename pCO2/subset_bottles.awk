@@ -1,9 +1,8 @@
 #! /usr/bin/awk -f
+# -*- coding: utf-8
 # Author: Sebastian P. Luque
 # Created: 2013-11-16T19:47:33+0000
-# Last-Updated: 2016-10-23T13:16:00+0000
-#           By: Sebastian P. Luque
-# copyright (c) 2013-2016 Sebastian P. Luque
+# copyright (c) 2013-2017 Sebastian P. Luque
 # ------------------------------------------------------------------------
 # This program is Free Software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

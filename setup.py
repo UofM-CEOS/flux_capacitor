@@ -15,7 +15,7 @@ setup(name="fluxer",
       author_email="sebastian.luque@umanitoba.ca",
       url="https://github.com/UofM-CEOS/flux_capacitor",
       packages=["fluxer", "fluxer.eddycov", "fluxer.underway"],
-      scripts=["pCO2/pCO2_rosette.py", "pCO2/subset_bottles.awk",
+      scripts=["pCO2/pCO2_rosette.py", "pCO2/subset_bottles.py",
                "pCO2/pCO2_bottle_match.awk"],
       test_suite="fluxer.tests",
       entry_points={

@@ -27,6 +27,7 @@ plt.style.use('ggplot')
 
 __version__ = "0.1.0"
 
+
 def main(bottle_files, uw_files, **kwargs):
     """Perform subsetting and matching of rosette and pCO2 data.
 
@@ -48,12 +49,12 @@ def main(bottle_files, uw_files, **kwargs):
     date_fld = kwargs.get("date_fld")
     time_fld = kwargs.get("time_fld")
     flow_fld = kwargs.get("flow_fld")
-    subset_cmd = (["gawk", "-f", subset_prog,
-                   "-v", "target_depth=" + str(target_depth),
-                   "-v", "tol_diff=" + str(tol_diff),
-                   "-v", "depth_fld=" + str(depth_fld),
-                   "-v", "temperature_fld=" + str(temperature_fld),
-                   "-v", "salinity_fld=" + str(salinity_fld)] +
+    subset_cmd = ([subset_prog,
+                   "--target_depth=" + str(target_depth),
+                   "--tol_diff=" + str(tol_diff),
+                   "--depth_fld=" + str(depth_fld),
+                   "--temperature_fld=" + str(temperature_fld),
+                   "--salinity_fld=" + str(salinity_fld)] +
                   glob.glob(bottle_files))
     match_cmd = (["gawk", "-f", match_prog,
                   "-v", "max_time_diff=" + str(max_time_diff),
@@ -91,48 +92,50 @@ if __name__ == "__main__":
     # them via its normal search path.  This ensures we find the programs
     # in the most natural way, and avoid hard-coding any location.
     _SCRIPTS_DIR = osp.dirname(osp.realpath(__file__))
-    _SUBSET_PROG = osp.join(_SCRIPTS_DIR, "subset_bottles.awk")
+    _SUBSET_PROG = osp.join(_SCRIPTS_DIR, "subset_bottles.py")
     _MATCH_PROG = osp.join(_SCRIPTS_DIR, "pCO2_bottle_match.awk")
-    parser = argparse.ArgumentParser(description=_DESCRIPTION)
+    _FORMATERCLASS = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(description=_DESCRIPTION,
+                                     formatter_class=_FORMATERCLASS)
     group = parser.add_argument_group("required arguments")
     # We have to specify every argument to the underlying programs.
     parser.add_argument("bottle_files", metavar="bottle-files",
-                        help="Glob pattern for location of bottle files.")
+                        help="Glob pattern for location of bottle files")
     parser.add_argument("uw_files", metavar="uw-files",
                         help=("Glob pattern for location of underway pCO2 "
-                              "files (including suffix)."))
+                              "files (including suffix)"))
     group.add_argument("--ofigure-file", required=True,
                        type=argparse.FileType("w"),
                        help="Path to output figure file.")
     parser.add_argument("--target-depth", default=5, type=float,
-                        help="Depth (m) of bottles to extract.")
+                        help="Depth (m) of bottles to extract")
     parser.add_argument("--tol-diff", default=1, type=float,
                         help=("Maximum difference (m) allowed for "
-                              "deviation from target depth."))
+                              "deviation from target depth"))
     parser.add_argument("--depth-fld", default=6, type=int,
                         help=("Field where depth is located in average "
-                              "rows of bottle files."))
+                              "rows of bottle files"))
     parser.add_argument("--temperature-fld", default=7, type=int,
                         help=("Field where temperature is located in "
-                              "average rows of bottle files."))
+                              "average rows of bottle files"))
     parser.add_argument("--salinity-fld", default=9, type=int,
                         help=("Field where salinity is located in "
-                              "average rows of bottle files."))
+                              "average rows of bottle files"))
     parser.add_argument("--max-time-diff", default=600, type=float,
                         help=("Maximum time difference (seconds) allowed "
-                              "between bottle and underway pCO2 data."))
+                              "between bottle and underway pCO2 data"))
     parser.add_argument("--min-flow", default=2, type=float,
                         help=("Minimum water flow rate allowed in " +
-                              "underway pCO2 data (units as in input)."))
+                              "underway pCO2 data (units as in input)"))
     parser.add_argument("--date-fld", default=3, type=int,
                         help=("Field where date is located in underway "
-                              "pCO2 files."))
+                              "pCO2 files"))
     parser.add_argument("--time-fld", default=4, type=int,
                         help=("Field where time is located in underway "
-                              " pCO2 files."))
+                              " pCO2 files"))
     parser.add_argument("--flow-fld", default=16, type=int,
                         help=("Field where flow rate is located in "
-                              "underway pCO2 files."))
+                              "underway pCO2 files"))
     parser.add_argument("--version", action="version",
                         version="%(prog)s {}".format(__version__))
     args = parser.parse_args()
