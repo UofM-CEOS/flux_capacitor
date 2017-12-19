@@ -88,18 +88,18 @@ if __name__ == "__main__":
                                      formatter_class=_FORMATERCLASS)
     parser.add_argument("file", nargs="+", type=argparse.FileType(),
                         help="Path to rosette bottle file(s)")
-    parser.add_argument("--target_depth", type=float, default=5,
+    parser.add_argument("--target-depth", type=float, default=5,
                         help="Depth (m) of bottles to extract")
-    parser.add_argument("--tol_diff", type=float, default=2,
+    parser.add_argument("--tol-diff", type=float, default=2,
                         help=("Number of meters for maximum deviation from" +
                               "target_depth"))
-    parser.add_argument("--depth_fld", type=int, default=6,
+    parser.add_argument("--depth-fld", type=int, default=6,
                         help=("Field (integer) where depth is located in" +
                               "average rows"))
-    parser.add_argument("--temperature_fld", type=int, default=7,
+    parser.add_argument("--temperature-fld", type=int, default=7,
                         help=("Field (integer) where temperature is located" +
                               "in average rows"))
-    parser.add_argument("--salinity_fld", type=int, default=8,
+    parser.add_argument("--salinity-fld", type=int, default=8,
                         help=("Field (integer) where salinity is located in" +
                               "average rows"))
     args = parser.parse_args()

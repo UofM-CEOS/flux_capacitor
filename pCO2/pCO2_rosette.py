@@ -50,11 +50,11 @@ def main(bottle_files, uw_files, **kwargs):
     time_fld = kwargs.get("time_fld")
     flow_fld = kwargs.get("flow_fld")
     subset_cmd = ([subset_prog,
-                   "--target_depth=" + str(target_depth),
-                   "--tol_diff=" + str(tol_diff),
-                   "--depth_fld=" + str(depth_fld),
-                   "--temperature_fld=" + str(temperature_fld),
-                   "--salinity_fld=" + str(salinity_fld)] +
+                   "--target-depth=" + str(target_depth),
+                   "--tol-diff=" + str(tol_diff),
+                   "--depth-fld=" + str(depth_fld),
+                   "--temperature-fld=" + str(temperature_fld),
+                   "--salinity-fld=" + str(salinity_fld)] +
                   glob.glob(bottle_files))
     match_cmd = (["gawk", "-f", match_prog,
                   "-v", "max_time_diff=" + str(max_time_diff),
@@ -65,6 +65,7 @@ def main(bottle_files, uw_files, **kwargs):
                  glob.glob(uw_files))
     bottles = Popen(subset_cmd, stdout=PIPE)
     bottle_matches = Popen(match_cmd, stdin=bottles.stdout, stdout=PIPE)
+    bottles.stdout.close()
     rosette = pd.read_csv(StringIO(bottle_matches.communicate()[0]))
     # Fit model
     temp_fit = np.polyfit(rosette.equ_temperature, rosette.temperature, 1)
