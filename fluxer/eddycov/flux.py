@@ -150,7 +150,7 @@ def planarfit(vectors):
     """Calculate planar fit coefficients for coordinate rotation
 
     See Handbook of Micrometeorology (Lee et al. 2004).  Ported from
-    getPlanarCoeffs.m from Patric Sturm <pasturm@ethz.ch>.
+    getPlanarFitCoeffs.m from Patric Sturm <pasturm@ethz.ch>.
 
     Parameters
     ----------
@@ -167,9 +167,9 @@ def planarfit(vectors):
         1-D array (1x3) unit vector parallel to the new z-axis.
     numpy.ndarray [1, `tilt_coefs`]
         1-D array (1x3) Tilt coefficients `b0`, `b1`, `b2`.
-    numpy.float [`phi`]
+    numpy.float [2, `phi`]
         Scalar representing roll angle :math:`\\phi`.
-    numpy.float [`theta`]
+    numpy.float [3, `theta`]
         Scalar representing pitch angle :math:`\\theta`.
 
     """
@@ -647,7 +647,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # EULER ANGLES: (see Edson et al., 1998)
     # Low frequency tilt using accelerometers and gyro
     g = np.sqrt(np.sum(np.mean(acceleration, 0) ** 2))
-    gyro = np.unwrap(-np.radians(heading))  # Put heading in radians
+    gyro = np.unwrap(-np.radians(heading))  # Put heading in radians and RHS
     gyro0 = gyro[0]               # Initial heading
     gyro = gyro - gyro0           # Remove initial heading
     EA_acc = np.column_stack((np.arctan2(acceleration[:, 1], g),
@@ -658,7 +658,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # Low-pass filter to retain low-frequency content, but not the offset
     psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
     # High frequency angles using angular rates
-    rm = signal.detrend(angle_rate, 0)
+    rm = signal.detrend(angle_rate, 0, "constant")
     EA_rate = _integrate_rate(rm, sample_freq)
     EA_rate_hf = signal.filtfilt(bc, ac, EA_rate, padlen=pdl, axis=0)
     phi = phi_lf + EA_rate_hf[:, 0]
