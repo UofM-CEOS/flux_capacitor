@@ -636,9 +636,6 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
         1683-1694, DOI: 10.1175/2008JTECHO547.1.
 
     """
-    if len([Ta]) == 1:
-        Ta = Ta * np.ones((3, 1))
-
     Astop, Apass = 10.0, 0.5     # stopband attenuation; passband Ripple (dB)
     # Stop, passband cutoffs
     bc, ac, pdl = _butterworth_coefs(Tcf, sample_freq,
@@ -720,6 +717,8 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
     # PLATFORM LINEAR VELOCITY
     # High-pass filters for accelerometers
+    if np.isscalar(Ta):
+        Ta = np.repeat(Ta, 3)
     bax, aax, pdlx = _butterworth_coefs(Ta[0], sample_freq,
                                         Astop=Astop, Apass=Apass)
     bay, aay, pdly = _butterworth_coefs(Ta[1], sample_freq,
