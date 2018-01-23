@@ -163,6 +163,7 @@ def planarfit(vectors):
     Returns
     -------
     namedtuple with (index and name in brackets):
+
     numpy.ndarray [0, `k_vct`]
         1-D array (1x3) unit vector parallel to the new z-axis.
     numpy.ndarray [1, `tilt_coefs`]
@@ -324,6 +325,7 @@ def rotate_wind3d(wind3D, method="PF", **kwargs):
     Returns
     -------
     namedtuple with (index, name in brackets):
+
     numpy.ndarray [0, `rotated`]
         2-D array (Nx3) Array with rotated vectors
     numpy.ndarray [1, `phi_theta`]
@@ -489,25 +491,25 @@ def euler_rate_rotate(euler_angles, omega):
     return omega_rots
 
 
-def _integrate_rate(rate, sample_freq):
-    """Integrate angular or linear rate signal given sampling frequency
+def _cumtrapz(x, sample_freq):
+    """Cumulatively integrate signal given sampling frequency
 
     Parameters
     ----------
-    rate : array_like
-        A 1- or 2-D array with angular rate (deg/s) or linear rate
-        measurements.
+    x : array_like
+        A 1- or 2-D array with signal such as angular rate (deg/s) or
+        linear rate measurements.
     sample_freq : int, float
         The sampling frequency in units required for integration.
 
     Returns
     -------
     array_like
-        Array with same shape as ``rate``
+        Array with same shape as `x`
 
     """
-    x = integrate.cumtrapz(rate, dx=(1.0 / sample_freq), axis=0, initial=0)
-    return x
+    y = integrate.cumtrapz(x, dx=(1.0 / sample_freq), axis=0, initial=0)
+    return y
 
 
 def _butterworth_coefs(cutoff_factor, sample_freq, Astop=10.0, Apass=0.5):
@@ -527,6 +529,7 @@ def _butterworth_coefs(cutoff_factor, sample_freq, Astop=10.0, Apass=0.5):
     Returns
     -------
     Tuple with (index, name in brackets):
+
     numpy.ndarray [0]
         Numerator (b) polynomial of the filter.
     numpy.ndarray [1]
@@ -598,6 +601,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     Returns
     -------
     namedtuple with (index, name in brackets):
+
     numpy.ndarray [0, `uvw_ship`]
         2-D array (Nx3) with corrected wind vectors in ship-referenced
         frame with z-axis parallel to gravity.
@@ -656,7 +660,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
     # High frequency angles using angular rates
     rm = signal.detrend(angle_rate, 0, "constant")
-    EA_rate = _integrate_rate(rm, sample_freq)
+    EA_rate = _cumtrapz(rm, sample_freq)
     EA_rate_hf = signal.filtfilt(bc, ac, EA_rate, padlen=pdl, axis=0)
     phi = phi_lf + EA_rate_hf[:, 0]
     axg = np.arctan2(-acceleration[:, 0] * np.cos(phi), g)
@@ -680,7 +684,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # matrix. Re-integrate and high pass filter these angular rates to get
     # the fast angles.
     EA_fast = signal.filtfilt(bc, ac,
-                              _integrate_rate(omega, sample_freq),
+                              _cumtrapz(omega, sample_freq),
                               padlen=pdl, axis=0)
 
     # combine high- and low-frequency angles; make 2D transformation matrix
@@ -703,7 +707,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
     # WIND VECTOR ROTATION
     # Using coordinate rotations
-    EA_degs = np.degrees(EA)
+    EA_degs = np.degrees(EA)    # only for getting rotation matrix
     Ur = euler_rotate(np.dot(M_ma, wind_speed.T).T, EA_degs)
 
     # PLATFORM ANGULAR VELOCITY
@@ -729,7 +733,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     # Rotate accelerations
     ae = euler_rotate(acceleration, EA_degs)
     ae[:, 2] = ae[:, 2] - g     # subtract gravity
-    up = _integrate_rate(ae, sample_freq)
+    up = _cumtrapz(ae, sample_freq)
     Up = np.column_stack((signal.filtfilt(bax, aax, up[:, 0], padlen=pdlx),
                           signal.filtfilt(bay, aay, up[:, 1], padlen=pdly),
                           signal.filtfilt(baz, aaz, up[:, 2], padlen=pdlz)))
@@ -754,7 +758,7 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     U_ship = euler_rotate(Us, u_ea_degs)
     U_earth = euler_rotate(UVW, u_ea_degs)
     # Platform displacement
-    xp = _integrate_rate(Up, sample_freq)
+    xp = _cumtrapz(Up, sample_freq)
     Xp = np.column_stack((signal.filtfilt(bax, aax, xp[:, 0], padlen=pdlx),
                           signal.filtfilt(bay, aay, xp[:, 1], padlen=pdly),
                           signal.filtfilt(baz, aaz, xp[:, 2], padlen=pdlz)))
