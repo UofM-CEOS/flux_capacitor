@@ -512,13 +512,14 @@ def _cumtrapz(x, sample_freq):
     return y
 
 
-def _butterworth_coefs(cutoff_factor, sample_freq, Astop=10.0, Apass=0.5):
+def _butterworth_coefs(cutoff_period, sample_freq, Astop=10.0, Apass=0.5):
     """Compute Butterworth filter coefficients
 
     Parameters
     ----------
-    cutoff_factor : float
-        Cutoff value to use for designing the filter
+    cutoff_period : int, float
+        Cutoff period (s) defining the cutoff frequency for designing the
+        filter.
     sample_freq : int, float
         The sampling frequency in units required for integration.
     Apass : float, optional
@@ -536,10 +537,11 @@ def _butterworth_coefs(cutoff_factor, sample_freq, Astop=10.0, Apass=0.5):
         Denominator (a) polynomial of the filter.
     float [2]
         Padding length for the filter.
+
     """
-    # Stop, passband cutoffs
-    wp = 1.0 / (2.0 * cutoff_factor) / (sample_freq / 2.0)
-    ws = 1.0 / cutoff_factor / (sample_freq / 2.0)
+    # Passband and stopband cutoffs, normalized to Nyquist frequency
+    wp = 1.0 / (2.0 * cutoff_period) / (sample_freq / 2.0)
+    ws = 1.0 / cutoff_period / (sample_freq / 2.0)
     N, Wn = signal.buttord(wp, ws, Apass, Astop)
     bc, ac = signal.butter(N, Wn, "high")
     # WATCH THIS: we need to make padlen the same as in Matlab
@@ -651,18 +653,19 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     gyro = np.unwrap(-np.radians(heading))  # Put heading in radians and RHS
     gyro0 = gyro[0]               # Initial heading
     gyro = gyro - gyro0           # Remove initial heading
+    # Estimated Euler angles
     EA_acc = np.column_stack((np.arctan2(acceleration[:, 1], g),
                               np.arctan2(-acceleration[:, 0], g),
                               gyro))
+    # Low-pass filter to retain low-frequency content, but not the offset
     phi_lf = (EA_acc[:, 0] -
               signal.filtfilt(bc, ac, EA_acc[:, 0], padlen=pdl))
-    # Low-pass filter to retain low-frequency content, but not the offset
     psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
     # High frequency angles using angular rates
     rm = signal.detrend(angle_rate, 0, "constant")
-    EA_rate = _cumtrapz(rm, sample_freq)
+    EA_rate = _cumtrapz(rm, sample_freq)  # Estimated Euler angles
     EA_rate_hf = signal.filtfilt(bc, ac, EA_rate, padlen=pdl, axis=0)
-    phi = phi_lf + EA_rate_hf[:, 0]
+    phi = phi_lf + EA_rate_hf[:, 0]  # complementary-filtered phi
     axg = np.arctan2(-acceleration[:, 0] * np.cos(phi), g)
     theta_lf = axg - signal.filtfilt(bc, ac, axg, padlen=pdl)
     theta = theta_lf + EA_rate_hf[:, 1]
@@ -729,7 +732,6 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
                                         Astop=Astop, Apass=Apass)
     baz, aaz, pdlz = _butterworth_coefs(Ta[2], sample_freq,
                                         Astop=Astop, Apass=Apass)
-
     # Rotate accelerations
     ae = euler_rotate(acceleration, EA_degs)
     ae[:, 2] = ae[:, 2] - g     # subtract gravity
