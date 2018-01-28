@@ -653,19 +653,22 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
     gyro = np.unwrap(-np.radians(heading))  # Put heading in radians and RHS
     gyro0 = gyro[0]               # Initial heading
     gyro = gyro - gyro0           # Remove initial heading
-    # Estimated Euler angles
-    EA_acc = np.column_stack((np.arctan2(acceleration[:, 1], g),
-                              np.arctan2(-acceleration[:, 0], g),
-                              gyro))
-    # Low-pass filter to retain low-frequency content, but not the offset
-    phi_lf = (EA_acc[:, 0] -
-              signal.filtfilt(bc, ac, EA_acc[:, 0], padlen=pdl))
-    psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
+    # Uncorrected Euler angles from accelerometers and gyro
+    EA_acc = np.column_stack((np.arcsin(acceleration[:, 1] / g),  # phi
+                              np.arcsin(-acceleration[:, 0] / g),  # theta
+                              gyro))                               # psi
     # High frequency angles using angular rates
     rm = signal.detrend(angle_rate, 0, "constant")
     EA_rate = _cumtrapz(rm, sample_freq)  # Estimated Euler angles
     EA_rate_hf = signal.filtfilt(bc, ac, EA_rate, padlen=pdl, axis=0)
+    theta_lf = (EA_acc[:, 1] -
+                signal.filtfilt(bc, ac, EA_acc[:, 1], padlen=pdl))
+    theta = theta_lf + EA_rate_hf[:, 1]
+    phi_pitched = EA_acc[:, 0] / np.cos(theta_lf)
+    phi_lf = phi_pitched - signal.filtfilt(bc, ac, phi_pitched, padlen=pdl)
     phi = phi_lf + EA_rate_hf[:, 0]  # complementary-filtered phi
+    # Low-pass filter to retain low-frequency content, but not the offset
+    psi_lf = gyro - signal.filtfilt(bc, ac, gyro, padlen=pdl)
     axg = np.arctan2(-acceleration[:, 0] * np.cos(phi), g)
     theta_lf = axg - signal.filtfilt(bc, ac, axg, padlen=pdl)
     theta = theta_lf + EA_rate_hf[:, 1]
