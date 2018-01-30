@@ -27,4 +27,4 @@ EddyCovariance/
 MANIFEST
 Scripts/*.m
 flux_[0-9]*.cfg
-/Scripts/octave-workspace
+.octave-workspace
