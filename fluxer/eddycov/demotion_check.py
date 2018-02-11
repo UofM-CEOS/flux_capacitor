@@ -359,7 +359,7 @@ def _plot1_IMU_spectra(rates, accelerations, axs_rate, axs_acc,
 
 
 def plot_IMU_euler_angles_spectra(config_file, nperseg=60 * 5 * 10,
-                                  **kwargs):
+                                  nfiles=None, **kwargs):
     """Compute and plot spectra for motion sensor (IMU) fusion
 
     The plot shows the spectral density for all individual runs from input
@@ -373,6 +373,8 @@ def plot_IMU_euler_angles_spectra(config_file, nperseg=60 * 5 * 10,
     nperseg : int, optional
         Number of samples per segment for computing the spectral density
         using Welch's method (see scipy.signal.welch).
+    nfiles : int, optional
+        Number of files to randomly sample from the configuration file list.
     **kwargs
         Keyword arguments passed to Axes.loglog.
 
@@ -388,6 +390,8 @@ def plot_IMU_euler_angles_spectra(config_file, nperseg=60 * 5 * 10,
         kwargs.update({"linewidth": 0.1})
     config = ec.db_flux.parse_config(config_file)
     input_files = config["EC Inputs"]["input_files"]
+    if nfiles is not None and nfiles < len(input_files):
+        input_files = np.random.choice(input_files, nfiles, replace=False)
     sample_freq_hz = config["EC Inputs"]["sample_frequency"]
     # Set up subplots
     title = "IMU naive Euler roll and pitch spectra"
@@ -407,7 +411,7 @@ def plot_IMU_euler_angles_spectra(config_file, nperseg=60 * 5 * 10,
     return (fig, axs, leg)
 
 
-def plot_IMU_spectra(config_file, nperseg=60 * 10, **kwargs):
+def plot_IMU_spectra(config_file, nperseg=60 * 10, nfiles=None, **kwargs):
     """Compute and plot spectra for all signals in motion sensor (IMU)
 
     The plot shows the spectral density for each individual run from input
@@ -421,6 +425,8 @@ def plot_IMU_spectra(config_file, nperseg=60 * 10, **kwargs):
     nperseg : int, optional
         Number of samples per segment for computing the spectral density
         using Welch's method (see scipy.signal.welch).
+    nfiles : int, optional
+        Number of files to randomly sample from the configuration file list.
     **kwargs
         Optional keyword arguments passed to Axes.loglog.
 
@@ -438,6 +444,8 @@ def plot_IMU_spectra(config_file, nperseg=60 * 10, **kwargs):
         kwargs.update({"linewidth": 0.1})
     config = ec.db_flux.parse_config(config_file)
     input_files = config["EC Inputs"]["input_files"]
+    if nfiles is not None and nfiles < len(input_files):
+        input_files = np.random.choice(input_files, nfiles, replace=False)
     sample_freq_hz = config["EC Inputs"]["sample_frequency"]
     # Prepare plots for angular rate
     fig_rate, axs_rate = _spectra_subplot_init(3, 1,
