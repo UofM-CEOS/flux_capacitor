@@ -254,22 +254,21 @@ def rotation_matrix(theta, axis, active=False):
     return R_theta
 
 
-def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
+def rotate_coordinates(vectors, theta, axis=2, **kwargs):
     """Rotate vector coordinate system or vectors themselves around an axis
 
     A right-handed coordinate system is assumed, where positive rotations
     are clockwise when looking along the rotation axis from the origin
-    towards the positive direction.  With the default
-    ``rotate_vectors=False``, each vector :math:`i` in input coordinate
-    system :math:`0` is rotated around the given axis by angle
-    :math:`\\theta`, so that it can be expressed in coordinate system
-    :math:`1` as follows:
+    towards the positive direction.  With the default ``active=False``,
+    each row vector :math:`i` in input coordinate system :math:`0` is
+    rotated around the given axis by angle :math:`\\theta`, so that it can
+    be expressed in coordinate system :math:`1` as follows:
 
     .. math:: \\vec{v}_{i,1} = \\vec{v}_{i,0} R_{\\theta}
 
     where the input and output coordinate systems are different.  If the
-    input and output coordinate systems are the same,
-    i.e. ``rotate_vectors=True``, the vectors are transformed according to:
+    input and output coordinate systems are the same, i.e. ``active=True``,
+    the vectors are transformed according to:
 
     .. math:: \\vec{v}_{i,1} = \\vec{v}_{i,0} R_{\\theta}^\\intercal
 
@@ -277,26 +276,28 @@ def rotate_coordinates(vectors, theta=0, axis=2, rotate_vectors=False):
     ----------
     vectors : array_like
         An nx3 array of vectors with their `x`, `y`, `z` components
-    theta : numeric, optional
-        The angle (degrees) by which to perform the rotation.  Default is
-        0, which means return the coordinates of the vector in the rotated
-        coordinate system, when rotate_vectors=False.
-    axis : int, optional
-        Axis around which to perform the rotation (`x` = 0; `y` = 1; `z` =
-        2)
-    rotate_vectors : bool, optional
-        Whether to return the coordinates of each vector in the rotated
-        coordinate system or to rotate the vectors themselves onto the same
-        coordinate system.  Default is to perform a passive transformation,
-        i.e. rotation of the coordinate system.
+    theta : numeric
+        The angle (degrees) by which to perform the rotation.
+    axis : int
+        Axis around which to perform the rotation (`x` = 0; `y` = 1;
+        `z` = 2).
+    **kwargs
+        Optional keywords
+
+        active : bool
+            Whether to return the coordinates of each vector in the rotated
+            coordinate system or to rotate the vectors themselves onto the
+            same coordinate system.  Default is to perform a passive
+            transformation, i.e. rotation of the coordinate system.
 
     Returns
     -------
     array_like
-    The vector array with the same shape as input with rotated components.
+        The vector array with the same shape as input with rotated
+        components.
 
     """
-    R_theta = rotation_matrix(theta, axis, active=rotate_vectors)
+    R_theta = rotation_matrix(theta, axis, **kwargs)
     # Multiplying a vector by R_theta, as defined above, transforms the
     # vector coordinates from the original coordinate system to the new,
     # rotated coordinate frame.  Note that the rotation matrix

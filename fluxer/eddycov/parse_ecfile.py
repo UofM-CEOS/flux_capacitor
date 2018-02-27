@@ -110,15 +110,13 @@ def prepare_period(period_file, config):
     # Rotate the sonic vectors to align the instrument's coordinate frame
     # with the ship's
     wind.loc[:] = rotate_coordinates(wind.values, theta=sonic_xoffset,
-                                     axis=2, rotate_vectors=False)
+                                     axis=2, active=False)
     # Rotate the motion sensor vectors to align the instrument's coordinate
     # frame with the ship's - Note we modify motiond3d by reference
     accel3d = rotate_coordinates(motion3d.iloc[:, 0:3].values,
-                                 theta=imu_xoffset, axis=2,
-                                 rotate_vectors=False)
+                                 theta=imu_xoffset, axis=2, active=False)
     rate3d = rotate_coordinates(motion3d.iloc[:, 3:].values,
-                                theta=imu_xoffset, axis=2,
-                                rotate_vectors=False)
+                                theta=imu_xoffset, axis=2, active=False)
     motion3d.loc[:, "acceleration_x":"acceleration_z"] = accel3d
     motion3d.loc[:, "rate_phi":] = rate3d
 
