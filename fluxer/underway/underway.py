@@ -47,9 +47,8 @@ def underway_pCO2(period_file, config):
 
     Returns
     -------
-
-    A pandas.DataFrame object with additional columns as results of
-    computations.
+    pandas.DataFrame
+        object with additional columns as results of computations.
 
     """
     R_u = 8.31451              # j/mol/k universal gas constant
@@ -235,8 +234,7 @@ def main(config_file):
     Returns
     -------
     None
-
-    Writes summary file and prints messages from process.
+        Writes summary file and prints messages from process.
 
     """
     config = parse_config(config_file)

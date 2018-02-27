@@ -30,6 +30,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
     'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
     'sphinx.ext.ifconfig',
@@ -38,6 +39,10 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     'sphinx.ext.githubpages',
+    'matplotlib.sphinxext.only_directives',
+    'matplotlib.sphinxext.plot_directive',
+    'IPython.sphinxext.ipython_console_highlighting',
+    'IPython.sphinxext.ipython_directive',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -58,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'fluxer'
-copyright = u'2017, Sebastian Luque'
+copyright = u'2017-2018, Sebastian Luque'
 author = u'Sebastian Luque'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -156,9 +161,9 @@ else:
 #
 # html_logo = None
 
-# The name of an image file (relative to this directory) to use as a favicon of
-# the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
-# pixels large.
+# The name of an image file (relative to this directory) to use as a
+# favicon of the docs.  This file should be a Windows icon file (.ico)
+# being 16x16 or 32x32 pixels large.
 #
 # html_favicon = None
 
@@ -437,3 +442,7 @@ epub_exclude_files = ['search.html']
 # -- Options for autodoc --------------------------------------------------
 
 autodoc_member_order = 'groupwise'
+
+# -- Miscellaneous custom options -----------------------------------------
+
+numfig = True

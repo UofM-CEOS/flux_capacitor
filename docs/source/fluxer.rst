@@ -19,7 +19,7 @@ Submodules
 ----------
 
 fluxer.flux_config module
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: fluxer.flux_config
     :members:

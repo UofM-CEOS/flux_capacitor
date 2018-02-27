@@ -6,6 +6,7 @@ import unittest as ut
 from fluxer.eddycov import flux
 import numpy as np
 from numpy import testing as npt
+import transforms3d.derivations.eulerangles as euler_deriv
 
 
 class TestAngleVectorFuncs (ut.TestCase):
@@ -152,3 +153,68 @@ class TestAngleVectorFuncs (ut.TestCase):
                                       err_msg=msg.format("angles"))
         npt.assert_array_almost_equal(vmags_hat, E_vmags,
                                       err_msg=msg.format("magnitudes"))
+
+
+class TestRotations (ut.TestCase):
+    def setUp(self):
+        np.random.seed(123)
+        self.uvw = np.random.randn(10, 3)
+        self.euler_degs = np.array([[10, 20, 30]])
+        self.degs = np.resize(self.euler_degs, self.uvw.shape)
+        self.uvw_rot = flux.euler_rotate(self.uvw, self.degs)
+        phi, theta, psi = euler_deriv.symbols("\\phi, \\theta, \\psi")
+        self.phi, self.theta, self.psi = phi, theta, psi
+
+        def euler_mat_fun(x):
+            """Compute active rotation matrix from 3 angles in 1-D array x"""
+            rotx = flux.rotation_matrix(x[0], 0)
+            roty = flux.rotation_matrix(x[1], 1)
+            rotz = flux.rotation_matrix(x[2], 2)
+            return np.transpose(np.dot(rotz, np.dot(roty, rotx)))
+
+        self.euler_mat_fun = euler_mat_fun
+
+    def test_euler_rotations(self):
+        """Compare rotations from fluxer and transforms3d"""
+
+        # Derive the rotation matrix applied in euler_rotate
+
+        # The transpose of a product of matrices is equal to the product of
+        # their transposes in reverse order... so reverse the order of
+        # multiplication, which obfuscates the meaning... The alternative
+        # is to have the rotation matrix pre-multiply column vectors, which
+        # is inconvenient.  Either way at least one transpose is required
+        euler_mat0 = (euler_deriv.x_rotation(self.phi).T *
+                      euler_deriv.y_rotation(self.theta).T *
+                      euler_deriv.z_rotation(self.psi).T)
+        subs = dict(zip([self.phi, self.theta, self.psi],
+                        *np.radians(self.euler_degs)))
+        M_zyx = np.array(euler_mat0.subs(subs)).astype(np.float)
+        npt.assert_array_almost_equal(np.dot(self.uvw, M_zyx),
+                                      self.uvw_rot)
+
+        xrot_active = flux.rotation_matrix(self.euler_degs[0, 0], 0, True)
+        yrot_active = flux.rotation_matrix(self.euler_degs[0, 1], 1, True)
+        zrot_active = flux.rotation_matrix(self.euler_degs[0, 2], 2, True)
+        euler_mat1 = np.dot(xrot_active, np.dot(yrot_active, zrot_active))
+        npt.assert_array_almost_equal(np.dot(self.uvw, euler_mat1),
+                                      self.uvw_rot)
+
+        # Try with passive rotation and transpose the resulting rotation
+        # matrix
+        xrot_passive = flux.rotation_matrix(self.euler_degs[0, 0], 0)
+        yrot_passive = flux.rotation_matrix(self.euler_degs[0, 1], 1)
+        zrot_passive = flux.rotation_matrix(self.euler_degs[0, 2], 2)
+        euler_mat2 = np.dot(zrot_passive,
+                            np.dot(yrot_passive, xrot_passive))
+        npt.assert_array_almost_equal(np.dot(self.uvw, euler_mat2.T),
+                                      self.uvw_rot)
+
+        # Now looping through rows, mimicking the real case of changing
+        # euler angles.  First show derivation:
+        uvw_rots = np.empty_like(self.uvw)
+        for i, v in enumerate(self.degs):
+            euler_mati = self.euler_mat_fun(v)
+            uvw_roti = np.dot(self.uvw[i], euler_mati)
+            uvw_rots[i] = uvw_roti
+        npt.assert_array_almost_equal(uvw_rots, self.uvw_rot)

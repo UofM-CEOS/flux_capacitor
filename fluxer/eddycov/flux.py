@@ -58,7 +58,8 @@ def decompose(angle, vmagnitude):
 
     Returns
     -------
-    namedtuple with ndarrays `x` and `y`, in that order.
+    AngleCoordinates : namedtuple
+        namedtuple with ndarrays `x` and `y`, in that order.
 
     Examples
     --------
@@ -90,7 +91,9 @@ def recompose(x, y):
 
     Returns
     -------
-    namedtuple with ndarrays `angle` and `magnitude`, in that order.
+    Vector : namedtuple
+        namedtuple with ndarrays ``angle`` and ``magnitude``, in that
+        order.
 
     """
     vmag = np.sqrt((x ** 2) + (y ** 2))
@@ -128,7 +131,10 @@ def smooth_angle(angle, vmagnitude=1, kernel_width=21):
 
     Returns
     -------
-    namedtuple with ndarrays ``angle`` and ``magnitude``, in that order.
+    namedtuple
+        namedtuple with ndarrays ``angle`` and ``magnitude``, in that
+        order.
+
     """
     x, y = decompose(angle, vmagnitude)
     x_smooth = convolve(x, Box1DKernel(kernel_width), boundary="extend")
@@ -162,16 +168,17 @@ def planarfit(vectors):
 
     Returns
     -------
-    namedtuple with (index and name in brackets):
+    PlanarFitCoefs : namedtuple
+        namedtuple with (index and name in brackets):
 
-    numpy.ndarray [0, `k_vct`]
-        1-D array (1x3) unit vector parallel to the new z-axis.
-    numpy.ndarray [1, `tilt_coefs`]
-        1-D array (1x3) Tilt coefficients `b0`, `b1`, `b2`.
-    numpy.float [2, `phi`]
-        Scalar representing roll angle :math:`\\phi`.
-    numpy.float [3, `theta`]
-        Scalar representing pitch angle :math:`\\theta`.
+        numpy.ndarray [0, `k_vct`]
+            1-D array (1x3) unit vector parallel to the new z-axis.
+        numpy.ndarray [1, `tilt_coefs`]
+            1-D array (1x3) Tilt coefficients `b0`, `b1`, `b2`.
+        numpy.float [2, `phi`]
+            Scalar representing roll angle :math:`\\phi`.
+        numpy.float [3, `theta`]
+            Scalar representing pitch angle :math:`\\theta`.
 
     """
     vct_u = vectors[:, 0]
@@ -225,8 +232,8 @@ def rotation_matrix(theta, axis, active=False):
 
     Returns
     -------
-    numpy.ndarray
-    3x3 rotation matrix
+    R_theta : numpy.ndarray
+        3x3 rotation matrix
 
     """
     theta = np.radians(theta)
@@ -314,7 +321,7 @@ def rotate_wind3d(wind3D, method="PF", **kwargs):
         A 2-D (Nx3) array with `x`, `y`, and `z` vector components,
         expressed in a right-handed coordinate system.  These may represent
         `u`, `v`, and `w` wind speed vectors, or inertial acceleration.
-    method : str, optional
+    method : {"DR", "TR", "PF"}, optional
         One of: "DR", "TR", "PF" for double rotation, triple rotation, or
         planar fit.
     k_vector : numpy.ndarray, optional
@@ -324,17 +331,19 @@ def rotate_wind3d(wind3D, method="PF", **kwargs):
 
     Returns
     -------
-    namedtuple with (index, name in brackets):
+    RotatedVectors : namedtuple
+        namedtuple with (index, name in brackets):
 
-    numpy.ndarray [0, `rotated`]
-        2-D array (Nx3) Array with rotated vectors
-    numpy.ndarray [1, `phi_theta`]
-        1-D array (1x2) :math:`\\phi` and :math:`\\theta` rotation angles.
-        The former is the estimated angle between the vertical unit
-        coordinate vector in the rotated frame and the vertical unit vector
-        in the measured uv plane, while the latter is wind direction in the
-        measured uv plane.  Note these are *not* roll and pitch angles of
-        the measurement coordinate frame relative to the reference frame.
+        numpy.ndarray [0, `rotated`]
+            2-D array (Nx3) Array with rotated vectors
+        numpy.ndarray [1, `phi_theta`]
+            1-D array (1x2) :math:`\\phi` and :math:`\\theta` rotation
+            angles.  The former is the estimated angle between the vertical
+            unit coordinate vector in the rotated frame and the vertical
+            unit vector in the measured uv plane, while the latter is wind
+            direction in the measured uv plane.  Note these are *not* roll
+            and pitch angles of the measurement coordinate frame relative
+            to the reference frame.
 
     """
     if method not in _VECTOR_ROTATION_METHODS:
@@ -529,14 +538,15 @@ def _butterworth_coefs(cutoff_period, sample_freq, Astop=10.0, Apass=0.5):
 
     Returns
     -------
-    Tuple with (index, name in brackets):
+    tuple
+        Tuple with (index, name in brackets):
 
-    numpy.ndarray [0]
-        Numerator (b) polynomial of the filter.
-    numpy.ndarray [1]
-        Denominator (a) polynomial of the filter.
-    float [2]
-        Padding length for the filter.
+        numpy.ndarray [0]
+            Numerator (b) polynomial of the filter.
+        numpy.ndarray [1]
+            Denominator (a) polynomial of the filter.
+        float [2]
+            Padding length for the filter.
 
     """
     # Passband and stopband cutoffs, normalized to Nyquist frequency
@@ -602,37 +612,43 @@ def wind3D_correct(wind_speed, acceleration, angle_rate, heading, speed,
 
     Returns
     -------
-    namedtuple with (index, name in brackets):
+    CorrectedWind3D : namedtuple
+        namedtuple with (index, name in brackets):
 
-    numpy.ndarray [0, `uvw_ship`]
-        2-D array (Nx3) with corrected wind vectors in ship-referenced
-        frame with z-axis parallel to gravity.
-    numpy.ndarray [1, `euler_angles`]
-        2-D array (Nx3) with Euler angles.
-    numpy.ndarray [2, `euler_angles_angular_rates`]
-        2-D array (NX3) with Euler angles from rate sensors (unfiltered).
-    numpy.ndarray [3, `euler_angles_accelerations`]
-        2-D array (NX3) with Euler angles from accelerometers (unfiltered).
-    numpy.ndarray [4, `euler_angles_slow`]
-        2-D array (NX3) with slow Euler angles (low pass filtered).
-    numpy.ndarray [5, `euler_angles_fast`]
-        2-D array (NX3) with fast Euler angles (high pass filtered).
-    numpy.ndarray [6, `mount_offset_rotations`]
-        2-D array (3X3) with mounting offset rotation matrix (see Miller 2008).
-    numpy.ndarray [7, `uvw_earth`]
-        2-D array (NX3) with measured velocity, rotated to the earth frame.
-    numpy.ndarray [8, `uvw_angular`]
-        2-D array (NX3) with velocity induced by angular motion.
-    numpy.ndarray [9, `uvw_linear`]
-        2-D array (NX3) with velocity induced by platform linear motion.
-    numpy.ndarray [10, `ship_enu`]
-        2-D array (NX3) with ship velocity in eastward, northward, up
-        frame.  (low pass filtered).
-    numpy.ndarray [11, `uvw_enu`]
-        2-D array (NX3) with corrected wind in eastward, northward, up
-        frame.
-    numpy.ndarray [12, `imu_enu`]
-        2-D (NX3) array with displacement of the motion sensor.
+        numpy.ndarray [0, `uvw_ship`]
+            2-D array (Nx3) with corrected wind vectors in ship-referenced
+            frame with z-axis parallel to gravity.
+        numpy.ndarray [1, `euler_angles`]
+            2-D array (Nx3) with Euler angles.
+        numpy.ndarray [2, `euler_angles_angular_rates`]
+            2-D array (NX3) with Euler angles from rate sensors
+            (unfiltered).
+        numpy.ndarray [3, `euler_angles_accelerations`]
+            2-D array (NX3) with Euler angles from accelerometers
+            (unfiltered).
+        numpy.ndarray [4, `euler_angles_slow`]
+            2-D array (NX3) with slow Euler angles (low pass filtered).
+        numpy.ndarray [5, `euler_angles_fast`]
+            2-D array (NX3) with fast Euler angles (high pass filtered).
+        numpy.ndarray [6, `mount_offset_rotations`]
+            2-D array (3X3) with mounting offset rotation matrix (see
+            Miller 2008).
+        numpy.ndarray [7, `uvw_earth`]
+            2-D array (NX3) with measured velocity, rotated to the earth
+            frame.
+        numpy.ndarray [8, `uvw_angular`]
+            2-D array (NX3) with velocity induced by angular motion.
+        numpy.ndarray [9, `uvw_linear`]
+            2-D array (NX3) with velocity induced by platform linear
+            motion.
+        numpy.ndarray [10, `ship_enu`]
+            2-D array (NX3) with ship velocity in eastward, northward, up
+            frame.  (low pass filtered).
+        numpy.ndarray [11, `uvw_enu`]
+            2-D array (NX3) with corrected wind in eastward, northward, up
+            frame.
+        numpy.ndarray [12, `imu_enu`]
+            2-D (NX3) array with displacement of the motion sensor.
 
     References
     ----------
@@ -786,7 +802,8 @@ def window_indices(idxs, width, step=None):
 
     Returns
     -------
-    List of tuples, each with the indices for a window.
+    list
+        List of tuples, each with the indices for a window.
 
     """
     return zip(*(idxs[i::step] for i in range(width)))
@@ -808,18 +825,21 @@ def get_VickersMahrt(x, zscore_thr, nrep_thr):
 
     Returns
     -------
-    Tuple with (index, name in brackets):
-    numpy.ndarray [0, `x`]
-        1-D array with interpolated input.
-    numpy.int [1, `nspikes`]
-        Number of spikes detected.
-    numpy.int [2, `ntrends`]
-        Number of outlier trends detected.
-    numpy.ndarray [3, `kclass`]
-        1-D array of the same size as input, indicating the classification
-        `k` for each measurement. k=0: measurement within plausibility
-        range, k=[-1 or 1]: measurement outside plausibility range, abs(k)
-        > 1: measurement is part of an outlier trend.
+    VickersMahrt : tuple
+        Tuple with (index, name in brackets):
+
+        numpy.ndarray [0, `x`]
+            1-D array with interpolated input.
+        numpy.int [1, `nspikes`]
+            Number of spikes detected.
+        numpy.int [2, `ntrends`]
+            Number of outlier trends detected.
+        numpy.ndarray [3, `kclass`]
+            1-D array of the same size as input, indicating the
+            classification `k` for each measurement. k=0: measurement
+            within plausibility range, k=[-1 or 1]: measurement outside
+            plausibility range, abs(k) > 1: measurement is part of an
+            outlier trend.
 
     """
     z = zscore(x)
@@ -894,15 +914,17 @@ def despike_VickersMahrt(x, width, zscore_thr, nreps, step=None,
 
     Returns
     -------
-    Tuple with (index, name in brackets):
-    numpy.ndarray [0, `x`]
-        1-D array with despiked input.
-    numpy.int [1, `nspikes`]
-        Number of spikes detected.
-    numpy.int [2, `ntrends`]
-        Number of outlier trends detected.
-    numpy.int [3, `kclass`]
-        Number of iterations performed.
+    VickersMahrt : tuple
+        Tuple with (index, name in brackets):
+
+        numpy.ndarray [0, `x`]
+            1-D array with despiked input.
+        numpy.int [1, `nspikes`]
+            Number of spikes detected.
+        numpy.int [2, `ntrends`]
+            Number of outlier trends detected.
+        numpy.int [3, `kclass`]
+            Number of iterations performed.
 
     """
     if step is None:            # set default step as

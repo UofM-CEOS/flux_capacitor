@@ -9,14 +9,3 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
-
-Submodules
-----------
-
-fluxer.underway.underway module
--------------------------------
-
-.. automodule:: fluxer.underway.underway
-    :members:
-    :undoc-members:
-    :show-inheritance:

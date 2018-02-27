@@ -15,5 +15,6 @@ install:
   - python setup.py sdist
   - python setup.py install
 script:
+  - pip install transforms3d sympy
   - python -m unittest discover -s fluxer
   - python setup.py egg_info

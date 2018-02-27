@@ -115,7 +115,8 @@ class TiltWindows:
 
         Returns
         -------
-        pandas.DataFrame with tilt angles for each window.
+        pandas.DataFrame
+            tilt angles for each window.
 
         """
         wind_names = ["wind_speed_u", "wind_speed_v", "wind_speed_w"]
@@ -221,6 +222,7 @@ class TiltWindows:
             Returns
             -------
             Matplotlib axis
+
             """
             pivot = kwargs.pop("pivot", "mid")
             width = kwargs.pop("width", 0.015)

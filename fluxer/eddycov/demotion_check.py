@@ -204,8 +204,9 @@ def plot_wind3D_spectra(uvw_measured, uvw_corrected, **kwargs):
 
     Returns
     -------
-    Tuple with Figure, Axes, and Legend instances consisting of 3x1 matrix
-    of plots of measured vs motion-corrected spectra.
+    tuple
+        Figure, Axes, and Legend instances consisting of 3x1 matrix
+        of plots of measured vs motion-corrected spectra.
 
     """
     # Constants for spectra figures
@@ -252,8 +253,9 @@ def plot_wind3D_cospectra(uvw_measured, uvw_corrected, **kwargs):
 
     Returns
     -------
-    Tuple with Figure, Axes, and Legend instances consisting of 2x1 matrix
-    of plots of measured vs motion-corrected cospectra.
+    tuple
+        Figure, Axes, and Legend instances consisting of 2x1 matrix
+        of plots of measured vs motion-corrected cospectra.
 
     """
     # Constants for cospectra figure
@@ -380,10 +382,11 @@ def plot_IMU_euler_angles_spectra(config_file, nperseg=60 * 5 * 10,
 
     Returns
     -------
-    Tuple with Figure, Axes, and Legend instances consisting of 2x1 matrix
-    of plots of spectral densities for non-filtered :math:`\\phi` and
-    :math:`\\theta` Euler angles estimated directly from integration of
-    angular velocities and normalized linear accelerations from IMU.
+    tuple
+        Figure, Axes, and Legend instances consisting of 2x1 matrix
+        of plots of spectral densities for non-filtered :math:`\\phi` and
+        :math:`\\theta` Euler angles estimated directly from integration of
+        angular velocities and normalized linear accelerations from IMU.
 
     """
     if "linewidth" not in kwargs:
@@ -432,12 +435,13 @@ def plot_IMU_spectra(config_file, nperseg=60 * 10, nfiles=None, **kwargs):
 
     Returns
     -------
-    Tuple with two sets of Figure and Axes instances for angular velocities
-    and linear acceleration, each consisting of 3x1 matrix of semi-log (y)
-    plots of spectral densities for the three IMU angular velocity sensors
-    (first set, with order: Figure and Axes instances), and for the three
-    IMU linear acceleration sensors (second set, also with order Figure,
-    and Axes instances).
+    tuple
+        Two sets of Figure and Axes instances for angular velocities and
+        linear acceleration, each consisting of 3x1 matrix of semi-log (y)
+        plots of spectral densities for the three IMU angular velocity
+        sensors (first set, with order: Figure and Axes instances), and for
+        the three IMU linear acceleration sensors (second set, also with
+        order Figure, and Axes instances).
 
     """
     if "linewidth" not in kwargs:
@@ -495,11 +499,12 @@ def plot1_IMU_complementary_spectra(config_file, file_idx, Tcf, Ta,
 
     Returns
     -------
-    Tuple with Figure, Axes, and Legend instances consisting of 2x1 matrix
-    of plots of spectral densities for non-filtered :math:`\\phi` and
-    :math:`\\theta` Euler angles estimated directly from integration of
-    angular velocities, normalized linear accelerations from IMU, and
-    complementary-filtered signals.
+    tuple
+        Figure, Axes, and Legend instances consisting of 2x1 matrix
+        of plots of spectral densities for non-filtered :math:`\\phi` and
+        :math:`\\theta` Euler angles estimated directly from integration of
+        angular velocities, normalized linear accelerations from IMU, and
+        complementary-filtered signals.
 
     """
     config = ec.db_flux.parse_config(config_file)

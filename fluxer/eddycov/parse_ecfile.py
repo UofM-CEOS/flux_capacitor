@@ -59,10 +59,10 @@ def prepare_period(period_file, config):
 
     Returns
     -------
-
-    Tuple of two ``pandas.DataFrame`` objects; first represents prepared
-    flux data, and the second the flags encountered during tests.  The
-    latter is also passed along with exception, if raised.
+    tuple
+        Tuple of two ``pandas.DataFrame`` objects; first represents
+        prepared flux data, and the second the flags encountered during
+        tests.  The latter is also passed along with exception, if raised.
 
     """
     # Extract all the config pieces

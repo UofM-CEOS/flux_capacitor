@@ -43,7 +43,8 @@ def wind3D_correct_period(ec_prep, config, **kwargs):
 
     Returns
     -------
-    pandas.DataFrame with wind corrected flux data.
+    pandas.DataFrame
+        wind corrected flux data.
 
     """
     # Extract all the config pieces
@@ -141,8 +142,7 @@ def main(config_file):
     Returns
     -------
     None
-
-    Writes summary file and prints messages from process.
+        Writes summary file and prints messages from process.
 
     """
     # Parse configuration file
